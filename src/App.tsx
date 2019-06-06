@@ -1,26 +1,61 @@
-import React from 'react';
-import logo from './assets/icons/png/512x512.png';
+import * as React from 'react';
+import { connect } from "react-redux";
 import './App.css';
+import { AppState } from './store'
 
-const App: React.FC = () => {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Welcome to <code>Prestige</code>.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import { SystemState } from "./store/system/types";
+import { updateSession } from "./store/system/actions";
+
+interface AppProps {
+  system: SystemState,
+  updateSession: typeof updateSession;
 }
 
-export default App;
+
+class App extends React.Component<AppProps> {
+  state = {
+    message: ""
+  };
+
+  componentDidMount() {
+    this.props.updateSession({
+      loggedIn: true,
+      session: "my_session",
+      userName: "myName"
+    });
+  }
+
+  render() {
+    return (
+      <div className="App">
+      <header className="App-header">
+        <p>
+          Welcome to <code>Prestige</code>.
+          userName={this.props.system.userName}
+        </p>
+      </header>
+    </div>
+    );
+  }
+};
+
+/*
+const { default: installExtension, REACT_DEVELOPER_TOOLS } = require("electron-devtools-installer")
+
+installExtension(REACT_DEVELOPER_TOOLS).then((name:string) => {
+  console.log(`Added extension ${name}`);
+}).catch((err:any) => {
+  //todo, sort errors
+  console.log("An error occured", err);
+})
+*/
+
+const mapStateToProps = (state: AppState) => ({
+  system: state.system
+});
+
+export default connect(
+  mapStateToProps,
+  { updateSession }
+)(App);
+

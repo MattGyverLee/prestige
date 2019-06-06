@@ -13,7 +13,6 @@
     "@orbit/store": "^0.15.25",
     "@rescripts/cli": "^0.0.10",
     "@rescripts/rescript-env": "^0.0.10",
-    "concurrently": "^4.1.0",
     "@testing-library/react": "^8.0.1",
     "@types/auth0-js": "^9.10.1",
     "@types/classnames": "^2.2.7",
@@ -24,8 +23,10 @@
     "@types/react-redux": "^7.0.6",
     "@types/react-router-dom": "^4.3.1",
     "@types/react-select": "^2.0.19",
+    "concurrently": "^4.1.0",
     "electron": "^5.0.2",
     "electron-builder": "^20.43.0",
+    "electron-devtools-installer": "^2.2.4",
     "jest-dom": "^3.2.2",
     "wait-on": "^3.2.0"
   },

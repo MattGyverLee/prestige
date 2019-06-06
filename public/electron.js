@@ -1,22 +1,13 @@
 const electron = require('electron');
 const app = electron.app;
-const BrowserWindow = electron.BrowserWindow({titleBarStyle: 'hidden',
-width: 1281,
-height: 800,
-minWidth: 1281,
-minHeight: 800,
-backgroundColor: '#312450',
-show: false,
-icon: path.join(__dirname, './assets/icons/png/64x64.png')
-});
-
+const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const isDev = require('electron-is-dev');
 
 let mainWindow;
 
 function createWindow() {
-  mainWindow = new BrowserWindow({width: 900, height: 680});
+  mainWindow = new BrowserWindow({width: 900, height: 680, icon: path.join(__dirname, '../src/assets/icons/png/64x64.png')});
   mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
   if (isDev) {
     // Open the DevTools.
