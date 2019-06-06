@@ -1,8 +1,9 @@
 import React from 'react';
+import { Provider } from 'react-redux';
 import logo from './assets/icons/png/512x512.png';
 import './App.css';
 
-const App: React.FC = () => {
+const splash: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
@@ -10,17 +11,9 @@ const App: React.FC = () => {
         <p>
           Welcome to <code>Prestige</code>.
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
       </header>
     </div>
   );
 }
 
-export default App;
+export default splash;

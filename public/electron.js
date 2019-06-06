@@ -1,6 +1,14 @@
 const electron = require('electron');
 const app = electron.app;
-const BrowserWindow = electron.BrowserWindow;
+const BrowserWindow = electron.BrowserWindow({titleBarStyle: 'hidden',
+width: 1281,
+height: 800,
+minWidth: 1281,
+minHeight: 800,
+backgroundColor: '#312450',
+show: false,
+icon: path.join(__dirname, './assets/icons/png/64x64.png')
+});
 
 const path = require('path');
 const isDev = require('electron-is-dev');
