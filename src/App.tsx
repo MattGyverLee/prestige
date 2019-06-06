@@ -1,26 +1,57 @@
-import React from 'react';
-import logo from './assets/icons/png/512x512.png';
-import './App.css';
 
-const App: React.FC = () => {
-  return (
-    <div className="App">
+import * as React from 'react';
+import { connect } from "react-redux";
+import './App.css';
+import logo from './assets/icons/png/512x512.png';
+import { AppState } from './store'
+import { SystemState } from "./store/system/types";
+import { updateSession } from "./store/system/actions";
+interface AppProps {
+  system: SystemState,
+  updateSession: typeof updateSession;
+}
+
+
+class App extends React.Component<AppProps> {
+  state = {
+    message: ""
+  };
+
+  componentDidMount() {
+    this.props.updateSession({
+      loggedIn: true,
+      session: "my_session",
+      userName: "myName3",
+      clicks: 5
+    });
+  }
+
+  render() {
+    return (
+      <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Welcome to <code>Prestige</code>.
+          userName={this.props.system.userName}
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
       </header>
     </div>
-  );
-}
+    );
+  }
+};
 
-export default App;
+
+
+
+
+
+const mapStateToProps = (state: AppState) => ({
+  system: state.system
+});
+
+export default connect(
+  mapStateToProps,
+  { updateSession }
+)(App);
+
