@@ -3,6 +3,7 @@ export interface SystemState {
     loggedIn: boolean;
     session: string;
     userName: string;
+    clicks: number;
   }
   
   // Describing the different ACTION NAMES available

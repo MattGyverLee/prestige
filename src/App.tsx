@@ -1,11 +1,11 @@
+
 import * as React from 'react';
 import { connect } from "react-redux";
 import './App.css';
+import logo from './assets/icons/png/512x512.png';
 import { AppState } from './store'
-
 import { SystemState } from "./store/system/types";
 import { updateSession } from "./store/system/actions";
-
 interface AppProps {
   system: SystemState,
   updateSession: typeof updateSession;
@@ -21,7 +21,8 @@ class App extends React.Component<AppProps> {
     this.props.updateSession({
       loggedIn: true,
       session: "my_session",
-      userName: "myName"
+      userName: "myName3",
+      clicks: 5
     });
   }
 
@@ -29,6 +30,7 @@ class App extends React.Component<AppProps> {
     return (
       <div className="App">
       <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
         <p>
           Welcome to <code>Prestige</code>.
           userName={this.props.system.userName}
@@ -39,16 +41,10 @@ class App extends React.Component<AppProps> {
   }
 };
 
-/*
-const { default: installExtension, REACT_DEVELOPER_TOOLS } = require("electron-devtools-installer")
 
-installExtension(REACT_DEVELOPER_TOOLS).then((name:string) => {
-  console.log(`Added extension ${name}`);
-}).catch((err:any) => {
-  //todo, sort errors
-  console.log("An error occured", err);
-})
-*/
+
+
+
 
 const mapStateToProps = (state: AppState) => ({
   system: state.system

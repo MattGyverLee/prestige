@@ -1,36 +1,55 @@
 const electron = require('electron');
+const fs = require('fs');
 // Module to control application life.
 const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
 
-const path = require('path');
-const url = require('url');
-const isDev = require('electron-is-dev');
-
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
+const path = require('path');
+const url = require('url');
+
+console.log(__dirname);
+console.log(process.env.NODE_ENV);
+
+function debounce(func, ms) {
+    let ts;
+    return function() {
+        clearTimeout(ts);
+        ts = setTimeout(() => func.apply(this, arguments), ms);
+    };
+}
+
+if (process.env.NODE_ENV !== 'production') {
+    const watchPath = path.join(__dirname, "./build/static");
+
+    fs.watch(
+        watchPath,
+        { encoding: 'buffer' },
+        debounce((eventType, filename) => {
+            watchPathExists = fs.existsSync(watchPath);
+            console.log(`Reloading electron: ${watchPathExists}`);
+            if (watchPathExists) {
+                mainWindow.destroy();
+                createWindow();
+            }
+        }, 50)
+
+    );
+}
+
 function createWindow() {
     // Create the browser window.
-    mainWindow = new BrowserWindow({width: 800, height: 600, icon: path.join(__dirname, '../src/assets/icons/png/64x64.png'), webPreferences: { nodeIntegration: true }});
-
+    mainWindow = new BrowserWindow({width: 1024, height: 768, webPreferences: { nodeIntegration: true }});
 
     // and load the index.html of the app.
-    console.log(__dirname);
     // mainWindow.loadURL('http://localhost:3000');
-    mainWindow.loadFile(path.join(__dirname, "../build/index.html"));
+    mainWindow.loadFile(path.join(__dirname, "./build/index.html"));
 
     // Open the DevTools.
-    //BrowserWindow.addDevToolsExtension('<location to your react chrome extension>');
-    //todo Make Optional
-    //BrowserWindow.addDevToolsExtension(
-    //path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
-    //)
-    //BrowserWindow.addDevToolsExtension(
-    //path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
-    //)
     mainWindow.webContents.openDevTools();
 
     // Emitted when the window is closed.
@@ -40,14 +59,28 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null
     })
-}
 
-app.on('ready', createWindow);
+    mainWindow.webContents.on('crashed', () => {
+        console.log(`mainWindow crashed. re-creating.`)
+        mainWindow.destroy();
+        createWindow();
+    });
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', async () => {
+    const path = require('path')
+    const os = require('os')
+    BrowserWindow.addDevToolsExtension(
+    path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+    )
+    BrowserWindow.addDevToolsExtension(
+    path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
+    )
+    createWindow()
+})
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {

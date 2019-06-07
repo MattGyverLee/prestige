@@ -8,6 +8,13 @@ import configureStore from "./store";
 
 const store = configureStore();
 
+console.log(`process.env: `, process.env);
+if (process.env.REACT_APP_MODE === 'electron') {
+    console.log(`Running in Electron: Filesystem access is enabled.`)
+} else {
+    console.log('Running on the Web, Filesystem access disabled.')
+}
+
 const Root = () => (
     <Provider store={store}>
       <App />
