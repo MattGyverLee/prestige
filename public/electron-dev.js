@@ -2,7 +2,8 @@ const electron = require('electron');
 const ipcMain = electron.ipcMain;
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
-
+const appMode = process.env.REACT_APP_MODE
+const envMode = process.env.NODE_ENV
 const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
@@ -12,7 +13,7 @@ let imageWindow;
 let settingsWindow;
 
 function createWindow() {
-  mainWindow = new BrowserWindow({width: 900, height: 680, webPreferences: { webSecurity: false}});
+  mainWindow = new BrowserWindow({width: 1000, height: 800, title: "Prestige", icon: path.join(__dirname, '../src/assets/icons/png/64x64.png'), webPreferences: { nodeIntegration: true, webSecurity: false}});
   imageWindow = new BrowserWindow({width: 600, height: 600, parent: mainWindow, show: false});
   settingsWindow = new BrowserWindow({width: 600, height: 600, parent: mainWindow, show: false});
 
@@ -32,9 +33,23 @@ function createWindow() {
     e.preventDefault();
     settingsWindow.hide();
   });
+  /*mainWindow.webContents.on('did-finish-load', () => {
+    let windowTitle = "Prestige: " + appMode+ "- " + envMode
+    mainWindow.setTitle(windowTitle)
+  })*/
 }
 
-app.on('ready', createWindow);
+app.on('ready', async () => {
+    const path = require('path')
+    const os = require('os')
+    BrowserWindow.addDevToolsExtension(
+    path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
+    )
+    BrowserWindow.addDevToolsExtension(
+    path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
+    )
+    createWindow()
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
