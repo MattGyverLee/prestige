@@ -61,7 +61,7 @@
     "redux-thunk": "^2.3.0",
     "reselect": "^4.0.0",
     "rimraf": "^2.6.3",
-    "typescript": "^3.5.1",
+    "typescript": "^3.5.1"
   },
   "devDependencies": {
     "@craco/craco": "^5.2.1",
