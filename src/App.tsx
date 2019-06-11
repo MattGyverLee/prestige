@@ -47,8 +47,8 @@ class App extends React.Component<AppProps> {
           Welcome to <code>Prestige</code>.
           userName={this.props.system.userName}
         </p>
-        <p>5997</p>
-        <p>{TestFs.getDirectoryListing()}</p>
+        <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
+        <p><textarea className={classes.TextArea} value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
       </header>
     </div>
     );

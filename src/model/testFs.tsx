@@ -1,9 +1,8 @@
 let fs: any;
 if (process.env.REACT_APP_MODE === 'electron') {
     console.log(`REQUIRING fs-extra`);
-    //fs = require('fs-extra');
-    //fs = require('fs-extra');
-    fs = require('fs');
+    fs = require('fs-extra');
+    //fs = require('fs');
 }
 
 export default class TestFs {

@@ -2,7 +2,8 @@ const electron = require('electron');
 const ipcMain = electron.ipcMain;
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
-
+const appMode = process.env.REACT_APP_MODE
+const envMode = process.env.NODE_ENV
 const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
@@ -32,6 +33,10 @@ function createWindow() {
     e.preventDefault();
     settingsWindow.hide();
   });
+  /*mainWindow.webContents.on('did-finish-load', () => {
+    let windowTitle = "Prestige: " + appMode+ "- " + envMode
+    mainWindow.setTitle(windowTitle)
+  })*/
 }
 
 app.on('ready', async () => {
