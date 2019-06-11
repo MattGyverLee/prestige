@@ -9,6 +9,10 @@ import { SystemState } from "./store/system/types";
 import { updateSession } from "./store/system/actions";
 import { ActiveFolderState } from "./store/tree/types";
 import { updateActiveFolder } from "./store/tree/actions";
+import TestFs from "./model/testFs";
+import classes from './App.module.css';
+
+
 interface AppProps {
   system: SystemState,
   updateSession: typeof updateSession;
@@ -43,7 +47,8 @@ class App extends React.Component<AppProps> {
           Welcome to <code>Prestige</code>.
           userName={this.props.system.userName}
         </p>
-        <p>599</p>
+        <p>5997</p>
+        <p>{TestFs.getDirectoryListing()}</p>
       </header>
     </div>
     );
