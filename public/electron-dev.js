@@ -7,6 +7,9 @@ const envMode = process.env.NODE_ENV
 const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
+//ToDo: Remove thiss and follow instructions here:
+//https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 let mainWindow;
 let imageWindow;
