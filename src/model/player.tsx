@@ -2,16 +2,17 @@ import React, { Component } from "react";
 import { connect } from 'react-redux'
 import ReactPlayer from "react-player"
 import { playPause } from "../store/player/actions";
+import { UpdatePlayerParam } from "../App";
 //updatePlayerAction,
 
 
 interface PlayProps {
-    parent?: any,
     url: string,
     playing: boolean,
     volume: number,
     muted: boolean,
     playbackRate: number,
+    parent?: any,
     loop?: boolean,
     loaded?: number,
     played?: number,
@@ -19,7 +20,10 @@ interface PlayProps {
     duration?: number,
     controls?: boolean,
     player?: any,
-    seeking?: boolean
+    seeking?: boolean,
+
+    playPause: () => void;
+    refreshApp?: (event: UpdatePlayerParam) => void
   }
 
 class PlayerZone extends Component<PlayProps> {
@@ -31,10 +35,7 @@ class PlayerZone extends Component<PlayProps> {
         super(props); 
         //this.state = props
     }*/
-    
-    playPauser = () => {
-    //this.setState({ playing: !this.props.playing })
-      }
+
     pip = () => {
     this.setState({ pip: !this.props.pip })
     }
@@ -137,7 +138,7 @@ class PlayerZone extends Component<PlayProps> {
                 <th>Controls</th>
                 <td>
                     <button onClick={this.stop}>Stop</button>
-                    <button onClick={this.playPauser}>{this.props.playing ? 'Pause' : 'Play'}</button>
+                    <button onClick={this.props.playPause}>{this.props.playing ? 'Pause' : 'Play'}</button>
                     <button onClick={this.onClickFullscreen}>Fullscreen</button>
                     {ReactPlayer.canEnablePIP(this.props.url) &&
                     <button onClick={this.pip}>{this.props.pip ? 'Disable PiP' : 'Enable PiP'}</button>
@@ -199,5 +200,6 @@ class PlayerZone extends Component<PlayProps> {
         );
     }
 }
+
 
 export default connect()(PlayerZone)

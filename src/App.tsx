@@ -11,9 +11,11 @@ import { ActiveFolderState } from "./store/tree/types";
 import { updateActiveFolder } from "./store/tree/actions";
 import { MediaPlayerState } from "./store/player/types";
 import { updatePlayerAction } from "./store/player/actions";
+import { playPause } from "./store/player/actions";
 import TestFs from "./model/testFs";
 import classes from './App.module.css';
-import PlayerZone from "./model/player"
+import PlayerZone from "./model/player";
+
 
 
 interface AppProps {
@@ -23,7 +25,10 @@ interface AppProps {
   updateActiveFolder: typeof updateActiveFolder;
   player: MediaPlayerState;
   updatePlayerAction: typeof updatePlayerAction;
+  playPause: typeof playPause;
 }
+
+export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 class App extends React.Component<AppProps> {
   state = {
@@ -43,7 +48,7 @@ class App extends React.Component<AppProps> {
     this.props.updatePlayerAction({
       parent: this,
       url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
-      playing: true,
+      playing: false,
       volume: 0.8,
       muted: false,
       controls: false,
@@ -54,6 +59,11 @@ class App extends React.Component<AppProps> {
       loop: false,
     })
 
+  }
+
+  playPause = () => {
+    this.props.playPause()
+    this.setState({ player: {playing: !this.props.player.playing}})
   }
 
   render() {
@@ -71,6 +81,7 @@ class App extends React.Component<AppProps> {
           muted={this.props.player.muted}
           playbackRate={this.props.player.playbackRate}
           volume={this.props.player.volume}
+          playPause={this.playPause}
         />
         <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
         <p><textarea className={classes.TextArea} value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
@@ -89,5 +100,5 @@ const mapStateToProps = (state: AppState) => ({
 
 export default hot(module)(connect(
   mapStateToProps,
-  { updateSession, updateActiveFolder, updatePlayerAction }
+  { updateSession, updateActiveFolder, updatePlayerAction, playPause }
 )(App));
