@@ -13,17 +13,22 @@ interface PlayProps {
     muted: boolean,
     playbackRate: number,
     parent?: any,
-    loop?: boolean,
+    loop: boolean,
     loaded?: number,
-    played?: number,
+    played: number,
     pip?: boolean,
     duration?: number,
     controls?: boolean,
     player?: any,
     seeking?: boolean,
+    state?: any
 
     playPause: () => void;
     stopPlaying: () => void;
+    toggleLoop: () => void;
+    onPlay: () => void;
+    onEnded: () => void;
+    onProgress: (state: any) => void;
     refreshApp?: (event: UpdatePlayerParam) => void
   }
 
@@ -36,10 +41,6 @@ class PlayerZone extends Component<PlayProps> {
     pip = () => {
     this.setState({ pip: !this.props.pip })
     }
-
-    toggleLoop = () => {
-    this.setState({ loop: !this.props.loop })
-    }
     setVolume = (e:any) => {
     this.setState({ volume: parseFloat(e.target.value) })
     }
@@ -48,18 +49,6 @@ class PlayerZone extends Component<PlayProps> {
     }
     setPlaybackRate = (e: any) => {
     this.setState({ playbackRate: parseFloat(e.target.value) })
-    }
-    onPlay = () => {
-    console.log('onPlay')
-    this.setState({ playing: true })
-    }
-    onEnablePIP = () => {
-    console.log('onEnablePIP')
-    this.setState({ pip: true })
-    }
-    onDisablePIP = () => {
-    console.log('onDisablePIP')
-    this.setState({ pip: false })
     }
     onPause = () => {
     console.log('onPause')
@@ -75,17 +64,13 @@ class PlayerZone extends Component<PlayProps> {
     this.setState({ seeking: false })
     this.player.seekTo(parseFloat(e.target.value))
     }
-    onProgress = (state: {} | ((prevState: Readonly<{}>, props: Readonly<PlayProps>) => {} | Pick<{}, never> | null) | Pick<{}, never> | null) => {
+    /* onProgress = (state: any) => {
     console.log('onProgress', state)
     // We only want to update time slider if we are not currently seeking
     if (!this.props.seeking) {
         this.setState(state)
     }
-    }
-    onEnded = () => {
-    console.log('onEnded')
-    this.setState({ playing: this.props.loop })
-    }
+    } */
     onDuration = (duration: any) => {
     console.log('onDuration', duration)
     this.setState({ duration })
@@ -116,15 +101,13 @@ class PlayerZone extends Component<PlayProps> {
                     muted={this.props.muted}
                     onReady={() => console.log('onReady')}
                     onStart={() => console.log('onStart')}
-                    onPlay={this.onPlay}
-                    onEnablePIP={this.onEnablePIP}
-                    onDisablePIP={this.onDisablePIP}
+                    onPlay={this.props.onPlay}
                     onPause={this.onPause}
                     onBuffer={() => console.log('onBuffer')}
                     onSeek={e => console.log('onSeek', e)}
-                    onEnded={this.onEnded}
+                    onEnded={this.props.onEnded}
                     onError={e => console.log('onError', e)}
-                    onProgress={this.onProgress}
+                    onProgress={this.props.onProgress}
                     onDuration={this.onDuration}
                     />
             </div>
@@ -135,9 +118,6 @@ class PlayerZone extends Component<PlayProps> {
                     <button onClick={this.props.stopPlaying}>Stop</button>
                     <button onClick={this.props.playPause}>{this.props.playing ? 'Pause' : 'Play'}</button>
                     <button onClick={this.onClickFullscreen}>Fullscreen</button>
-                    {ReactPlayer.canEnablePIP(this.props.url) &&
-                    <button onClick={this.pip}>{this.props.pip ? 'Disable PiP' : 'Enable PiP'}</button>
-                    }
                 </td>
                 </tr>
                 <tr>
@@ -179,7 +159,7 @@ class PlayerZone extends Component<PlayProps> {
                     <label htmlFor='loop'>Loop</label>
                 </th>
                 <td>
-                    <input id='loop' type='checkbox' checked={this.props.loop} onChange={this.toggleLoop} />
+                    <input id='loop' type='checkbox' checked={this.props.loop} onChange={this.props.toggleLoop} />
                 </td>
                 </tr>
                 <tr>

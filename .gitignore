@@ -335,3 +335,4 @@ ASALocalRun/
 .env
 dist/
 build/
+src/model/bits.txt

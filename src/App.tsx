@@ -3,16 +3,21 @@ import * as React from 'react';
 import { connect } from "react-redux";
 import './App.css';
 import { hot } from 'react-hot-loader'
-import logo from './assets/icons/png/512x512.png';
+import logo from './assets/icons/png/256x256.png';
 import { AppState } from './store'
 import { SystemState } from "./store/system/types";
 import { updateSession } from "./store/system/actions";
 import { ActiveFolderState } from "./store/tree/types";
 import { updateActiveFolder } from "./store/tree/actions";
 import { MediaPlayerState } from "./store/player/types";
-import { updatePlayerAction } from "./store/player/actions";
-import { playPause } from "./store/player/actions";
-import { stopPlaying } from "./store/player/actions";
+import { 
+  playPause, 
+  stopPlaying, 
+  updatePlayerAction, 
+  toggleLoop, 
+  onPlay, 
+  onEnded,
+  onProgress} from "./store/player/actions";
 import TestFs from "./model/testFs";
 import classes from './App.module.css';
 import PlayerZone from "./model/player";
@@ -28,6 +33,10 @@ interface AppProps {
   updatePlayerAction: typeof updatePlayerAction;
   playPause: typeof playPause;
   stopPlaying: typeof stopPlaying;
+  toggleLoop: typeof toggleLoop;
+  onPlay: typeof onPlay;
+  onEnded: typeof onEnded;
+  onProgress: typeof onProgress;
 }
 
 class App extends React.Component<AppProps> {
@@ -35,7 +44,7 @@ class App extends React.Component<AppProps> {
     this.props.updateSession({
       loggedIn: true,
       session: "my_session",
-      userName: "myName4",
+      userName: "Matthew",
       clicks: 0
     });
     this.props.updateActiveFolder({
@@ -43,49 +52,74 @@ class App extends React.Component<AppProps> {
       URI: "http.bing"
     });
     this.props.updatePlayerAction({
-      parent: this,
-      url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
+      url: "http://www.youtube.com/watch?v=Fc1P-AEaEp8",
+      //url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
       playing: false,
       volume: 0.8,
       muted: false,
+      playbackRate: 1.0,
       controls: false,
       played: false,
+      pip: false,
       loaded: false,
       duration: -1,
-      playbackRate: 1.0,
       loop: false,
+      seeking: false
     })
-
   }
 
   playPause = () => {
     this.props.playPause()
+    console.log('onPlay/PauseApp')
   }
   stopPlaying = () => {
     this.props.stopPlaying()
+    console.log('onStopApp')
+  }
+  toggleLoop = () => {
+    this.props.toggleLoop()
+    console.log('ToggleLoopApp')
+  }
+  onPlay = () => {
+    this.props.onPlay()
+    console.log('onPlayApp')
+  }
+  onEnded = () => {
+    this.props.onEnded()
+    console.log('onEndedApp')
+  }
+  onProgress = (playState: any) => {
+    this.props.onProgress(playState)
+    console.log('onProgressApp', playState)
+    if (!this.props.player.seeking) {
+      //this.setState({player: {played: playState.played}})
+      //this.setState(playState)
+  }
   }
 
   render() {
     return (
       <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Welcome to <code>Prestige</code>s.
-          userName={this.props.system.userName}
-        </p>
+        <p>{this.props.system.userName}, welcome to <code>Prestige</code>. <img src={logo} className="App-logo" alt="logo"/></p>
         <PlayerZone 
           url={this.props.player.url} 
           playing={this.props.player.playing}
           muted={this.props.player.muted}
           playbackRate={this.props.player.playbackRate}
           volume={this.props.player.volume}
+          loop={this.props.player.loop}
+          played={this.props.player.played}
           playPause={this.playPause}
           stopPlaying={this.stopPlaying}
+          toggleLoop={this.toggleLoop}
+          onPlay={this.onPlay}
+          onEnded={this.onEnded}
+          onProgress={this.onProgress}
         />
+      </header>
         <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
         <p><textarea className={classes.TextArea} value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
-      </header>
     </div>
     );
   }
@@ -98,14 +132,14 @@ const mapStateToProps = (state: AppState) => ({
   player: state.player
 });
 
-const mapDispatchToProps = (dispatch: any) => {
+/* const mapDispatchToProps = (dispatch: any) => {
   return {
     // dispatching plain actions
     stopPlaying2: () => dispatch({ type: 'STOP_PLAYING' }),
   }
-}
+} */
 
 export default hot(module)(connect(
   mapStateToProps,
-  { updateSession, updateActiveFolder, updatePlayerAction, playPause, stopPlaying }
+  { updateSession, updateActiveFolder, updatePlayerAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress }
 )(App));
