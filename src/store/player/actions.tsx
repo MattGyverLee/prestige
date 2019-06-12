@@ -1,4 +1,4 @@
-import { MediaPlayerState, UPDATE_PLAYER_SESSION, PLAY_PAUSE, PlayerActionTypes } from './types'
+import { MediaPlayerState, UPDATE_PLAYER_SESSION, PLAY_PAUSE, STOP_PLAYING, PlayerActionTypes } from './types'
 
 export function updatePlayerAction(newPlayerState: MediaPlayerState): PlayerActionTypes {
     return {
@@ -10,7 +10,12 @@ export function updatePlayerAction(newPlayerState: MediaPlayerState): PlayerActi
 export function playPause(): PlayerActionTypes {
   return {
     type: PLAY_PAUSE,
-    payload: true
+  };
+}
+
+export function stopPlaying(): PlayerActionTypes {
+  return {
+    type: STOP_PLAYING,
   };
 }
 /*export function setNewURL(newURL: URL): PlayerActionTypes {

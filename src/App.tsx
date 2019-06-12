@@ -12,11 +12,12 @@ import { updateActiveFolder } from "./store/tree/actions";
 import { MediaPlayerState } from "./store/player/types";
 import { updatePlayerAction } from "./store/player/actions";
 import { playPause } from "./store/player/actions";
+import { stopPlaying } from "./store/player/actions";
 import TestFs from "./model/testFs";
 import classes from './App.module.css';
 import PlayerZone from "./model/player";
 
-
+export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 interface AppProps {
   system: SystemState,
@@ -26,14 +27,10 @@ interface AppProps {
   player: MediaPlayerState;
   updatePlayerAction: typeof updatePlayerAction;
   playPause: typeof playPause;
+  stopPlaying: typeof stopPlaying;
 }
 
-export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
-
 class App extends React.Component<AppProps> {
-  state = {
-    message: ""
-  };
   componentDidMount() {
     this.props.updateSession({
       loggedIn: true,
@@ -63,7 +60,9 @@ class App extends React.Component<AppProps> {
 
   playPause = () => {
     this.props.playPause()
-    this.setState({ player: {playing: !this.props.player.playing}})
+  }
+  stopPlaying = () => {
+    this.props.stopPlaying()
   }
 
   render() {
@@ -82,6 +81,7 @@ class App extends React.Component<AppProps> {
           playbackRate={this.props.player.playbackRate}
           volume={this.props.player.volume}
           playPause={this.playPause}
+          stopPlaying={this.stopPlaying}
         />
         <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
         <p><textarea className={classes.TextArea} value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
@@ -98,7 +98,14 @@ const mapStateToProps = (state: AppState) => ({
   player: state.player
 });
 
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    // dispatching plain actions
+    stopPlaying2: () => dispatch({ type: 'STOP_PLAYING' }),
+  }
+}
+
 export default hot(module)(connect(
   mapStateToProps,
-  { updateSession, updateActiveFolder, updatePlayerAction, playPause }
+  { updateSession, updateActiveFolder, updatePlayerAction, playPause, stopPlaying }
 )(App));

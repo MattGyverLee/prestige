@@ -1,5 +1,5 @@
 // src/store/tree/reducers.ts
-import { UPDATE_PLAYER_SESSION, PLAY_PAUSE, MediaPlayerState, PlayerActionTypes } from "./types";
+import { UPDATE_PLAYER_SESSION, PLAY_PAUSE, STOP_PLAYING, MediaPlayerState, PlayerActionTypes } from "./types";
 
 const initialState: MediaPlayerState = {
     url: "",
@@ -27,13 +27,19 @@ export function playerReducer(
       };
     }
     case PLAY_PAUSE: {
-      let tempState = {...state}
-      tempState.playing = !tempState.playing
       return {
         ...state,
         playing: !state.playing
       }
     }
+    case STOP_PLAYING: {
+      return {
+        ...state,
+        playing: false,
+        url: "none"
+      }
+    }
+    //this.setState({ url: null, playing: false })
     default:
       return state;
   }

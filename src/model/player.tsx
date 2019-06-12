@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import { connect } from 'react-redux'
 import ReactPlayer from "react-player"
-import { playPause } from "../store/player/actions";
 import { UpdatePlayerParam } from "../App";
 //updatePlayerAction,
+
 
 
 interface PlayProps {
@@ -23,25 +23,20 @@ interface PlayProps {
     seeking?: boolean,
 
     playPause: () => void;
+    stopPlaying: () => void;
     refreshApp?: (event: UpdatePlayerParam) => void
   }
 
 class PlayerZone extends Component<PlayProps> {
-    
+
     private player!:ReactPlayer
     //private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
 
-    /*constructor(props: any){
-        super(props); 
-        //this.state = props
-    }*/
 
     pip = () => {
     this.setState({ pip: !this.props.pip })
     }
-    stop = () => {
-    this.setState({ url: null, playing: false })
-    }
+
     toggleLoop = () => {
     this.setState({ loop: !this.props.loop })
     }
@@ -137,7 +132,7 @@ class PlayerZone extends Component<PlayProps> {
                 <tr>
                 <th>Controls</th>
                 <td>
-                    <button onClick={this.stop}>Stop</button>
+                    <button onClick={this.props.stopPlaying}>Stop</button>
                     <button onClick={this.props.playPause}>{this.props.playing ? 'Pause' : 'Play'}</button>
                     <button onClick={this.onClickFullscreen}>Fullscreen</button>
                     {ReactPlayer.canEnablePIP(this.props.url) &&

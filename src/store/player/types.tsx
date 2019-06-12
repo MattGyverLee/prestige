@@ -16,6 +16,8 @@ export interface MediaPlayerState {
   // Describing the different ACTION NAMES available
   export const UPDATE_PLAYER_SESSION = "UPDATE_PLAYER_SESSION";
   export const PLAY_PAUSE = "PLAY_PAUSE";
+  export const STOP_PLAYING = "STOP_PLAYING"
+  
   
   interface UpdatePlayerAction {
     type: typeof UPDATE_PLAYER_SESSION;
@@ -24,7 +26,9 @@ export interface MediaPlayerState {
 
   interface PlayPause {
     type: typeof PLAY_PAUSE;
-    payload: true;
+  }
+  interface StopPlaying {
+    type: typeof STOP_PLAYING;
   }
 
-  export type PlayerActionTypes = UpdatePlayerAction | PlayPause;
+  export type PlayerActionTypes = UpdatePlayerAction | PlayPause | StopPlaying;
