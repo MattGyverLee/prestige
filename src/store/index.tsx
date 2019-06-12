@@ -4,10 +4,12 @@ import { composeWithDevTools } from "redux-devtools-extension";
 
 import { systemReducer } from "./system/reducers";
 import { treeReducer } from "./tree/reducers";
+import { playerReducer } from "./player/reducers";
 
 const rootReducer = combineReducers({
   system: systemReducer,
-  tree: treeReducer
+  tree: treeReducer,
+  player: playerReducer
 });
 
 export type AppState = ReturnType<typeof rootReducer>;
