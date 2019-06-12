@@ -334,3 +334,4 @@ ASALocalRun/
 .localhistory/
 dist/
 build/
+src/model/bits.txt

@@ -12,13 +12,14 @@
 
 .App-logo {
   animation: rock infinite 3s linear;
-  height: 40vmin;
+  height: 10vmin;
   pointer-events: none;
+  float: left;
 }
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  min-height: 20vh;
   display: flex;
   flex-direction: column;
   align-items: center;

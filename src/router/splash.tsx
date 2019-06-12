@@ -1,5 +1,4 @@
 import React from 'react';
-import { Provider } from 'react-redux';
 import logo from './assets/icons/png/512x512.png';
 import './App.css';
 
