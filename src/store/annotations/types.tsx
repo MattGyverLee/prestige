@@ -1,4 +1,3 @@
-import {map} from "redux-data-structures"
 
 // Describing the shape of the tree's slice of state
 

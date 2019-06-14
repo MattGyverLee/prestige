@@ -1,7 +1,10 @@
 // Describing the shape of the tree's slice of state
 export interface ActiveFolderState {
-    path?: string;
-    URI?: string;
+    env: string;
+    path: string;
+    loaded: boolean;
+    availableFiles?: [Blob]
+    availableMedia?: [Blob]
   }
   
   // Describing the different ACTION NAMES available

@@ -1,16 +1,17 @@
 
-import * as React from 'react';
+import React from 'react';
 import { connect } from "react-redux";
 import './App.css';
 import { hot } from 'react-hot-loader'
 import logo from './assets/icons/png/256x256.png';
 import { AppState } from './store'
 import { SystemState } from "./store/system/types";
+import SelectFolderZone from "./model/folderSelection" 
 import { updateSession } from "./store/system/actions";
 import { ActiveFolderState } from "./store/tree/types";
 import { updateActiveFolder } from "./store/tree/actions";
 import { MediaPlayerState } from "./store/player/types";
-import * as annAc from "./store/annotations/actions";
+//import * as annAc from "./store/annotations/actions";
 import { wipeAnnotationAction, resetAnnotationAction, enableAudtranscMain } from "./store/annotations/actions";
 import { AnnotationState } from "./store/annotations/types";
 import { 
@@ -23,14 +24,13 @@ import {
   onProgress} from "./store/player/actions";
 import TestFs from "./model/testFs";
 import PlayerZone from "./model/player";
-
+const isElectron = process.env.REACT_APP_MODE === 'electron'
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
-
 interface AppProps {
   system: SystemState,
   updateSession: typeof updateSession;
   
-  tree?: ActiveFolderState;
+  tree: ActiveFolderState;
   updateActiveFolder: typeof updateActiveFolder;
   
   player: MediaPlayerState;
@@ -50,15 +50,22 @@ interface AppProps {
 
 class App extends React.Component<AppProps> {
   componentDidMount() {
+    if (isElectron) {
+      this.props.updateActiveFolder({
+        env: "electron",
+        path: "local",
+        loaded: true
+      })} else {
+        this.props.updateActiveFolder({
+          env: "web",
+          path: "bing",
+          loaded: true,
+        })}
     this.props.updateSession({
       loggedIn: true,
       session: "my_session",
       userName: "Matthew",
       clicks: 0
-    });
-    this.props.updateActiveFolder({
-      path: "bing",
-      URI: "http.bing"
     });
     this.props.updatePlayerAction({
       url: "http://www.youtube.com/watch?v=Fc1P-AEaEp8",
@@ -92,6 +99,10 @@ class App extends React.Component<AppProps> {
     this.props.enableAudtranscMain()
   }
 
+
+  
+  
+  // Player Features
   playPause = () => {
     this.props.playPause()
     console.log('onPlay/PauseApp')
@@ -120,7 +131,10 @@ class App extends React.Component<AppProps> {
       //this.setState(playState)
   }
   }
-
+  onUpdatePath = () => {
+    console.log('onUpdatePath not defined')
+  } 
+  
   render() {
     return (
       <div className="App">
@@ -149,7 +163,10 @@ class App extends React.Component<AppProps> {
             <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
             <p><textarea value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
           </div>
-        </div>  
+        </div>
+        <div className="App-footer">
+          <SelectFolderZone env={this.props.tree.env} folder={this.props.tree.path} loaded={this.props.tree.loaded} />
+        </div>
       </div>
     );
   }
@@ -172,5 +189,5 @@ const mapStateToProps = (state: AppState) => ({
 
 export default hot(module)(connect(
   mapStateToProps,
-  { updateSession, updateActiveFolder, updatePlayerAction, wipeAnnotationAction, resetAnnotationAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress, enableAudtranscMain }
+  { updateSession, updateActiveFolder, updatePlayerAction, wipeAnnotationAction, resetAnnotationAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress, enableAudtranscMain}
 )(App));

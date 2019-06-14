@@ -19,9 +19,50 @@
             "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
             "windows": {
                 "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
+                },
+            "args" : ["./public/electron-debug.js"],
+            "outputCapture": "std",
+            "protocol": "inspector"
+        },
+        {
+            "name": "Electron: Main",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "args": ["public/electron-debug.js"],
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+              "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
             },
-            "args" : ["."],
-            "outputCapture": "std"
-        }
+            "preLaunchTask": "DebugMode",
+            "runtimeArgs": [
+              "--remote-debugging-port=9223",
+              "./public/electron-debug.js"
+            ],
+            "env": {
+              "NODE_ENV": "development",
+              "HOT": "1",
+              "HIDE_DEV_TOOLS": "1"
+            },
+            "protocol": "inspector",
+            "sourceMaps": true,
+            "outFiles": [],
+            "timeout": 150000
+          },
+          {
+            "name": "Electron: Renderer",
+            "type": "chrome",
+            "request": "attach",
+            "url": "http://localhost:3000",
+            "port": 9223,
+            "webRoot": "${workspaceFolder}",
+            "timeout": 150000
+          }
+    ],
+    "compounds": [
+        {
+            "name": "Electron: All",
+            "configurations": ["Electron: Main", "Electron: Renderer"]
+          }
     ]
 }

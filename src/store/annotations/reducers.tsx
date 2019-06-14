@@ -1,6 +1,6 @@
 // src/store/tree/reducers.ts
 import * as annTy from "./types";
-import {map} from "redux-data-structures"
+//import {map} from "redux-data-structures"
 
 /* export function audCareful_Main() {
  return map({
@@ -26,7 +26,6 @@ export function annotationReducer(
   state = initialState,
   action: annTy.AnnotationActionTypes
 ): annTy.AnnotationState {
-  let annotations = initialState.annotations
   switch (action.type) {
     case annTy.RESET_ANNOTATION_SESSION: {
       return {
@@ -88,12 +87,14 @@ export function annotationReducer(
     }
     case annTy.ENABLE_AUDTRANSL_MAIN: {
       return {
-        ...state
+        ...state,
+        audTransl_Main: true
       };
     }
     case annTy.DISABLE_AUDTRANSL_MAIN: {
       return {
-        ...state
+        ...state,
+        audTransl_Main: false
       };
     }
     case annTy.ENABLE_AUDTRANSC_MAIN: {

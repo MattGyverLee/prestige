@@ -2,8 +2,9 @@
 import { UPDATE_TREE, ActiveFolderState, TreeActionTypes } from "./types";
 
 const initialState: ActiveFolderState = {
+  env: "",
   path: "",
-  URI: ""
+  loaded: false
 };
 
 export function treeReducer(

@@ -7,7 +7,7 @@ const envMode = process.env.NODE_ENV
 const path = require('path');
 const url = require('url');
 const isDev = require('electron-is-dev');
-//ToDo: Remove thiss and follow instructions here:
+//ToDo: Remove this and follow instructions here:
 //https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
@@ -24,9 +24,6 @@ function createWindow() {
   imageWindow.loadURL(isDev ? 'http://localhost:3000/image' : `file://${path.join(__dirname, '../build/index.html')}`);
   settingsWindow.loadURL(isDev ? 'http://localhost:3000/settings' : `file://${path.join(__dirname, '../build/index.html')}`);
 
-  mainWindow.webContents.openDevTools();
-
-
   mainWindow.on('closed', () => mainWindow = null);
 
   imageWindow.on('close', (e) => {
@@ -38,23 +35,9 @@ function createWindow() {
     e.preventDefault();
     settingsWindow.hide();
   });
-  /*mainWindow.webContents.on('did-finish-load', () => {
-    let windowTitle = "Prestige: " + appMode+ "- " + envMode
-    mainWindow.setTitle(windowTitle)
-  })*/
 }
 
-app.on('ready', async () => {
-    const path = require('path')
-    const os = require('os')
-    BrowserWindow.addDevToolsExtension(
-    path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0')
-    )
-    BrowserWindow.addDevToolsExtension(
-    path.join(os.homedir(), '/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0')
-    )
-    createWindow()
-})
+app.on('ready', createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

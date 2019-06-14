@@ -35,7 +35,6 @@ interface PlayProps {
     refreshApp?: (event: UpdatePlayerParam) => void
   }
 
-const valid: boolean = true;
 class PlayerZone extends Component<PlayProps> {
 
     private player!:ReactPlayer

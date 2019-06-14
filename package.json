@@ -12,6 +12,7 @@
     "web-prod": "set NODE_ENV=production&& env-cmd -f .env.web craco start --config craco.config.web.js",
     "electron-dev-mac": "concurrently \"BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electron .\"",
     "electron-dev": "env-cmd -f .env.electron concurrently \"yarn start \" \"wait-on http://localhost:3000 && electron public/electron-dev.js\"",
+    "electron-debug": "env-cmd -f .env.electron craco start",
     "electron-prod": "set NODE_ENV=production&& env-cmd -f .env.electron concurrently \"yarn start \" \"wait-on http://localhost:3000 && electron public/electron.js\"",
     "postinstall": "electron-builder install-app-deps",
     "electron-pack": "build -w"
