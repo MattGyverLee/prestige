@@ -10,6 +10,9 @@ import { updateSession } from "./store/system/actions";
 import { ActiveFolderState } from "./store/tree/types";
 import { updateActiveFolder } from "./store/tree/actions";
 import { MediaPlayerState } from "./store/player/types";
+import * as annAc from "./store/annotations/actions";
+import { wipeAnnotationAction, resetAnnotationAction, enableAudtranscMain } from "./store/annotations/actions";
+import { AnnotationState } from "./store/annotations/types";
 import { 
   playPause, 
   stopPlaying, 
@@ -19,7 +22,6 @@ import {
   onEnded,
   onProgress} from "./store/player/actions";
 import TestFs from "./model/testFs";
-import classes from './App.module.css';
 import PlayerZone from "./model/player";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
@@ -27,8 +29,10 @@ export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 interface AppProps {
   system: SystemState,
   updateSession: typeof updateSession;
+  
   tree?: ActiveFolderState;
   updateActiveFolder: typeof updateActiveFolder;
+  
   player: MediaPlayerState;
   updatePlayerAction: typeof updatePlayerAction;
   playPause: typeof playPause;
@@ -37,6 +41,11 @@ interface AppProps {
   onPlay: typeof onPlay;
   onEnded: typeof onEnded;
   onProgress: typeof onProgress;
+
+  annotation?: AnnotationState;
+  wipeAnnotationAction: typeof wipeAnnotationAction;
+  resetAnnotationAction: typeof resetAnnotationAction;
+  enableAudtranscMain: typeof enableAudtranscMain;
 }
 
 class App extends React.Component<AppProps> {
@@ -100,27 +109,33 @@ class App extends React.Component<AppProps> {
   render() {
     return (
       <div className="App">
-      <header className="App-header">
-        <p>{this.props.system.userName}, welcome to <code>Prestige</code>. <img src={logo} className="App-logo" alt="logo"/></p>
-        <PlayerZone 
-          url={this.props.player.url} 
-          playing={this.props.player.playing}
-          muted={this.props.player.muted}
-          playbackRate={this.props.player.playbackRate}
-          volume={this.props.player.volume}
-          loop={this.props.player.loop}
-          played={this.props.player.played}
-          playPause={this.playPause}
-          stopPlaying={this.stopPlaying}
-          toggleLoop={this.toggleLoop}
-          onPlay={this.onPlay}
-          onEnded={this.onEnded}
-          onProgress={this.onProgress}
-        />
-      </header>
-        <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
-        <p><textarea className={classes.TextArea} value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
-    </div>
+        <header className="App-header">
+        <p><img src={logo} className="App-logo" alt="logo"/> Hi {this.props.system.userName}. Welcome to <code>Prestige</code>.</p>
+        </header>
+        <div className="App-body">
+          <div className="App-sidebar">
+          <PlayerZone 
+            url={this.props.player.url} 
+            playing={this.props.player.playing}
+            muted={this.props.player.muted}
+            playbackRate={this.props.player.playbackRate}
+            volume={this.props.player.volume}
+            loop={this.props.player.loop}
+            played={this.props.player.played}
+            playPause={this.playPause}
+            stopPlaying={this.stopPlaying}
+            toggleLoop={this.toggleLoop}
+            onPlay={this.onPlay}
+            onEnded={this.onEnded}
+            onProgress={this.onProgress}
+          />
+          </div>
+          <div className="DetailsZone">
+            <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
+            <p><textarea value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
+          </div>
+        </div>  
+      </div>
     );
   }
 };
@@ -129,7 +144,8 @@ class App extends React.Component<AppProps> {
 const mapStateToProps = (state: AppState) => ({
   system: state.system,
   tree: state.tree,
-  player: state.player
+  player: state.player,
+  annotations: state.annotations
 });
 
 /* const mapDispatchToProps = (dispatch: any) => {
@@ -141,5 +157,5 @@ const mapStateToProps = (state: AppState) => ({
 
 export default hot(module)(connect(
   mapStateToProps,
-  { updateSession, updateActiveFolder, updatePlayerAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress }
+  { updateSession, updateActiveFolder, updatePlayerAction, wipeAnnotationAction, resetAnnotationAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress, enableAudtranscMain }
 )(App));

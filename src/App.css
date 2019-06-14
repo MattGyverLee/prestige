@@ -12,20 +12,92 @@
 
 .App-logo {
   animation: rock infinite 3s linear;
-  height: 10vmin;
+  height: 50px;
   pointer-events: none;
-  float: left;
+  vertical-align: middle;
 }
 
 .App-header {
   background-color: #282c34;
-  min-height: 20vh;
+  min-height: 5vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+}
+.App-body {
+  background-color: #525252;
+  min-height: 80vh;
+  height: 80vh;
+  min-width: 95vw;
+  display: flex;
+  flex-direction: row;
+  align-content: stretch;
+  justify-content: space-between;
+  font-size: calc(10px + .5vmin);
+  color: white;
+  padding: 10px; 
+}
+
+.App-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 250px;
+  width: 40vw;
+  max-width: 70vw;
+  border-right-style: dotted;
+  border-right-width: 2px;
+  border-color: rgb(164, 170, 175);
+  resize: horizontal;
+  overflow: auto;
+  align-content: stretch;
+  justify-content: space-between;
+}
+
+.player-wrapper {
+  position: top;
+  width:inherit;
+  padding: 10px;
+  height:300px;
+  min-height: 10vh;
+  resize: vertical;
+  overflow: auto;
+  border-color: rgb(164, 170, 175);
+  border-bottom-style: dashed;
+  border-bottom-width: 1px;
+}
+.audio-Layers {
+  width:inherit;
+  padding: 10px;
+  min-height: 3vh;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  align-content: stretch;
+  justify-content: space-around;
+  overflow: auto;
+  border-color: rgb(164, 170, 175);
+  border-bottom-style: dashed;
+  border-bottom-width: 1px;
+}
+
+.mediaControls {
+  width:inherit;
+}
+
+.mediaControls table {
+  width: 250px
+}
+
+.react-player__preview {
+  min-height: 40vh;
+}
+
+.DetailsZone {
+  flex-grow: 1;
+  flex: 3;
 }
 
 .App-link {
