@@ -15,6 +15,7 @@ import { MediaPlayerState } from "./store/player/types";
 //import * as annAc from "./store/annotations/actions";
 import { wipeAnnotationAction, resetAnnotationAction, enableAudtranscMain } from "./store/annotations/actions";
 import { AnnotationState } from "./store/annotations/types";
+import { Worker } from 'worker_threads';
 import { 
   playPause, 
   stopPlaying, 
@@ -138,10 +139,24 @@ class App extends React.Component<AppProps> {
   }
   updateActiveFolder = (inputFolder: Folders) => {
     this.props.updateActiveFolder(inputFolder)
-    const fs = electron.remote.require('fs')
-    var files = fs.readdirSync(inputFolder.folderPath);
-    console.log(files)
+    //this.processFolderService(inputFolder.folderPath);
   } 
+
+  
+/*
+  processFolderService(workerData: any) {
+    return new Promise((resolve, reject) => {
+      //const worker = require('worker_threads');
+      const worker = new Worker('./model/fileScanner', { workerData });
+      worker.on('message', resolve);
+      worker.on('error', reject);
+      worker.on('exit', (code: number) => {
+        if (code !== 0)
+          reject(new Error(`Worker stopped with exit code ${code}`));
+      })
+    })
+  } 
+  */
   
   render() {
     return (
