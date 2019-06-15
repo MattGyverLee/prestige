@@ -1,5 +1,6 @@
 
 import React from 'react';
+import electron from 'electron'
 import { connect } from "react-redux";
 import './App.css';
 import { hot } from 'react-hot-loader'
@@ -8,8 +9,8 @@ import { AppState } from './store'
 import { SystemState } from "./store/system/types";
 import SelectFolderZone from "./model/folderSelection" 
 import { updateSession } from "./store/system/actions";
-import { ActiveFolderState } from "./store/tree/types";
-import { updateActiveFolder } from "./store/tree/actions";
+import { ActiveFolderState, Folders } from "./store/tree/types";
+import { updateTree, updateActiveFolder } from "./store/tree/actions";
 import { MediaPlayerState } from "./store/player/types";
 //import * as annAc from "./store/annotations/actions";
 import { wipeAnnotationAction, resetAnnotationAction, enableAudtranscMain } from "./store/annotations/actions";
@@ -32,6 +33,7 @@ interface AppProps {
   
   tree: ActiveFolderState;
   updateActiveFolder: typeof updateActiveFolder;
+  updateTree: typeof updateTree;
   
   player: MediaPlayerState;
   updatePlayerAction: typeof updatePlayerAction;
@@ -51,15 +53,17 @@ interface AppProps {
 class App extends React.Component<AppProps> {
   componentDidMount() {
     if (isElectron) {
-      this.props.updateActiveFolder({
+      this.props.updateTree({
         env: "electron",
-        path: "local",
-        loaded: true
+        folderName: "",
+        folderPath: "",
+        loaded: false
       })} else {
-        this.props.updateActiveFolder({
+        this.props.updateTree({
           env: "web",
-          path: "bing",
-          loaded: true,
+          folderName: "",
+          folderPath: "",
+          loaded: false
         })}
     this.props.updateSession({
       loggedIn: true,
@@ -67,6 +71,20 @@ class App extends React.Component<AppProps> {
       userName: "Matthew",
       clicks: 0
     });
+    let cleanStore = {
+      annotations: {},
+      annotationSet: {},
+      audCareful_Main: false,
+      audTransl_Main: false,
+      txtTransc_Main: false,
+      txtTransc_Subtitle: false,
+      txtTransl_Main: false,
+      txtTransl_Subtitle: false,
+      SayMoreMeta_Main: false,
+      fileInfo_Main: false,
+    }
+    this.props.wipeAnnotationAction(cleanStore)
+
     this.props.updatePlayerAction({
       url: "http://www.youtube.com/watch?v=Fc1P-AEaEp8",
       //url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
@@ -82,20 +100,7 @@ class App extends React.Component<AppProps> {
       loop: false,
       seeking: false
     })
-    let cleanStore = {
-      annotations: {},
-      annotationSet: {},
-      audCareful_Main: false,
-      audTransl_Main: false,
-      txtTransc_Main: false,
-      txtTransc_Subtitle: false,
-      txtTransl_Main: false,
-      txtTransl_Subtitle: false,
-      SayMoreMeta_Main: false,
-      fileInfo_Main: false,
-    }
     
-    this.props.wipeAnnotationAction(cleanStore)
     this.props.enableAudtranscMain()
   }
 
@@ -131,8 +136,11 @@ class App extends React.Component<AppProps> {
       //this.setState(playState)
   }
   }
-  onUpdatePath = () => {
-    console.log('onUpdatePath not defined')
+  updateActiveFolder = (inputFolder: Folders) => {
+    this.props.updateActiveFolder(inputFolder)
+    const fs = electron.remote.require('fs')
+    var files = fs.readdirSync(inputFolder.folderPath);
+    console.log(files)
   } 
   
   render() {
@@ -164,8 +172,15 @@ class App extends React.Component<AppProps> {
             <p><textarea value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
           </div>
         </div>
+        <p>{this.props.tree.loaded}</p>
         <div className="App-footer">
-          <SelectFolderZone env={this.props.tree.env} folder={this.props.tree.path} loaded={this.props.tree.loaded} />
+          <SelectFolderZone 
+            env={this.props.tree.env} 
+            folderPath={this.props.tree.folderPath}
+            folderName={this.props.tree.folderName} 
+            updateActiveFolder={this.props.updateActiveFolder}
+            loaded={this.props.tree.loaded} 
+             />
         </div>
       </div>
     );
@@ -189,5 +204,5 @@ const mapStateToProps = (state: AppState) => ({
 
 export default hot(module)(connect(
   mapStateToProps,
-  { updateSession, updateActiveFolder, updatePlayerAction, wipeAnnotationAction, resetAnnotationAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress, enableAudtranscMain}
+  { updateSession, updateActiveFolder, updateTree, updatePlayerAction, wipeAnnotationAction, resetAnnotationAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress, enableAudtranscMain}
 )(App));

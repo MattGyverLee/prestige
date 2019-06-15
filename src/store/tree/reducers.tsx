@@ -1,9 +1,10 @@
 // src/store/tree/reducers.ts
-import { UPDATE_TREE, ActiveFolderState, TreeActionTypes } from "./types";
+import { UPDATE_TREE, UPDATE_ACTIVE_FOLDER, ActiveFolderState, TreeActionTypes } from "./types";
 
 const initialState: ActiveFolderState = {
   env: "",
-  path: "",
+  folderName: "",
+  folderPath: "",
   loaded: false
 };
 
@@ -16,6 +17,14 @@ export function treeReducer(
       return {
         ...state,
         ...action.payload
+      };
+    }
+    case UPDATE_ACTIVE_FOLDER: {
+      return {
+        ...state,
+        folderName: action.payload.folderName,
+        folderPath: action.payload.folderPath,
+        loaded: true
       };
     }
     default:
