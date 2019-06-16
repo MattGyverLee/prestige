@@ -17,7 +17,7 @@
           "background": {
             "activeOnStart": false,
             "beginsPattern": "Starting the development server\\.\\.\\.$",
-            "endsPattern": "(Compiled successfully|Failed to compile|To create a production build, use yarn build\\.)"
+            "endsPattern": "(Compiled successfully|Compiled with warnings\\.|Failed to compile|To create a production build, use yarn build\\.)"
           }
         }
       }

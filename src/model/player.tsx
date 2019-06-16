@@ -10,21 +10,21 @@ import '../App.css';
 
 
 interface PlayProps {
-    url: string,
-    playing: boolean,
-    volume: number,
-    muted: boolean,
-    playbackRate: number,
-    parent?: any,
-    loop: boolean,
-    loaded?: number,
-    played: number,
-    pip?: boolean,
-    duration?: number,
     controls?: boolean,
+    duration?: number,
+    loaded?: number,
+    loop: boolean,
+    muted: boolean,
+    parent?: any,
+    pip?: boolean,
+    playbackRate: number,
+    played: number,
     player?: any,
+    playing: boolean,
     seeking?: boolean,
-    state?: any
+    state?: any,
+    url: string,
+    volume: number,
 
     playPause: () => void;
     stopPlaying: () => void;

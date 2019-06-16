@@ -5,11 +5,11 @@
 export class AnnotDetail extends Object {
     audCareful?: string;
     audTransl?: string;
-    txtTransc?: string;
-    txtTransl?: string;
     id?: number;
     startTime?: number;
     stopTime?: number;
+    txtTransc?: string;
+    txtTransl?: string;
   
 }
 
@@ -22,7 +22,7 @@ export interface AnnotationState {
     txtTransc_Subtitle: boolean;
     txtTransl_Main: boolean;
     txtTransl_Subtitle: boolean;
-    SayMoreMeta_Main: boolean;
+    sayMoreMeta_Main: boolean;
     fileInfo_Main: boolean;
   }
 
@@ -42,30 +42,30 @@ export interface AnnotationState {
 
   //todo: switch to index
   // Describing the different ACTION NAMES available
-  export const RESET_ANNOTATION_SESSION = "RESET_ANNOTATION_SESSION";
-  export const WIPE_ANNOTATION_SESSION = "WIPE_ANNOTATION_SESSION";
   export const ADD_ANNOTATION = "ADD_ANNOTATION";
-  export const UPDATE_ANNOTATION = "UPDATE_ANNOTATION";
-  export const REMOVE_ANNOTATION = "REMOVE_ANNOTATION";
   export const ADD_ANNOTATIONSET = "ADD_ANNOTATIONSET";
-  export const UPDATE_ANNOTATIONSET = "UPDATE_ANNOTATIONSET";
-  export const REMOVE_ANNOTATIONSET = "REMOVE_ANNOTATIONSET";
-  export const ENABLE_AUDCAREFUL_MAIN = "ENABLE_AUDCAREFUL_MAIN";
   export const DISABLE_AUDCAREFUL_MAIN = "DISABLE_AUDCAREFUL_MAIN";
-  export const ENABLE_AUDTRANSL_MAIN = "ENABLE_AUDTRANSL_MAIN";
-  export const DISABLE_AUDTRANSL_MAIN = "DISABLE_AUDTRANSL_MAIN";
-  export const ENABLE_AUDTRANSC_MAIN = "ENABLE_AUDTRANSC_MAIN";
   export const DISABLE_AUDTRANSC_MAIN = "DISABLE_AUDTRANSC_MAIN";
-  export const ENABLE_TRANSC_SUB = "ENABLE_TRANSC_SUB";
-  export const DISABLE_TRANSC_SUB = "DISABLE_TRANSC_SUB";
-  export const ENABLE_TXTTRANSL_MAIN = "ENABLE_TXTTRANSL_MAIN";
-  export const DISABLE_TXTTRANSL_MAIN = "DISABLE_TXTTRANSL_MAIN";
-  export const ENNABLE_AUDTRANSL_SUB = "ENNABLE_AUDTRANSL_SUB";
+  export const DISABLE_AUDTRANSL_MAIN = "DISABLE_AUDTRANSL_MAIN";
   export const DISABLE_AUDTRANSL_SUB = "DISABLE_AUDTRANSL_SUB";
-  export const ENABLE_META_MAIN = "ENABLE_META_MAIN";
-  export const DISABLE_META_MAIN = "DISABLE_META_MAIN";
-  export const ENABLE_FILEINFO = "ENABLE_FILEINFO";
   export const DISABLE_FILEINFO = "DISABLE_FILEINFO";
+  export const DISABLE_META_MAIN = "DISABLE_META_MAIN";
+  export const DISABLE_TRANSC_SUB = "DISABLE_TRANSC_SUB";
+  export const DISABLE_TXTTRANSL_MAIN = "DISABLE_TXTTRANSL_MAIN";
+  export const ENABLE_AUDCAREFUL_MAIN = "ENABLE_AUDCAREFUL_MAIN";
+  export const ENABLE_AUDTRANSC_MAIN = "ENABLE_AUDTRANSC_MAIN";
+  export const ENABLE_AUDTRANSL_MAIN = "ENABLE_AUDTRANSL_MAIN";
+  export const ENABLE_FILEINFO = "ENABLE_FILEINFO";
+  export const ENABLE_META_MAIN = "ENABLE_META_MAIN";
+  export const ENABLE_TRANSC_SUB = "ENABLE_TRANSC_SUB";
+  export const ENABLE_TXTTRANSL_MAIN = "ENABLE_TXTTRANSL_MAIN";
+  export const ENNABLE_AUDTRANSL_SUB = "ENNABLE_AUDTRANSL_SUB";
+  export const REMOVE_ANNOTATION = "REMOVE_ANNOTATION";
+  export const REMOVE_ANNOTATIONSET = "REMOVE_ANNOTATIONSET";
+  export const RESET_ANNOTATION_SESSION = "RESET_ANNOTATION_SESSION";
+  export const UPDATE_ANNOTATION = "UPDATE_ANNOTATION";
+  export const UPDATE_ANNOTATIONSET = "UPDATE_ANNOTATIONSET";
+  export const WIPE_ANNOTATION_SESSION = "WIPE_ANNOTATION_SESSION";
     
   interface ResetAnnotationAction {
     type: typeof RESET_ANNOTATION_SESSION,

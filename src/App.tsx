@@ -1,6 +1,6 @@
 
 import React from 'react';
-import electron from 'electron'
+//import electron from 'electron'
 import { connect } from "react-redux";
 import './App.css';
 import { hot } from 'react-hot-loader'
@@ -8,47 +8,73 @@ import logo from './assets/icons/png/256x256.png';
 import { AppState } from './store'
 import { SystemState } from "./store/system/types";
 import SelectFolderZone from "./model/folderSelection" 
-import { updateSession } from "./store/system/actions";
-import { ActiveFolderState, Folders } from "./store/tree/types";
-import { updateTree, updateActiveFolder } from "./store/tree/actions";
+import { updateSession} from "./store/system/actions";
+import { ActiveFolderState, Folders, FileDesc } from "./store/tree/types";
+import  {
+  updateActiveFolder,
+  updateTree,
+  fileAdded,
+  mediaAdded,
+  fileChanged,
+  mediaChanged,
+  fileDeleted
+} from "./store/tree/actions";
 import { MediaPlayerState } from "./store/player/types";
 //import * as annAc from "./store/annotations/actions";
-import { wipeAnnotationAction, resetAnnotationAction, enableAudtranscMain } from "./store/annotations/actions";
-import { AnnotationState } from "./store/annotations/types";
-import { Worker } from 'worker_threads';
 import { 
-  playPause, 
-  stopPlaying, 
-  updatePlayerAction, 
-  toggleLoop, 
-  onPlay, 
+  //addAnnotation,
+  //enableAudcarefulMain,
+  enableAudtranscMain,
+  //removeAnnotation,
+  resetAnnotationAction,
+  wipeAnnotationAction
+} from "./store/annotations/actions";
+import { AnnotationState } from "./store/annotations/types";
+ 
+
+import {
   onEnded,
-  onProgress} from "./store/player/actions";
-import TestFs from "./model/testFs";
+  onPlay,
+  onProgress,
+  playPause,
+  stopPlaying,
+  toggleLoop,
+  updatePlayerAction
+
+} from "./store/player/actions";
+import getDirectoryListing from "./model/testFs";
 import PlayerZone from "./model/player";
 const isElectron = process.env.REACT_APP_MODE === 'electron'
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
+
 interface AppProps {
   system: SystemState,
   updateSession: typeof updateSession;
   
   tree: ActiveFolderState;
+  fileAdded: typeof fileAdded;
+  mediaAdded: typeof mediaAdded;
+  fileChanged: typeof fileChanged;
+  mediaChanged: typeof mediaChanged;
+  fileDeleted: typeof fileDeleted;
   updateActiveFolder: typeof updateActiveFolder;
   updateTree: typeof updateTree;
   
   player: MediaPlayerState;
-  updatePlayerAction: typeof updatePlayerAction;
+  onEnded: typeof onEnded;
+  onPlay: typeof onPlay;
+  onProgress: typeof onProgress;
   playPause: typeof playPause;
   stopPlaying: typeof stopPlaying;
   toggleLoop: typeof toggleLoop;
-  onPlay: typeof onPlay;
-  onEnded: typeof onEnded;
-  onProgress: typeof onProgress;
+  updatePlayerAction: typeof updatePlayerAction;
 
   annotation?: AnnotationState;
-  wipeAnnotationAction: typeof wipeAnnotationAction;
-  resetAnnotationAction: typeof resetAnnotationAction;
   enableAudtranscMain: typeof enableAudtranscMain;
+  resetAnnotationAction: typeof resetAnnotationAction;
+  wipeAnnotationAction: typeof wipeAnnotationAction;
+
+  getDirectoryListing: typeof getDirectoryListing;
 }
 
 class App extends React.Component<AppProps> {
@@ -58,13 +84,17 @@ class App extends React.Component<AppProps> {
         env: "electron",
         folderName: "",
         folderPath: "",
-        loaded: false
+        loaded: false,
+        availableFiles: [],
+        availableMedia: []
       })} else {
         this.props.updateTree({
           env: "web",
           folderName: "",
           folderPath: "",
-          loaded: false
+          loaded: false,
+          availableFiles: [],
+          availableMedia: []
         })}
     this.props.updateSession({
       loggedIn: true,
@@ -77,29 +107,29 @@ class App extends React.Component<AppProps> {
       annotationSet: {},
       audCareful_Main: false,
       audTransl_Main: false,
+      fileInfo_Main: false,
+      sayMoreMeta_Main: false,
       txtTransc_Main: false,
       txtTransc_Subtitle: false,
       txtTransl_Main: false,
-      txtTransl_Subtitle: false,
-      SayMoreMeta_Main: false,
-      fileInfo_Main: false,
+      txtTransl_Subtitle: false
     }
     this.props.wipeAnnotationAction(cleanStore)
 
     this.props.updatePlayerAction({
+      controls: false,
+      duration: -1,
+      loaded: false,
+      loop: false,
+      muted: false,
+      pip: false,
+      playbackRate: 1.0,
+      played: false,
+      playing: false,
+      seeking: false,
       url: "http://www.youtube.com/watch?v=Fc1P-AEaEp8",
       //url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
-      playing: false,
-      volume: 0.8,
-      muted: false,
-      playbackRate: 1.0,
-      controls: false,
-      played: false,
-      pip: false,
-      loaded: false,
-      duration: -1,
-      loop: false,
-      seeking: false
+      volume: 0.8
     })
     
     this.props.enableAudtranscMain()
@@ -141,22 +171,13 @@ class App extends React.Component<AppProps> {
     this.props.updateActiveFolder(inputFolder)
     //this.processFolderService(inputFolder.folderPath);
   } 
-
-  
-/*
-  processFolderService(workerData: any) {
-    return new Promise((resolve, reject) => {
-      //const worker = require('worker_threads');
-      const worker = new Worker('./model/fileScanner', { workerData });
-      worker.on('message', resolve);
-      worker.on('error', reject);
-      worker.on('exit', (code: number) => {
-        if (code !== 0)
-          reject(new Error(`Worker stopped with exit code ${code}`));
-      })
-    })
+  fileAdded = (inputFile: FileDesc) => {
+    this.props.fileAdded(inputFile)
   } 
-  */
+  mediaAdded = (inputFile: FileDesc) => {
+    this.props.mediaAdded(inputFile)
+  } 
+
   
   render() {
     return (
@@ -184,7 +205,7 @@ class App extends React.Component<AppProps> {
           </div>
           <div className="DetailsZone">
             <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
-            <p><textarea value={TestFs.getDirectoryListing()} readOnly rows={20} /></p>
+            <p><textarea cols={60} value={getDirectoryListing(this.props.tree.availableMedia)} readOnly rows={20} /></p>
           </div>
         </div>
         <p>{this.props.tree.loaded}</p>
@@ -194,7 +215,14 @@ class App extends React.Component<AppProps> {
             folderPath={this.props.tree.folderPath}
             folderName={this.props.tree.folderName} 
             updateActiveFolder={this.props.updateActiveFolder}
-            loaded={this.props.tree.loaded} 
+            loaded={this.props.tree.loaded}
+            availableFiles={this.props.tree.availableFiles}
+            availableMedia={this.props.tree.availableMedia}
+            fileAdded={this.props.fileAdded}
+            mediaAdded={this.props.mediaAdded}
+            fileChanged={this.props.fileChanged}
+            mediaChanged={this.props.mediaChanged}
+            fileDeleted={this.props.fileDeleted}
              />
         </div>
       </div>
@@ -210,14 +238,28 @@ const mapStateToProps = (state: AppState) => ({
   annotations: state.annotations
 });
 
-/* const mapDispatchToProps = (dispatch: any) => {
-  return {
-    // dispatching plain actions
-    stopPlaying2: () => dispatch({ type: 'STOP_PLAYING' }),
-  }
-} */
 
 export default hot(module)(connect(
-  mapStateToProps,
-  { updateSession, updateActiveFolder, updateTree, updatePlayerAction, wipeAnnotationAction, resetAnnotationAction, playPause, stopPlaying, toggleLoop, onPlay, onEnded, onProgress, enableAudtranscMain}
+  mapStateToProps, 
+  { 
+    enableAudtranscMain,
+    fileAdded,
+    fileChanged,
+    fileDeleted,
+    getDirectoryListing,
+    mediaAdded,
+    mediaChanged,
+    onEnded, 
+    onPlay, 
+    onProgress, 
+    playPause, 
+    resetAnnotationAction, 
+    stopPlaying, 
+    toggleLoop, 
+    updateActiveFolder, 
+    updatePlayerAction, 
+    updateSession, 
+    updateTree, 
+    wipeAnnotationAction 
+  }
 )(App));

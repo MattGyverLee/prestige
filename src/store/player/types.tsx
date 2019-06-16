@@ -1,27 +1,27 @@
 // Describing the shape of the tree's slice of state
 export interface MediaPlayerState {
-    url: string,
-    playing: boolean,
-    volume: number,
-    muted: boolean,
-    playbackRate: number,
-    loop: boolean,
-    loaded: boolean,
-    played: any,
-    pip: boolean,
-    duration?: number,
     controls?: boolean,
-    seeking?: boolean
+    duration?: number,
+    loaded: boolean,
+    loop: boolean,
+    muted: boolean,
+    pip: boolean,
+    playbackRate: number,
+    played: any,
+    playing: boolean,
+    seeking?: boolean,
+    url: string,
+    volume: number
   }
   // Describing the different ACTION NAMES available
-  export const UPDATE_PLAYER_SESSION = "UPDATE_PLAYER_SESSION";
+  export const ON_ENDED = "ON_ENDED";
+  export const ON_PLAY = "ON_PLAY";
+  export const ON_PROGRESS = "ON_PROGESS";
   export const PLAY_PAUSE = "PLAY_PAUSE";
-  export const STOP_PLAYING = "STOP_PLAYING"
-  export const TOGGLE_LOOP = "TOGGLE_LOOP"
-  export const SET_VOLUME = "SET_VOLUME"
-  export const ON_PLAY = "ON_PLAY"
-  export const ON_ENDED = "ON_ENDED"
-  export const ON_PROGRESS = "ON_PROGESS"
+  export const SET_VOLUME = "SET_VOLUME";
+  export const STOP_PLAYING = "STOP_PLAYING";
+  export const TOGGLE_LOOP = "TOGGLE_LOOP";
+  export const UPDATE_PLAYER_SESSION = "UPDATE_PLAYER_SESSION";
   
   
   interface UpdatePlayerAction {
@@ -55,4 +55,12 @@ export interface MediaPlayerState {
 
 
 
-  export type PlayerActionTypes = UpdatePlayerAction | PlayPause | StopPlaying | ToggleLoop | SetVolume | OnPlay | OnEnded | OnProgress;
+  export type PlayerActionTypes = 
+  UpdatePlayerAction | 
+  PlayPause | 
+  StopPlaying | 
+  ToggleLoop | 
+  SetVolume | 
+  OnPlay | 
+  OnEnded | 
+  OnProgress;

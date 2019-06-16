@@ -14,12 +14,12 @@ const initialState: annTy.AnnotationState = {
   annotationSet: {},
   audCareful_Main: false,
   audTransl_Main: false,
+  fileInfo_Main: false,
+  sayMoreMeta_Main: false,
   txtTransc_Main: false,
   txtTransc_Subtitle: false,
   txtTransl_Main: false,
   txtTransl_Subtitle: false,
-  SayMoreMeta_Main: false,
-  fileInfo_Main: false,
 }
 
 export function annotationReducer(
