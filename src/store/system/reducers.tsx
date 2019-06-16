@@ -1,11 +1,12 @@
 // src/store/system/reducers.ts
-import { UPDATE_SESSION, SystemState, SystemActionTypes } from "./types";
+
+import { SystemActionTypes, SystemState, UPDATE_SESSION } from "./types";
 
 const initialState: SystemState = {
+  clicks: 0,
   loggedIn: false,
   session: "",
-  userName: "",
-  clicks: 0
+  userName: ""
 };
 
 export function systemReducer(

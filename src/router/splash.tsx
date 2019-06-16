@@ -1,6 +1,7 @@
-import React from 'react';
-import logo from './assets/icons/png/512x512.png';
-import './App.css';
+import "./App.css";
+
+import React from "react";
+import logo from "./assets/icons/png/512x512.png";
 
 const splash: React.FC = () => {
   return (
@@ -13,6 +14,6 @@ const splash: React.FC = () => {
       </header>
     </div>
   );
-}
+};
 
 export default splash;

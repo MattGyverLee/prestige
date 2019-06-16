@@ -3,11 +3,21 @@
 }
 
 @keyframes rock {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(-5deg); }
-  50% { transform: rotate(0deg); }
-  75% { transform: rotate(5deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 .App-logo {
@@ -29,16 +39,16 @@
 }
 .App-body {
   background-color: #525252;
-  min-height: 80vh;
-  height: 80vh;
+  min-height: 75vh;
+  height: 75vh;
   min-width: 95vw;
   display: flex;
   flex-direction: row;
   align-content: stretch;
   justify-content: space-between;
-  font-size: calc(10px + .5vmin);
+  font-size: calc(10px + 0.5vmin);
   color: white;
-  padding: 10px; 
+  padding: 10px;
 }
 
 .App-sidebar {
@@ -58,9 +68,9 @@
 
 .player-wrapper {
   position: top;
-  width:inherit;
+  width: inherit;
   padding: 10px;
-  height:300px;
+  height: 300px;
   min-height: 10vh;
   resize: vertical;
   overflow: auto;
@@ -69,7 +79,7 @@
   border-bottom-width: 1px;
 }
 .audio-Layers {
-  width:inherit;
+  width: inherit;
   padding: 10px;
   min-height: 3vh;
   height: auto;
@@ -84,11 +94,11 @@
 }
 
 .mediaControls {
-  width:inherit;
+  width: inherit;
 }
 
 .mediaControls table {
-  width: 250px
+  width: 250px;
 }
 
 .react-player__preview {

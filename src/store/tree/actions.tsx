@@ -1,13 +1,13 @@
-import { 
-  ActiveFolderState, 
-  Folders, 
-  FileDesc, 
-  FILE_ADDED, 
-  MEDIA_ADDED,
+import {
+  ActiveFolderState,
+  FILE_ADDED,
   FILE_CHANGED,
-  MEDIA_CHANGED,
   FILE_DELETED,
-  UPDATE_ACTIVE_FOLDER, 
+  FileDesc,
+  Folders,
+  MEDIA_ADDED,
+  MEDIA_CHANGED,
+  UPDATE_ACTIVE_FOLDER,
   UPDATE_TREE
 } from "./types";
 

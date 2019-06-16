@@ -1,11 +1,11 @@
-import { createStore, combineReducers, applyMiddleware } from "redux";
-import thunkMiddleware from "redux-thunk";
-import { composeWithDevTools } from "redux-devtools-extension";
+import { applyMiddleware, combineReducers, createStore } from "redux";
 
-import { systemReducer } from "./system/reducers";
-import { treeReducer } from "./tree/reducers";
-import { playerReducer } from "./player/reducers";
 import { annotationReducer } from "./annotations/reducers";
+import { composeWithDevTools } from "redux-devtools-extension";
+import { playerReducer } from "./player/reducers";
+import { systemReducer } from "./system/reducers";
+import thunkMiddleware from "redux-thunk";
+import { treeReducer } from "./tree/reducers";
 
 const rootReducer = combineReducers({
   system: systemReducer,

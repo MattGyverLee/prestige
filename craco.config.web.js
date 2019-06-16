@@ -1,7 +1,7 @@
 module.exports = {
-    webpack: {
-        configure: {
-            target: 'web'
-        }
+  webpack: {
+    configure: {
+      target: "web"
     }
+  }
 };

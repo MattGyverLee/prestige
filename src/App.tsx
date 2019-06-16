@@ -1,37 +1,22 @@
+import "./App.css";
 
-import React from 'react';
-//import electron from 'electron'
-import { connect } from "react-redux";
-import './App.css';
-import { hot } from 'react-hot-loader'
-import logo from './assets/icons/png/256x256.png';
-import { AppState } from './store'
-import { SystemState } from "./store/system/types";
-import SelectFolderZone from "./model/folderSelection" 
-import { updateSession} from "./store/system/actions";
-import { ActiveFolderState, Folders, FileDesc } from "./store/tree/types";
-import  {
-  updateActiveFolder,
-  updateTree,
-  fileAdded,
-  mediaAdded,
-  fileChanged,
-  mediaChanged,
-  fileDeleted
-} from "./store/tree/actions";
-import { MediaPlayerState } from "./store/player/types";
-//import * as annAc from "./store/annotations/actions";
-import { 
-  //addAnnotation,
-  //enableAudcarefulMain,
+import { ActiveFolderState, FileDesc, Folders } from "./store/tree/types";
+import { AnnotationState, Milestone } from "./store/annotations/types";
+import {
+  addAnnotation,
   enableAudtranscMain,
-  //removeAnnotation,
   resetAnnotationAction,
   wipeAnnotationAction
 } from "./store/annotations/actions";
-import { AnnotationState } from "./store/annotations/types";
- 
-
+import {
+  fileAdded,
+  fileChanged,
+  fileDeleted,
+  mediaAdded,
+  mediaChanged,
+  updateActiveFolder,
+  updateTree
+} from "./store/tree/actions";
 import {
   onEnded,
   onPlay,
@@ -40,17 +25,27 @@ import {
   stopPlaying,
   toggleLoop,
   updatePlayerAction
-
 } from "./store/player/actions";
-import getDirectoryListing from "./model/testFs";
+
+import { AppState } from "./store";
+import { MediaPlayerState } from "./store/player/types";
 import PlayerZone from "./model/player";
-const isElectron = process.env.REACT_APP_MODE === 'electron'
+import React from "react";
+import SelectFolderZone from "./model/folderSelection";
+import { SystemState } from "./store/system/types";
+import { connect } from "react-redux";
+import getDirectoryListing from "./model/testFs";
+import { hot } from "react-hot-loader";
+import logo from "./assets/icons/png/256x256.png";
+import { updateSession } from "./store/system/actions";
+
+const isElectron = process.env.REACT_APP_MODE === "electron";
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 interface AppProps {
-  system: SystemState,
+  system: SystemState;
   updateSession: typeof updateSession;
-  
+
   tree: ActiveFolderState;
   fileAdded: typeof fileAdded;
   mediaAdded: typeof mediaAdded;
@@ -59,7 +54,7 @@ interface AppProps {
   fileDeleted: typeof fileDeleted;
   updateActiveFolder: typeof updateActiveFolder;
   updateTree: typeof updateTree;
-  
+
   player: MediaPlayerState;
   onEnded: typeof onEnded;
   onPlay: typeof onPlay;
@@ -69,7 +64,8 @@ interface AppProps {
   toggleLoop: typeof toggleLoop;
   updatePlayerAction: typeof updatePlayerAction;
 
-  annotation?: AnnotationState;
+  annotation: AnnotationState;
+  addAnnotation: typeof addAnnotation;
   enableAudtranscMain: typeof enableAudtranscMain;
   resetAnnotationAction: typeof resetAnnotationAction;
   wipeAnnotationAction: typeof wipeAnnotationAction;
@@ -87,15 +83,17 @@ class App extends React.Component<AppProps> {
         loaded: false,
         availableFiles: [],
         availableMedia: []
-      })} else {
-        this.props.updateTree({
-          env: "web",
-          folderName: "",
-          folderPath: "",
-          loaded: false,
-          availableFiles: [],
-          availableMedia: []
-        })}
+      });
+    } else {
+      this.props.updateTree({
+        env: "web",
+        folderName: "",
+        folderPath: "",
+        loaded: false,
+        availableFiles: [],
+        availableMedia: []
+      });
+    }
     this.props.updateSession({
       loggedIn: true,
       session: "my_session",
@@ -103,18 +101,19 @@ class App extends React.Component<AppProps> {
       clicks: 0
     });
     let cleanStore = {
-      annotations: {},
-      annotationSet: {},
+      annotations: [],
+      annotationSet: [],
       audCareful_Main: false,
       audTransl_Main: false,
+      categories: [],
       fileInfo_Main: false,
       sayMoreMeta_Main: false,
       txtTransc_Main: false,
       txtTransc_Subtitle: false,
       txtTransl_Main: false,
       txtTransl_Subtitle: false
-    }
-    this.props.wipeAnnotationAction(cleanStore)
+    };
+    this.props.wipeAnnotationAction(cleanStore);
 
     this.props.updatePlayerAction({
       controls: false,
@@ -130,136 +129,147 @@ class App extends React.Component<AppProps> {
       url: "http://www.youtube.com/watch?v=Fc1P-AEaEp8",
       //url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
       volume: 0.8
-    })
-    
-    this.props.enableAudtranscMain()
+    });
+
+    this.props.enableAudtranscMain();
   }
 
-
-  
-  
   // Player Features
   playPause = () => {
-    this.props.playPause()
-    console.log('onPlay/PauseApp')
-  }
+    this.props.playPause();
+    console.log("onPlay/PauseApp");
+  };
   stopPlaying = () => {
-    this.props.stopPlaying()
-    console.log('onStopApp')
-  }
+    this.props.stopPlaying();
+    console.log("onStopApp");
+  };
   toggleLoop = () => {
-    this.props.toggleLoop()
-    console.log('ToggleLoopApp')
-  }
+    this.props.toggleLoop();
+    console.log("ToggleLoopApp");
+  };
   onPlay = () => {
-    this.props.onPlay()
-    console.log('onPlayApp')
-  }
+    this.props.onPlay();
+    console.log("onPlayApp");
+  };
   onEnded = () => {
-    this.props.onEnded()
-    console.log('onEndedApp')
-  }
+    this.props.onEnded();
+    console.log("onEndedApp");
+  };
   onProgress = (playState: any) => {
-    this.props.onProgress(playState)
-    console.log('onProgressApp', playState)
+    this.props.onProgress(playState);
+    console.log("onProgressApp", playState);
     if (!this.props.player.seeking) {
       //this.setState({player: {played: playState.played}})
       //this.setState(playState)
-  }
-  }
+    }
+  };
   updateActiveFolder = (inputFolder: Folders) => {
-    this.props.updateActiveFolder(inputFolder)
+    this.props.updateActiveFolder(inputFolder);
     //this.processFolderService(inputFolder.folderPath);
-  } 
+  };
   fileAdded = (inputFile: FileDesc) => {
-    this.props.fileAdded(inputFile)
-  } 
+    this.props.fileAdded(inputFile);
+  };
   mediaAdded = (inputFile: FileDesc) => {
-    this.props.mediaAdded(inputFile)
-  } 
+    this.props.mediaAdded(inputFile);
+  };
 
-  
   render() {
     return (
       <div className="App">
         <header className="App-header">
-        <p><img src={logo} className="App-logo" alt="logo"/> Hi {this.props.system.userName}. Welcome to <code>Prestige</code>.</p>
+          <p>
+            <img src={logo} className="App-logo" alt="logo" /> Hi{" "}
+            {this.props.system.userName}. Welcome to <code>Prestige</code>.
+          </p>
         </header>
         <div className="App-body">
           <div className="App-sidebar">
-          <PlayerZone 
-            url={this.props.player.url} 
-            playing={this.props.player.playing}
-            muted={this.props.player.muted}
-            playbackRate={this.props.player.playbackRate}
-            volume={this.props.player.volume}
-            loop={this.props.player.loop}
-            played={this.props.player.played}
-            playPause={this.playPause}
-            stopPlaying={this.stopPlaying}
-            toggleLoop={this.toggleLoop}
-            onPlay={this.onPlay}
-            onEnded={this.onEnded}
-            onProgress={this.onProgress}
-          />
+            <PlayerZone
+              loop={this.props.player.loop}
+              muted={this.props.player.muted}
+              onEnded={this.onEnded}
+              onPlay={this.onPlay}
+              onProgress={this.onProgress}
+              playbackRate={this.props.player.playbackRate}
+              played={this.props.player.played}
+              playing={this.props.player.playing}
+              playPause={this.playPause}
+              stopPlaying={this.stopPlaying}
+              toggleLoop={this.toggleLoop}
+              url={this.props.player.url}
+              volume={this.props.player.volume}
+            />
           </div>
           <div className="DetailsZone">
-            <p>{process.env.REACT_APP_MODE}: {process.env.NODE_ENV}</p>
-            <p><textarea cols={60} value={getDirectoryListing(this.props.tree.availableMedia)} readOnly rows={20} /></p>
+            <p>
+              {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
+            </p>
+            <p>
+              <textarea
+                cols={60}
+                value={getDirectoryListing(this.props.tree.availableMedia)}
+                readOnly
+                rows={20}
+              />
+            </p>
           </div>
         </div>
         <p>{this.props.tree.loaded}</p>
         <div className="App-footer">
-          <SelectFolderZone 
-            env={this.props.tree.env} 
-            folderPath={this.props.tree.folderPath}
-            folderName={this.props.tree.folderName} 
-            updateActiveFolder={this.props.updateActiveFolder}
-            loaded={this.props.tree.loaded}
+          <SelectFolderZone
+            addAnnotation={this.props.addAnnotation}
+            annotations={this.props.annotation.annotations}
             availableFiles={this.props.tree.availableFiles}
             availableMedia={this.props.tree.availableMedia}
+            env={this.props.tree.env}
             fileAdded={this.props.fileAdded}
-            mediaAdded={this.props.mediaAdded}
             fileChanged={this.props.fileChanged}
-            mediaChanged={this.props.mediaChanged}
             fileDeleted={this.props.fileDeleted}
-             />
+            folderName={this.props.tree.folderName}
+            folderPath={this.props.tree.folderPath}
+            loaded={this.props.tree.loaded}
+            mediaAdded={this.props.mediaAdded}
+            mediaChanged={this.props.mediaChanged}
+            updateActiveFolder={this.props.updateActiveFolder}
+          />
         </div>
       </div>
     );
   }
-};
-
+}
 
 const mapStateToProps = (state: AppState) => ({
   system: state.system,
   tree: state.tree,
   player: state.player,
-  annotations: state.annotations
+  annotation: state.annotations
 });
 
-
-export default hot(module)(connect(
-  mapStateToProps, 
-  { 
-    enableAudtranscMain,
-    fileAdded,
-    fileChanged,
-    fileDeleted,
-    getDirectoryListing,
-    mediaAdded,
-    mediaChanged,
-    onEnded, 
-    onPlay, 
-    onProgress, 
-    playPause, 
-    resetAnnotationAction, 
-    stopPlaying, 
-    toggleLoop, 
-    updateActiveFolder, 
-    updatePlayerAction, 
-    updateSession, 
-    updateTree, 
-    wipeAnnotationAction 
-  }
-)(App));
+export default hot(module)(
+  connect(
+    mapStateToProps,
+    {
+      addAnnotation,
+      enableAudtranscMain,
+      fileAdded,
+      fileChanged,
+      fileDeleted,
+      getDirectoryListing,
+      mediaAdded,
+      mediaChanged,
+      onEnded,
+      onPlay,
+      onProgress,
+      playPause,
+      resetAnnotationAction,
+      stopPlaying,
+      toggleLoop,
+      updateActiveFolder,
+      updatePlayerAction,
+      updateSession,
+      updateTree,
+      wipeAnnotationAction
+    }
+  )(App)
+);

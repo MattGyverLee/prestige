@@ -1,5 +1,7 @@
 // src/store/tree/reducers.ts
+
 import * as annTy from "./types";
+
 //import {map} from "redux-data-structures"
 
 /* export function audCareful_Main() {
@@ -19,8 +21,8 @@ const initialState: annTy.AnnotationState = {
   txtTransc_Main: false,
   txtTransc_Subtitle: false,
   txtTransl_Main: false,
-  txtTransl_Subtitle: false,
-}
+  txtTransl_Subtitle: false
+};
 
 export function annotationReducer(
   state = initialState,
@@ -104,7 +106,6 @@ export function annotationReducer(
       };
     }
     case annTy.DISABLE_AUDTRANSC_MAIN: {
-
       return {
         ...state,
         txtTransc_Main: false
@@ -165,4 +166,3 @@ export function annotationReducer(
       return state;
   }
 }
-

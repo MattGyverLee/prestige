@@ -1,134 +1,205 @@
-import * as annTy from './types'
+import {
+  ADD_ANNOTATION,
+  ADD_ANNOTATIONSET,
+  AnnotationActionTypes,
+  AnnotationState,
+  DISABLE_AUDCAREFUL_MAIN,
+  DISABLE_AUDTRANSC_MAIN,
+  DISABLE_AUDTRANSL_MAIN,
+  DISABLE_AUDTRANSL_SUB,
+  DISABLE_FILEINFO,
+  DISABLE_META_MAIN,
+  DISABLE_TRANSC_SUB,
+  DISABLE_TXTTRANSL_MAIN,
+  ENABLE_AUDCAREFUL_MAIN,
+  ENABLE_AUDTRANSC_MAIN,
+  ENABLE_AUDTRANSL_MAIN,
+  ENABLE_FILEINFO,
+  ENABLE_META_MAIN,
+  ENABLE_TRANSC_SUB,
+  ENABLE_TXTTRANSL_MAIN,
+  ENNABLE_AUDTRANSL_SUB,
+  REMOVE_ANNOTATION,
+  REMOVE_ANNOTATIONSET,
+  RESET_ANNOTATION_SESSION,
+  UPDATE_ANNOTATION,
+  UPDATE_ANNOTATIONSET,
+  WIPE_ANNOTATION_SESSION
+} from "./types";
 
 //Object.entries(annTy).forEach(([name, exported]) => window[name] = exported);
 
-export function resetAnnotationAction(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function resetAnnotationAction(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.RESET_ANNOTATION_SESSION,
-      payload: annotState
-    }
+    type: RESET_ANNOTATION_SESSION,
+    payload: annotState
+  };
 }
 
-export function wipeAnnotationAction(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function wipeAnnotationAction(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.WIPE_ANNOTATION_SESSION,
-      payload: annotState
-    }
+    type: WIPE_ANNOTATION_SESSION,
+    payload: annotState
+  };
 }
 
-export function addAnnotation(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function addAnnotation(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ADD_ANNOTATION,
-      payload: annotState
-    }
+    type: ADD_ANNOTATION,
+    payload: annotState
+  };
 }
-export function updateAnnotation(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function updateAnnotation(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.UPDATE_ANNOTATION,
-      payload: annotState
-    }
+    type: UPDATE_ANNOTATION,
+    payload: annotState
+  };
 }
-export function removeAnnotation(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function removeAnnotation(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.REMOVE_ANNOTATION,
-      payload: annotState
-    }
+    type: REMOVE_ANNOTATION,
+    payload: annotState
+  };
 }
-export function addAnnotationset(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function addAnnotationset(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ADD_ANNOTATIONSET,
-      payload: annotState
-    }
+    type: ADD_ANNOTATIONSET,
+    payload: annotState
+  };
 }
-export function updateAnnotationset(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function updateAnnotationset(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.UPDATE_ANNOTATIONSET,
-      payload: annotState
-    }
+    type: UPDATE_ANNOTATIONSET,
+    payload: annotState
+  };
 }
-export function removeAnnotationset(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function removeAnnotationset(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.REMOVE_ANNOTATIONSET,
-      payload: annotState
-    }
+    type: REMOVE_ANNOTATIONSET,
+    payload: annotState
+  };
 }
-export function enableAudcarefulMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function enableAudcarefulMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ENABLE_AUDCAREFUL_MAIN
-    }
+    type: ENABLE_AUDCAREFUL_MAIN
+  };
 }
-export function disableAudcarefulMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function disableAudcarefulMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_AUDCAREFUL_MAIN
-    }
+    type: DISABLE_AUDCAREFUL_MAIN
+  };
 }
-export function enableAudtranslMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function enableAudtranslMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ENABLE_AUDTRANSL_MAIN
-    }
+    type: ENABLE_AUDTRANSL_MAIN
+  };
 }
-export function disableAudtranslMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function disableAudtranslMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_AUDTRANSL_MAIN
-    }
+    type: DISABLE_AUDTRANSL_MAIN
+  };
 }
-export function enableAudtranscMain(): annTy.AnnotationActionTypes {
+export function enableAudtranscMain(): AnnotationActionTypes {
   return {
-      type: annTy.ENABLE_AUDTRANSC_MAIN
-    }
+    type: ENABLE_AUDTRANSC_MAIN
+  };
 }
-export function disableAudtranscMain(): annTy.AnnotationActionTypes {
+export function disableAudtranscMain(): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_AUDTRANSC_MAIN
-    }
+    type: DISABLE_AUDTRANSC_MAIN
+  };
 }
-export function enableTranscSub(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function enableTranscSub(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ENABLE_TRANSC_SUB
-    }
+    type: ENABLE_TRANSC_SUB
+  };
 }
-export function disableTranscSub(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function disableTranscSub(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_TRANSC_SUB
-    }
+    type: DISABLE_TRANSC_SUB
+  };
 }
-export function enableTxttranslMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function enableTxttranslMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ENABLE_TXTTRANSL_MAIN
-    }
+    type: ENABLE_TXTTRANSL_MAIN
+  };
 }
-export function disableTxttranslMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function disableTxttranslMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_TXTTRANSL_MAIN
-    }
+    type: DISABLE_TXTTRANSL_MAIN
+  };
 }
-export function ennableAudtranslSub(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function ennableAudtranslSub(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ENNABLE_AUDTRANSL_SUB
-    }
+    type: ENNABLE_AUDTRANSL_SUB
+  };
 }
-export function disableAudtranslSub(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function disableAudtranslSub(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_AUDTRANSL_SUB
-    }
+    type: DISABLE_AUDTRANSL_SUB
+  };
 }
-export function enableMetaMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function enableMetaMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ENABLE_META_MAIN
-    }
+    type: ENABLE_META_MAIN
+  };
 }
-export function disableMetaMain(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function disableMetaMain(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_META_MAIN
-    }
+    type: DISABLE_META_MAIN
+  };
 }
-export function enableFileinfo(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function enableFileinfo(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.ENABLE_FILEINFO
-    }
+    type: ENABLE_FILEINFO
+  };
 }
-export function disableFileinfo(annotState: annTy.AnnotationState): annTy.AnnotationActionTypes {
+export function disableFileinfo(
+  annotState: AnnotationState
+): AnnotationActionTypes {
   return {
-      type: annTy.DISABLE_FILEINFO
-    }
+    type: DISABLE_FILEINFO
+  };
 }
