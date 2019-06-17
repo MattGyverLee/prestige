@@ -1,10 +1,18 @@
 import "./App.css";
 
 import { ActiveFolderState, FileDesc, Folders } from "./store/tree/types";
-import { AnnotationState, Milestone } from "./store/annotations/types";
+import {
+  AnnotationState,
+  LooseObject,
+  Milestone
+} from "./store/annotations/types";
 import {
   addAnnotation,
+  addCategory,
+  addOralAnnotation,
   enableAudtranscMain,
+  pushAnnotation,
+  pushTimeline,
   resetAnnotationAction,
   wipeAnnotationAction
 } from "./store/annotations/actions";
@@ -37,6 +45,7 @@ import { connect } from "react-redux";
 import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
+import processEAF from "./model/processEAF";
 import { updateSession } from "./store/system/actions";
 
 const isElectron = process.env.REACT_APP_MODE === "electron";
@@ -65,12 +74,17 @@ interface AppProps {
   updatePlayerAction: typeof updatePlayerAction;
 
   annotation: AnnotationState;
+  addCategory: typeof addCategory;
   addAnnotation: typeof addAnnotation;
+  addOralAnnotation: typeof addOralAnnotation;
+  pushAnnotation: typeof pushAnnotation;
+  pushTimeline: typeof pushTimeline;
   enableAudtranscMain: typeof enableAudtranscMain;
   resetAnnotationAction: typeof resetAnnotationAction;
   wipeAnnotationAction: typeof wipeAnnotationAction;
 
   getDirectoryListing: typeof getDirectoryListing;
+  processEAF: typeof processEAF;
 }
 
 class App extends React.Component<AppProps> {
@@ -108,6 +122,7 @@ class App extends React.Component<AppProps> {
       categories: [],
       fileInfo_Main: false,
       sayMoreMeta_Main: false,
+      timeline: [],
       txtTransc_Main: false,
       txtTransc_Subtitle: false,
       txtTransl_Main: false,
@@ -173,6 +188,18 @@ class App extends React.Component<AppProps> {
   mediaAdded = (inputFile: FileDesc) => {
     this.props.mediaAdded(inputFile);
   };
+  pushAnnotation = (inMilestones: Array<Milestone>) => {
+    console.log("onPushAnnotation");
+    this.props.pushAnnotation(inMilestones);
+  };
+  pushTimeline = (inTimeline: LooseObject) => {
+    console.log("onPushTimeline");
+    this.props.pushTimeline(inTimeline);
+  };
+  callProcessEAF = (inputFile: string) => {
+    processEAF(inputFile, this.props);
+    console.log(inputFile);
+  };
 
   render() {
     return (
@@ -219,9 +246,13 @@ class App extends React.Component<AppProps> {
         <div className="App-footer">
           <SelectFolderZone
             addAnnotation={this.props.addAnnotation}
+            addCategory={this.props.addCategory}
+            addOralAnnotation={this.props.addOralAnnotation}
             annotations={this.props.annotation.annotations}
             availableFiles={this.props.tree.availableFiles}
             availableMedia={this.props.tree.availableMedia}
+            callProcessEAF={this.callProcessEAF}
+            categories={this.props.annotation.categories}
             env={this.props.tree.env}
             fileAdded={this.props.fileAdded}
             fileChanged={this.props.fileChanged}
@@ -231,6 +262,8 @@ class App extends React.Component<AppProps> {
             loaded={this.props.tree.loaded}
             mediaAdded={this.props.mediaAdded}
             mediaChanged={this.props.mediaChanged}
+            pushAnnotation={this.pushAnnotation}
+            pushTimeline={this.props.pushTimeline}
             updateActiveFolder={this.props.updateActiveFolder}
           />
         </div>
@@ -251,6 +284,9 @@ export default hot(module)(
     mapStateToProps,
     {
       addAnnotation,
+      addOralAnnotation,
+      addCategory,
+      pushAnnotation,
       enableAudtranscMain,
       fileAdded,
       fileChanged,
@@ -262,6 +298,8 @@ export default hot(module)(
       onPlay,
       onProgress,
       playPause,
+      pushTimeline,
+      processEAF,
       resetAnnotationAction,
       stopPlaying,
       toggleLoop,

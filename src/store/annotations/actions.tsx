@@ -1,6 +1,8 @@
 import {
   ADD_ANNOTATION,
   ADD_ANNOTATIONSET,
+  ADD_CATEGORY,
+  ADD_ORAL_ANNOTATION,
   AnnotationActionTypes,
   AnnotationState,
   DISABLE_AUDCAREFUL_MAIN,
@@ -14,11 +16,16 @@ import {
   ENABLE_AUDCAREFUL_MAIN,
   ENABLE_AUDTRANSC_MAIN,
   ENABLE_AUDTRANSL_MAIN,
+  ENABLE_AUDTRANSL_SUB,
   ENABLE_FILEINFO,
   ENABLE_META_MAIN,
   ENABLE_TRANSC_SUB,
   ENABLE_TXTTRANSL_MAIN,
-  ENNABLE_AUDTRANSL_SUB,
+  LooseObject,
+  Milestone,
+  PUSH_ANNOTATION,
+  PUSH_TIMELINE,
+  PUSH_WHICH_TIMELINE,
   REMOVE_ANNOTATION,
   REMOVE_ANNOTATIONSET,
   RESET_ANNOTATION_SESSION,
@@ -47,12 +54,44 @@ export function wipeAnnotationAction(
   };
 }
 
-export function addAnnotation(
-  annotState: AnnotationState
-): AnnotationActionTypes {
+export function addAnnotation(milestone: Milestone): AnnotationActionTypes {
   return {
     type: ADD_ANNOTATION,
-    payload: annotState
+    payload: milestone
+  };
+}
+export function addOralAnnotation(newMilestone: any): AnnotationActionTypes {
+  return {
+    type: ADD_ORAL_ANNOTATION,
+    payload: newMilestone
+  };
+}
+export function addCategory(inString: string): AnnotationActionTypes {
+  return {
+    type: ADD_CATEGORY,
+    payload: inString
+  };
+}
+export function pushAnnotation(
+  milestones: Array<Milestone>
+): AnnotationActionTypes {
+  return {
+    type: PUSH_ANNOTATION,
+    payload: milestones
+  };
+}
+export function pushWhichTimeline(
+  whichtimeline: LooseObject
+): AnnotationActionTypes {
+  return {
+    type: PUSH_WHICH_TIMELINE,
+    payload: whichtimeline
+  };
+}
+export function pushTimeline(timeline: LooseObject): AnnotationActionTypes {
+  return {
+    type: PUSH_TIMELINE,
+    payload: timeline
   };
 }
 export function updateAnnotation(
@@ -161,11 +200,11 @@ export function disableTxttranslMain(
     type: DISABLE_TXTTRANSL_MAIN
   };
 }
-export function ennableAudtranslSub(
+export function enableAudtranslSub(
   annotState: AnnotationState
 ): AnnotationActionTypes {
   return {
-    type: ENNABLE_AUDTRANSL_SUB
+    type: ENABLE_AUDTRANSL_SUB
   };
 }
 export function disableAudtranslSub(
