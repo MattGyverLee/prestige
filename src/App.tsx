@@ -244,28 +244,7 @@ class App extends React.Component<AppProps> {
         </div>
         <p>{this.props.tree.loaded}</p>
         <div className="App-footer">
-          <SelectFolderZone
-            addAnnotation={this.props.addAnnotation}
-            addCategory={this.props.addCategory}
-            addOralAnnotation={this.props.addOralAnnotation}
-            annotations={this.props.annotation.annotations}
-            availableFiles={this.props.tree.availableFiles}
-            availableMedia={this.props.tree.availableMedia}
-            callProcessEAF={this.callProcessEAF}
-            categories={this.props.annotation.categories}
-            env={this.props.tree.env}
-            fileAdded={this.props.fileAdded}
-            fileChanged={this.props.fileChanged}
-            fileDeleted={this.props.fileDeleted}
-            folderName={this.props.tree.folderName}
-            folderPath={this.props.tree.folderPath}
-            loaded={this.props.tree.loaded}
-            mediaAdded={this.props.mediaAdded}
-            mediaChanged={this.props.mediaChanged}
-            pushAnnotation={this.pushAnnotation}
-            pushTimeline={this.props.pushTimeline}
-            updateActiveFolder={this.props.updateActiveFolder}
-          />
+          <SelectFolderZone callProcessEAF={this.callProcessEAF} />
         </div>
       </div>
     );

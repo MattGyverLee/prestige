@@ -85,30 +85,19 @@ export function annotationReducer(
     case ADD_ORAL_ANNOTATION: {
       //TODO: Need to clean this up, it's awfully messy!
       //todo: pass BLOBURL inside
-      var tempState = { ...state.timeline };
-
-      const targetMilestone = state.timeline[0].milestones.filter(
-        (milestone: any) =>
-          milestone.startTime == action.payload.startTime &&
-          milestone.stopTime == action.payload.stopTime
-      )[0];
-      const targetData = targetMilestone.data.concat(action.payload.data);
-      const targetMilestoneEd = { ...targetMilestone, data: targetData };
-      //action.payload.annotationID = targetMilestone.annotationID;
-      var otherMilestones = state.timeline[0].milestones.filter(
-        (milestone: any) =>
-          milestone.startTime !== action.payload.startTime &&
-          milestone.stopTime !== action.payload.stopTime
+      const milestones = state.timeline[0].milestones.map((m: LooseObject) =>
+        m.startTime === action.payload.startTime &&
+        m.stopTime === action.payload.stopTime
+          ? { ...m, data: m.data.concat(action.payload.data) }
+          : m
       );
-      const editedMilestones = otherMilestones.concat(targetMilestoneEd);
-      tempState[0].milestones = editedMilestones.sort(function(
-        a: LooseObject,
-        b: LooseObject
-      ) {
-        return a.id - b.id || a.name.localeCompare(b.name);
-      });
-      const tempStateFinal = { ...state, timeline: { ...tempState } };
-      return tempStateFinal;
+      //action.payload.annotationID = targetMilestone.annotationID;
+      return {
+        ...state,
+        timeline: state.timeline.map((t: LooseObject, i: number) =>
+          i === 0 ? { ...t, milestones } : t
+        )
+      };
     }
     case ADD_CATEGORY: {
       return {

@@ -1,14 +1,17 @@
+import * as actions from "../store";
+
 import { FileDesc, Folders } from "../store/tree/types";
 import React, { Component } from "react";
 
 import { LooseObject } from "../store/annotations/types";
 import { Milestone } from "../store/annotations/types";
+import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
 //import { Middleware } from "redux";
 
 var oldPath = "";
-interface FolderProps {
+interface IStateProps {
   annotations: object;
   availableFiles: Array<LooseObject>;
   availableMedia: Array<LooseObject>;
@@ -17,18 +20,23 @@ interface FolderProps {
   folderName: string;
   folderPath: string;
   loaded: boolean;
+}
 
-  addCategory: (inString: string) => void;
-  addOralAnnotation: (inTimeline: LooseObject) => void;
-  fileAdded: (inFile: FileDesc) => void;
-  fileChanged: (inFile: FileDesc) => void;
-  fileDeleted: (inFile: string) => void;
-  mediaAdded: (inFile: FileDesc) => void;
-  mediaChanged: (inFile: FileDesc) => void;
-  updateActiveFolder: (folder: Folders) => void;
-  addAnnotation: (inMilestone: Milestone) => void;
-  pushAnnotation: (inMilestones: Array<Milestone>) => void;
-  pushTimeline: (inTimeline: LooseObject) => void;
+interface IDispatchProps {
+  addCategory: typeof actions.addCategory;
+  addOralAnnotation: typeof actions.addOralAnnotation;
+  fileAdded: typeof actions.fileAdded;
+  fileChanged: typeof actions.fileChanged;
+  fileDeleted: typeof actions.fileDeleted;
+  mediaAdded: typeof actions.mediaAdded;
+  mediaChanged: typeof actions.mediaChanged;
+  updateActiveFolder: typeof actions.updateActiveFolder;
+  addAnnotation: typeof actions.addAnnotation;
+  pushAnnotation: typeof actions.pushAnnotation;
+  pushTimeline: typeof actions.pushTimeline;
+}
+
+interface FolderProps extends IStateProps, IDispatchProps {
   callProcessEAF: (inPath: string) => void;
 }
 //onUpdatePath: () => void;
@@ -364,5 +372,38 @@ class SelectFolderZone extends Component<FolderProps> {
   }
 }
 //const mapDispatchToProps = (dispatch: any) => { return { fileChange: () => fileChange(dispatch) } }
-export default connect()(SelectFolderZone);
+//todo: Define state: Istate from https://github.com/sillsdev/web-transcriber-admin/blob/develop/src/model/state.tsx
+const mapStateToProps = (state: actions.AppState): IStateProps => ({
+  annotations: state.annotations.annotations,
+  availableFiles: state.tree.availableFiles,
+  availableMedia: state.tree.availableMedia,
+  categories: state.annotations.categories,
+  env: state.tree.env,
+  folderName: state.tree.folderName,
+  folderPath: state.tree.folderPath,
+  loaded: state.tree.loaded
+});
+
+const mapDispatchToProps = (dispatch: any): IDispatchProps => ({
+  ...bindActionCreators(
+    {
+      addCategory: actions.addCategory,
+      addOralAnnotation: actions.addOralAnnotation,
+      fileAdded: actions.fileAdded,
+      fileChanged: actions.fileChanged,
+      fileDeleted: actions.fileDeleted,
+      mediaAdded: actions.mediaAdded,
+      mediaChanged: actions.mediaChanged,
+      updateActiveFolder: actions.updateActiveFolder,
+      addAnnotation: actions.addAnnotation,
+      pushAnnotation: actions.pushAnnotation,
+      pushTimeline: actions.pushTimeline
+    },
+    dispatch
+  )
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(SelectFolderZone);
 //export default connect(null,mapDispatchToProps)(SelectFolderZone)
