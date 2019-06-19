@@ -2,7 +2,6 @@ import "./App.css";
 
 import * as actions from "./store";
 
-import { IStateProps } from "./store";
 import PlayerZone from "./model/player";
 import React from "react";
 import SelectFolderZone from "./model/folderSelection";
@@ -17,7 +16,7 @@ import { updateSession } from "./store/system/actions";
 const isElectron = process.env.REACT_APP_MODE === "electron";
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
-interface IDispatchProps {
+interface DispatchProps {
   updateSession: typeof updateSession;
 
   fileAdded: typeof actions.fileAdded;
@@ -48,8 +47,8 @@ interface IDispatchProps {
   wipeAnnotationAction: typeof actions.wipeAnnotationAction;
 }
 
-interface AppProps extends IStateProps, IDispatchProps {
-  //local state props go here
+interface AppProps extends actions.StateProps, DispatchProps {
+  // local state props go here
 }
 
 class App extends React.Component<AppProps> {
@@ -79,7 +78,7 @@ class App extends React.Component<AppProps> {
       userName: "Matthew",
       clicks: 0
     });
-    let cleanStore = {
+    const cleanStore = {
       annotations: [],
       annotationSet: [],
       audCareful_Main: false,
@@ -107,7 +106,7 @@ class App extends React.Component<AppProps> {
       playing: false,
       seeking: false,
       url: "http://www.youtube.com/watch?v=Fc1P-AEaEp8",
-      //url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
+      // url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
       volume: 0.8
     });
 
@@ -120,8 +119,8 @@ class App extends React.Component<AppProps> {
     this.props.onProgress(playState);
     console.log("onProgressApp", playState);
     if (!this.props.player.seeking) {
-      //this.setState({player: {played: playState.played}})
-      //this.setState(playState)
+      // this.setState({player: {played: playState.played}})
+      // this.setState(playState)
     }
   };
 
@@ -166,14 +165,14 @@ class App extends React.Component<AppProps> {
   }
 }
 
-const mapStateToProps = (state: IStateProps): IStateProps => ({
+const mapStateToProps = (state: actions.StateProps): actions.StateProps => ({
   system: state.system,
   tree: state.tree,
   player: state.player,
   annotations: state.annotations
 });
 
-const mapDispatchToProps = (dispatch: any): IDispatchProps => ({
+const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
       addAnnotation: actions.addAnnotation,

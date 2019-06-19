@@ -45,17 +45,17 @@ export function treeReducer(
       };
     }
     case types.FILE_CHANGED: {
-      let tempState = state.availableFiles.filter(
+      const tempState = state.availableFiles.filter(
         file => file.name !== action.payload.file.name
       );
-      //let tempState: any[] = []
+      // let tempState: any[] = []
       return {
         ...state,
         availableFiles: [...tempState, action.payload.file]
       };
     }
     case types.MEDIA_CHANGED: {
-      let tempState = state.availableMedia.filter(
+      const tempState = state.availableMedia.filter(
         file => file.name !== action.payload.file.name
       );
       return {
@@ -66,7 +66,7 @@ export function treeReducer(
     case types.FILE_DELETED: {
       return {
         ...state,
-        //ToDo: Minor memory waste: try to determine which category has the file instead of double filter.
+        // ToDo: Minor memory waste: try to determine which category has the file instead of double filter.
         availableMedia: [
           ...state.availableMedia.filter(file => file.name !== action.payload)
         ],
@@ -75,7 +75,7 @@ export function treeReducer(
         ]
       };
     }
-    //TODO add Media/File Deletion
+    // TODO add Media/File Deletion
     default:
       return state;
   }

@@ -28,11 +28,11 @@ export interface Milestone {
 }
 
 export interface AnnotationState {
-  annotations: Array<any>;
-  annotationSet: Array<any>;
+  annotations: any[];
+  annotationSet: any[];
   audCareful_Main: boolean;
   audTransl_Main: boolean;
-  categories: Array<string>;
+  categories: string[];
   fileInfo_Main: boolean;
   sayMoreMeta_Main: boolean;
   timeline: LooseObject;
@@ -93,7 +93,7 @@ interface AddOralAnnotation {
 }
 interface PushAnnotation {
   type: typeof PUSH_ANNOTATION;
-  payload: Array<Milestone>;
+  payload: Milestone[];
 }
 interface PushWhichTimeline {
   type: typeof PUSH_WHICH_TIMELINE;

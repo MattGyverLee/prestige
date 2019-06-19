@@ -9,8 +9,7 @@ import { UpdatePlayerParam } from "../App";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
-//updatePlayerAction,
-interface IStateProps {
+interface StateProps {
   controls?: boolean;
   duration?: number;
   loop: boolean;
@@ -28,7 +27,7 @@ interface IStateProps {
   loaded: number;
 }
 
-interface IDispatchProps {
+interface DispatchProps {
   playPause: typeof actions.playPause;
   stopPlaying: typeof actions.stopPlaying;
   toggleLoop: typeof actions.toggleLoop;
@@ -36,14 +35,14 @@ interface IDispatchProps {
   onEnded: typeof actions.onEnded;
   onProgress: typeof actions.onProgress;
 }
-interface PlayerProps extends IStateProps, IDispatchProps {
-  //todo: do i need this?
+interface PlayerProps extends StateProps, DispatchProps {
+  // todo: do i need this?
   refreshApp?: (event: UpdatePlayerParam) => void;
 }
 
 class PlayerZone extends Component<PlayerProps> {
   private player!: ReactPlayer;
-  //private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
+  // private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
 
   pip = () => {
     this.setState({ pip: !this.props.pip });
@@ -83,7 +82,7 @@ class PlayerZone extends Component<PlayerProps> {
     this.setState({ duration });
   };
   onClickFullscreen = () => {
-    //screenfull.request(findDOMNode(this.player))
+    // screenfull.request(findDOMNode(this.player))
   };
 
   ref = (player: any) => {
@@ -243,7 +242,7 @@ class PlayerZone extends Component<PlayerProps> {
     );
   }
 }
-const mapStateToProps = (state: actions.IStateProps): IStateProps => ({
+const mapStateToProps = (state: actions.StateProps): StateProps => ({
   playbackRate: state.player.playbackRate,
   played: state.player.played,
   muted: state.player.muted,
@@ -257,7 +256,7 @@ const mapStateToProps = (state: actions.IStateProps): IStateProps => ({
   loaded: state.player.loaded
 });
 
-const mapDispatchToProps = (dispatch: any): IDispatchProps => ({
+const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
       playPause: actions.playPause,

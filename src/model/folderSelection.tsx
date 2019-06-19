@@ -7,21 +7,19 @@ import { LooseObject } from "../store/annotations/types";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
-//import { Middleware } from "redux";
-
-var oldPath = "";
-interface IStateProps {
+let oldPath = "";
+interface StateProps {
   annotations: object;
-  availableFiles: Array<LooseObject>;
-  availableMedia: Array<LooseObject>;
-  categories: Array<string>;
+  availableFiles: LooseObject[];
+  availableMedia: LooseObject[];
+  categories: string[];
   env: string;
   folderName: string;
   folderPath: string;
   loaded: boolean;
 }
 
-interface IDispatchProps {
+interface DispatchProps {
   addCategory: typeof actions.addCategory;
   addOralAnnotation: typeof actions.addOralAnnotation;
   fileAdded: typeof actions.fileAdded;
@@ -35,10 +33,10 @@ interface IDispatchProps {
   pushTimeline: typeof actions.pushTimeline;
 }
 
-interface FolderProps extends IStateProps, IDispatchProps {
+interface FolderProps extends StateProps, DispatchProps {
   callProcessEAF: (inPath: string) => void;
 }
-//onUpdatePath: () => void;
+// onUpdatePath: () => void;
 
 class SelectFolderZone extends Component<FolderProps> {
   constructor(props: any) {
@@ -55,9 +53,9 @@ class SelectFolderZone extends Component<FolderProps> {
     }); */
   }
 
-  StartWatcher = (path: string, props: any) => {
-    var chokidar = require("chokidar");
-    var watcher = chokidar.watch(path, {
+  startWatcher = (path: string, props: any) => {
+    const chokidar = require("chokidar");
+    const watcher = chokidar.watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
       ignoreInitial: false
@@ -67,19 +65,20 @@ class SelectFolderZone extends Component<FolderProps> {
       const fileUrl = require("file-url");
       const pathParse = require("path");
       const parsedPath = pathParse.parse(path);
-      var mime = require("mime");
+      const mime = require("mime");
       const blobURL = fileUrl(path);
-      var tempMime = "";
-      if (mime.getType(path) != null) {
+      let tempMime = "";
+      // tslint:disable-next-line
+      if (mime.getType(path) !== null) {
         tempMime = mime.getType(path);
       } else {
         tempMime = "file/" + parsedPath.ext;
       }
-      //Try converting MTS files:
+      // Try converting MTS files:
       if (tempMime.startsWith("model") && tempMime.endsWith(".mts")) {
         try {
-          var ffmpeg = require("ffmpeg");
-          var process = new ffmpeg(blobURL);
+          const ffmpeg = require("ffmpeg");
+          const process = new ffmpeg(blobURL);
           process.then(
             function(video: any) {
               // Callback mode
@@ -91,7 +90,7 @@ class SelectFolderZone extends Component<FolderProps> {
                   parsedPath.dir + "\\" + parsedPath.name + ".avi",
                   function(error: Error, file: File) {
                     if (!error) console.log("New video file: " + file);
-                    //todo: update/replace Blob on conversion
+                    // todo: update/replace Blob on conversion
                   }
                 );
             },
@@ -105,7 +104,7 @@ class SelectFolderZone extends Component<FolderProps> {
           tempMime = "video/MP2T";
         }
       }
-      var isAnnotation = false;
+      let isAnnotation = false;
       if (parsedPath.dir.endsWith("_Annotations")) {
         isAnnotation = true;
       }
@@ -118,6 +117,7 @@ class SelectFolderZone extends Component<FolderProps> {
         inMilestones: false,
         mimeType: tempMime,
         name: parsedPath.base,
+        // tslint:disable-next-line
         path: path
       };
 
@@ -129,9 +129,9 @@ class SelectFolderZone extends Component<FolderProps> {
     };
 
     const chokFileadd = (path: string) => {
-      //Todo: If Chokidar.notready, go on, otherwise add annotation.
+      // Todo: If Chokidar.notready, go on, otherwise add annotation.
       const fileDef = chocFileDescribe(path);
-      let fileDesc: FileDesc = { file: fileDef };
+      const fileDesc: FileDesc = { file: fileDef };
       if (
         fileDef.mimeType.startsWith("video") ||
         fileDef.mimeType.startsWith("audio")
@@ -147,7 +147,7 @@ class SelectFolderZone extends Component<FolderProps> {
     };
     const chokChange = (path: string) => {
       const fileDef = chocFileDescribe(path);
-      let fileDesc: FileDesc = { file: fileDef };
+      const fileDesc: FileDesc = { file: fileDef };
       if (
         fileDef.mimeType.startsWith("video") ||
         fileDef.mimeType.startsWith("audio")
@@ -203,10 +203,10 @@ class SelectFolderZone extends Component<FolderProps> {
         folderName: inputElement.files[0].name,
         folderPath: inputElement.files[0].path
       });
-      //toDo: Make this Fire on Update
-      let path = inputElement.files[0].path.toString();
+      // toDo: Make this Fire on Update
+      const path = inputElement.files[0].path.toString();
       if (path !== "" && path !== oldPath) {
-        this.StartWatcher(path, this.props);
+        this.startWatcher(path, this.props);
         oldPath = path;
       }
     }
@@ -228,16 +228,17 @@ class SelectFolderZone extends Component<FolderProps> {
         if (this.props.categories.indexOf(tier) === -1) {
           this.props.addCategory(tier);
         }
-        var fileDef: LooseObject = {};
+
+        const fileDef: LooseObject = {};
         fileDef["isAnnotation"] = true;
-        //todo: the following line is cheating redux
+        // todo: the following line is cheating redux
         mediaFile["inMilestones"] = true;
         fileDef["linguisticType"] = tier;
         fileDef["channel"] = refType;
         fileDef["minmeType"] = mediaFile.mimeType;
         fileDef["name"] = mediaFile.name;
         fileDef["blobURL"] = mediaFile.blobURL;
-        var oralMilestone: LooseObject = {
+        const oralMilestone: LooseObject = {
           annotationID: "",
           annotationRef: refFile,
           data: fileDef,
@@ -253,11 +254,11 @@ class SelectFolderZone extends Component<FolderProps> {
   /* export function formatTimeline(path: string) {
     console.log("Starting");
     const focus = this.timeline["timeline"][0]["milestones"];
-    //TODO 0 is Temporary
-    var table = [];
+    // TODO 0 is Temporary
+    let table = [];
     focus.forEach(milestone => {
       console.log(milestone.data);
-      var row = {
+      let row = {
         id: milestone["id"],
         startTime: milestone["startTime"],
         stopTime: milestone["stopTime"],
@@ -266,7 +267,7 @@ class SelectFolderZone extends Component<FolderProps> {
         txtTransc: "",
         txtTransl: ""
       };
-      var c, d;
+      let c, d;
       for (c = 0; c < this.state.category.length; c++) {
         for (d = 0; d < milestone["data"].length; d++) {
           console.log(this.state.category[c]);
@@ -345,7 +346,7 @@ class SelectFolderZone extends Component<FolderProps> {
   }
 }
 
-const mapStateToProps = (state: actions.IStateProps): IStateProps => ({
+const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotations: state.annotations.annotations,
   availableFiles: state.tree.availableFiles,
   availableMedia: state.tree.availableMedia,
@@ -356,7 +357,7 @@ const mapStateToProps = (state: actions.IStateProps): IStateProps => ({
   loaded: state.tree.loaded
 });
 
-const mapDispatchToProps = (dispatch: any): IDispatchProps => ({
+const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
       addCategory: actions.addCategory,
@@ -378,4 +379,4 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(SelectFolderZone);
-//export default connect(null,mapDispatchToProps)(SelectFolderZone)
+// export default connect(null,mapDispatchToProps)(SelectFolderZone)

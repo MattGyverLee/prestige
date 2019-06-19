@@ -15,7 +15,17 @@
     "electron-debug": "env-cmd -f .env.electron craco start",
     "electron-prod": "set NODE_ENV=production&& env-cmd -f .env.electron concurrently \"yarn start \" \"wait-on http://localhost:3000 && electron public/electron.js\"",
     "postinstall": "electron-builder install-app-deps",
-    "electron-pack": "build -w"
+    "electron-pack": "build -w",
+    "lint:ts": "tslint --project tsconfig.json --config tslint.json"
+  },
+  "lint-staged": {
+    "*.ts": "yarn lint:ts",
+    "*.tsx": "yarn lint:ts"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -46,6 +56,7 @@
     "file-url": "^3.0.0",
     "formatted": "^1.0.0",
     "fs-extra": "^8.0.1",
+    "mime": "^2.4.4",
     "moment": "^2.24.0",
     "npm-watch": "^0.6.0",
     "path": "^0.12.7",
@@ -100,7 +111,11 @@
     "electron-devtools-installer": "^2.2.4",
     "electron-is-dev": "^1.1.0",
     "electron-react-devtools": "^0.5.3",
-    "jest-dom": "^3.5.0"
+    "husky": "^2.4.1",
+    "jest-dom": "^3.5.0",
+    "lint-staged": "^8.2.1",
+    "redux-devtools-extension": "^2.13.8",
+    "tslint": "^5.17.0"
   },
   "author": {
     "name": "Matthew Lee",

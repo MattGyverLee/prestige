@@ -34,7 +34,7 @@ import {
   WIPE_ANNOTATION_SESSION
 } from "./types";
 
-//Object.entries(annTy).forEach(([name, exported]) => window[name] = exported);
+// Object.entries(annTy).forEach(([name, exported]) => window[name] = exported);
 
 export function resetAnnotationAction(
   annotState: AnnotationState
@@ -72,9 +72,7 @@ export function addCategory(inString: string): AnnotationActionTypes {
     payload: inString
   };
 }
-export function pushAnnotation(
-  milestones: Array<Milestone>
-): AnnotationActionTypes {
+export function pushAnnotation(milestones: Milestone[]): AnnotationActionTypes {
   return {
     type: PUSH_ANNOTATION,
     payload: milestones

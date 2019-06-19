@@ -4,8 +4,8 @@ export interface ActiveFolderState {
   folderPath: string;
   folderName: string;
   loaded: boolean;
-  availableFiles: Array<any>;
-  availableMedia: Array<any>;
+  availableFiles: any[];
+  availableMedia: any[];
 }
 
 export interface Folders {
