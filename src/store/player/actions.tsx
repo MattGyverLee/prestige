@@ -1,56 +1,46 @@
-import {
-  MediaPlayerState,
-  ON_ENDED,
-  ON_PLAY,
-  ON_PROGRESS,
-  PLAY_PAUSE,
-  PlayerActionTypes,
-  STOP_PLAYING,
-  TOGGLE_LOOP,
-  UPDATE_PLAYER_SESSION
-} from "./types";
+import * as types from "./types";
 
 export function updatePlayerAction(
-  newPlayerState: MediaPlayerState
-): PlayerActionTypes {
+  newPlayerState: types.MediaPlayerState
+): types.PlayerActionTypes {
   return {
-    type: UPDATE_PLAYER_SESSION,
+    type: types.UPDATE_PLAYER_SESSION,
     payload: newPlayerState
   };
 }
 
-export function playPause(): PlayerActionTypes {
+export function playPause(): types.PlayerActionTypes {
   return {
-    type: PLAY_PAUSE
+    type: types.PLAY_PAUSE
   };
 }
 
-export function stopPlaying(): PlayerActionTypes {
+export function stopPlaying(): types.PlayerActionTypes {
   return {
-    type: STOP_PLAYING
+    type: types.STOP_PLAYING
   };
 }
 
-export function toggleLoop(): PlayerActionTypes {
+export function toggleLoop(): types.PlayerActionTypes {
   return {
-    type: TOGGLE_LOOP
+    type: types.TOGGLE_LOOP
   };
 }
 
-export function onPlay(): PlayerActionTypes {
+export function onPlay(): types.PlayerActionTypes {
   return {
-    type: ON_PLAY
+    type: types.ON_PLAY
   };
 }
 
-export function onEnded(): PlayerActionTypes {
+export function onEnded(): types.PlayerActionTypes {
   return {
-    type: ON_ENDED
+    type: types.ON_ENDED
   };
 }
-export function onProgress(playState: any): PlayerActionTypes {
+export function onProgress(playState: any): types.PlayerActionTypes {
   return {
-    type: ON_PROGRESS,
+    type: types.ON_PROGRESS,
     payload: playState.played
   };
 }

@@ -1,18 +1,8 @@
 // src/store/tree/reducers.ts
 
-import {
-  ActiveFolderState,
-  FILE_ADDED,
-  FILE_CHANGED,
-  FILE_DELETED,
-  MEDIA_ADDED,
-  MEDIA_CHANGED,
-  TreeActionTypes,
-  UPDATE_ACTIVE_FOLDER,
-  UPDATE_TREE
-} from "./types";
+import * as types from "./types";
 
-const initialState: ActiveFolderState = {
+const initialState: types.ActiveFolderState = {
   availableFiles: [],
   availableMedia: [],
   env: "",
@@ -23,16 +13,16 @@ const initialState: ActiveFolderState = {
 
 export function treeReducer(
   state = initialState,
-  action: TreeActionTypes
-): ActiveFolderState {
+  action: types.TreeActionTypes
+): types.ActiveFolderState {
   switch (action.type) {
-    case UPDATE_TREE: {
+    case types.UPDATE_TREE: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case UPDATE_ACTIVE_FOLDER: {
+    case types.UPDATE_ACTIVE_FOLDER: {
       return {
         ...state,
         availableFiles: [],
@@ -42,19 +32,19 @@ export function treeReducer(
         loaded: true
       };
     }
-    case FILE_ADDED: {
+    case types.FILE_ADDED: {
       return {
         ...state,
         availableFiles: [...state.availableFiles, action.payload.file]
       };
     }
-    case MEDIA_ADDED: {
+    case types.MEDIA_ADDED: {
       return {
         ...state,
         availableMedia: [...state.availableMedia, action.payload.file]
       };
     }
-    case FILE_CHANGED: {
+    case types.FILE_CHANGED: {
       let tempState = state.availableFiles.filter(
         file => file.name !== action.payload.file.name
       );
@@ -64,7 +54,7 @@ export function treeReducer(
         availableFiles: [...tempState, action.payload.file]
       };
     }
-    case MEDIA_CHANGED: {
+    case types.MEDIA_CHANGED: {
       let tempState = state.availableMedia.filter(
         file => file.name !== action.payload.file.name
       );
@@ -73,7 +63,7 @@ export function treeReducer(
         availableMedia: [...tempState, action.payload.file]
       };
     }
-    case FILE_DELETED: {
+    case types.FILE_DELETED: {
       return {
         ...state,
         //ToDo: Minor memory waste: try to determine which category has the file instead of double filter.

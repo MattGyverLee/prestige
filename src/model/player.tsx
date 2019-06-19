@@ -1,21 +1,22 @@
 import "../App.css";
 
+import * as actions from "../store";
+
 import React, { Component } from "react";
 
 import ReactPlayer from "react-player";
 import { UpdatePlayerParam } from "../App";
+import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
 //updatePlayerAction,
-
-interface PlayProps {
+interface IStateProps {
   controls?: boolean;
   duration?: number;
-  loaded?: number;
   loop: boolean;
   muted: boolean;
   parent?: any;
-  pip?: boolean;
+  pip: boolean;
   playbackRate: number;
   played: number;
   player?: any;
@@ -24,17 +25,23 @@ interface PlayProps {
   state?: any;
   url: string;
   volume: number;
+  loaded: number;
+}
 
-  playPause: () => void;
-  stopPlaying: () => void;
-  toggleLoop: () => void;
-  onPlay: () => void;
-  onEnded: () => void;
-  onProgress: (state: any) => void;
+interface IDispatchProps {
+  playPause: typeof actions.playPause;
+  stopPlaying: typeof actions.stopPlaying;
+  toggleLoop: typeof actions.toggleLoop;
+  onPlay: typeof actions.onPlay;
+  onEnded: typeof actions.onEnded;
+  onProgress: typeof actions.onProgress;
+}
+interface PlayerProps extends IStateProps, IDispatchProps {
+  //todo: do i need this?
   refreshApp?: (event: UpdatePlayerParam) => void;
 }
 
-class PlayerZone extends Component<PlayProps> {
+class PlayerZone extends Component<PlayerProps> {
   private player!: ReactPlayer;
   //private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
 
@@ -236,5 +243,34 @@ class PlayerZone extends Component<PlayProps> {
     );
   }
 }
+const mapStateToProps = (state: actions.IStateProps): IStateProps => ({
+  playbackRate: state.player.playbackRate,
+  played: state.player.played,
+  muted: state.player.muted,
+  controls: state.player.controls,
+  duration: state.player.duration,
+  playing: state.player.playing,
+  pip: state.player.pip,
+  url: state.player.url,
+  loop: state.player.loop,
+  volume: state.player.volume,
+  loaded: state.player.loaded
+});
 
-export default connect()(PlayerZone);
+const mapDispatchToProps = (dispatch: any): IDispatchProps => ({
+  ...bindActionCreators(
+    {
+      playPause: actions.playPause,
+      stopPlaying: actions.stopPlaying,
+      toggleLoop: actions.toggleLoop,
+      onPlay: actions.onPlay,
+      onEnded: actions.onEnded,
+      onProgress: actions.onProgress
+    },
+    dispatch
+  )
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(PlayerZone);

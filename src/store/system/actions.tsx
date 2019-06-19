@@ -1,8 +1,8 @@
-import { SystemState, UPDATE_SESSION } from "./types";
+import * as types from "./types";
 
-export function updateSession(newSession: SystemState) {
+export function updateSession(newSession: types.SystemState) {
   return {
-    type: UPDATE_SESSION,
+    type: types.UPDATE_SESSION,
     payload: newSession
   };
 }

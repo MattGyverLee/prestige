@@ -1,55 +1,44 @@
-import {
-  ActiveFolderState,
-  FILE_ADDED,
-  FILE_CHANGED,
-  FILE_DELETED,
-  FileDesc,
-  Folders,
-  MEDIA_ADDED,
-  MEDIA_CHANGED,
-  UPDATE_ACTIVE_FOLDER,
-  UPDATE_TREE
-} from "./types";
+import * as types from "./types";
 
-export function updateTree(newTree: ActiveFolderState) {
+export function updateTree(newTree: types.ActiveFolderState) {
   return {
-    type: UPDATE_TREE,
+    type: types.UPDATE_TREE,
     payload: newTree
   };
 }
-export function updateActiveFolder(newFolder: Folders) {
+export function updateActiveFolder(newFolder: types.Folders) {
   return {
-    type: UPDATE_ACTIVE_FOLDER,
+    type: types.UPDATE_ACTIVE_FOLDER,
     payload: newFolder
   };
 }
-export function fileAdded(inFile: FileDesc) {
+export function fileAdded(inFile: types.FileDesc) {
   return {
-    type: FILE_ADDED,
+    type: types.FILE_ADDED,
     payload: inFile
   };
 }
-export function mediaAdded(inFile: FileDesc) {
+export function mediaAdded(inFile: types.FileDesc) {
   return {
-    type: MEDIA_ADDED,
+    type: types.MEDIA_ADDED,
     payload: inFile
   };
 }
-export function fileChanged(inFile: FileDesc) {
+export function fileChanged(inFile: types.FileDesc) {
   return {
-    type: FILE_CHANGED,
+    type: types.FILE_CHANGED,
     payload: inFile
   };
 }
-export function mediaChanged(inFile: FileDesc) {
+export function mediaChanged(inFile: types.FileDesc) {
   return {
-    type: MEDIA_CHANGED,
+    type: types.MEDIA_CHANGED,
     payload: inFile
   };
 }
 export function fileDeleted(inPath: string) {
   return {
-    type: FILE_DELETED,
+    type: types.FILE_DELETED,
     payload: inPath
   };
 }

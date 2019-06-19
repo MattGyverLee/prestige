@@ -27,7 +27,7 @@ export default function processEAF(
   for (h = 0; h < fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h++) {
     var refMedia = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
     for (g = 0; g < props.tree.availableMedia.length; g++) {
-      if (props.tree.availableMedia[g].name == refMedia) {
+      if (props.tree.availableMedia[g].name === refMedia) {
         //toDo: Do this right with Promise
         props.tree.availableMedia[g]["hasAnnotation"] = true;
         props.tree.availableMedia[g]["annotationRef"] = path;
@@ -46,37 +46,42 @@ export default function processEAF(
   //todo: This seems unsafe
 
   tempTimeline = new Timelines(whichTimeline);
-
+  const findStartTime = (myRef: string) => {
+    var startTime = -1;
+    for (i = 0; i < timeSlotPointer.length; i++) {
+      if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef) {
+        startTime = timeSlotPointer[i].$.TIME_VALUE;
+        return startTime;
+      }
+    }
+    return startTime;
+  };
+  const findStopTime = (myRef2: string) => {
+    var stopTime = -1;
+    for (i = 0; i < timeSlotPointer.length; i++) {
+      if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef2) {
+        stopTime = timeSlotPointer[i].$.TIME_VALUE;
+        console.log(stopTime);
+        return stopTime;
+      }
+    }
+    return stopTime;
+  };
   //First Pass:
   //Main Annotation
   for (j = 0; j < fileData.TIER.length; j++) {
+    const lingType = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
+    if (
+      props.annotations.categories.indexOf(lingType) === -1
+      //Todo: Clean up duplication here
+    ) {
+      props.addCategory(fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text");
+    }
     for (k = 0; k < fileData.TIER[j].ANNOTATION.length; k++) {
       if ("ALIGNABLE_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
         const alAnnPointer =
           fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
 
-        const findStartTime = (myRef: string) => {
-          var startTime = -1;
-          for (i = 0; i < timeSlotPointer.length; i++) {
-            if (timeSlotPointer[i].$.TIME_SLOT_ID == myRef) {
-              startTime = timeSlotPointer[i].$.TIME_VALUE;
-              return startTime;
-            }
-          }
-          return startTime;
-        };
-
-        const findStopTime = (myRef2: string) => {
-          var stopTime = -1;
-          for (i = 0; i < timeSlotPointer.length; i++) {
-            if (timeSlotPointer[i].$.TIME_SLOT_ID == myRef2) {
-              stopTime = timeSlotPointer[i].$.TIME_VALUE;
-              console.log(stopTime);
-              return stopTime;
-            }
-          }
-          return stopTime;
-        };
         //need to count id's
         const thisStartTime: number = findStartTime(
           alAnnPointer.$.TIME_SLOT_REF1
@@ -84,10 +89,9 @@ export default function processEAF(
         const thisStopTime: number = findStopTime(
           alAnnPointer.$.TIME_SLOT_REF2
         );
-
         //var annotationRef = "";
         var annotationRef = "";
-        if (alAnnPointer.$.ANNOTATION_REF != undefined) {
+        if (alAnnPointer.$.ANNOTATION_REF !== undefined) {
           annotationRef = alAnnPointer.$.ANNOTATION_REF;
         }
         const milestone = {
@@ -109,6 +113,7 @@ export default function processEAF(
           stopId: alAnnPointer.$.TIME_SLOT_REF2,
           timeline: parsedPath.base
         };
+
         miles.push(milestone);
         tempTimeline.addMilestone(annotationIndex, milestone);
       }
@@ -117,7 +122,7 @@ export default function processEAF(
 
       if ("REF_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
         const refAnnPointer = fileData.TIER[j].ANNOTATION[k].REF_ANNOTATION[0];
-        if (refAnnPointer.ANNOTATION_VALUE[0] != "") {
+        if (refAnnPointer.ANNOTATION_VALUE[0] !== "") {
           /*             var tier3 = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
             if (parentThis.category.indexOf(tier3) == -1) {
               parentThis.category = [...parentThis.category, tier3];
@@ -127,7 +132,7 @@ export default function processEAF(
             var startTime = -1;
             var i;
             for (i = 0; i < miles.length; i++) {
-              if (miles[i]["annotationID"] == myRef3) {
+              if (miles[i]["annotationID"] === myRef3) {
                 startTime = miles[i]["startTime"];
                 return startTime;
               }
@@ -139,7 +144,7 @@ export default function processEAF(
             var i;
             var stopTime = -1;
             for (i = 0; i < miles.length; i++) {
-              if (miles[i]["annotationID"] == myRef4) {
+              if (miles[i]["annotationID"] === myRef4) {
                 stopTime = miles[i]["stopTime"];
                 return stopTime;
               }
@@ -183,7 +188,12 @@ export default function processEAF(
   //Final Actions
   //test = tempTimeline["timeline"][0]["instantiated"];
   //Todo: is this ASYNC Safe?
-  annotationIndex = props.annotation.timeline.length;
+  if (props.annotations.timeline !== undefined) {
+    annotationIndex = props.annotations.timeline.length;
+  } else {
+    annotationIndex = 0;
+  }
+
   tempTimeline.timeline["annotationID"] = annotationIndex;
   props.pushTimeline(tempTimeline);
 

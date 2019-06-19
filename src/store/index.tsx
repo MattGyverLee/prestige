@@ -14,7 +14,7 @@ const rootReducer = combineReducers({
   annotations: annotationReducer
 });
 
-export type AppState = ReturnType<typeof rootReducer>;
+export type IStateProps = ReturnType<typeof rootReducer>;
 
 export default function configureStore() {
   const middlewares = [thunkMiddleware];

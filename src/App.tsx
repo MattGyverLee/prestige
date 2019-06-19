@@ -1,46 +1,12 @@
 import "./App.css";
 
-import { ActiveFolderState, FileDesc, Folders } from "./store/tree/types";
-import {
-  AnnotationState,
-  LooseObject,
-  Milestone
-} from "./store/annotations/types";
-import {
-  addAnnotation,
-  addCategory,
-  addOralAnnotation,
-  enableAudtranscMain,
-  pushAnnotation,
-  pushTimeline,
-  resetAnnotationAction,
-  wipeAnnotationAction
-} from "./store/annotations/actions";
-import {
-  fileAdded,
-  fileChanged,
-  fileDeleted,
-  mediaAdded,
-  mediaChanged,
-  updateActiveFolder,
-  updateTree
-} from "./store/tree/actions";
-import {
-  onEnded,
-  onPlay,
-  onProgress,
-  playPause,
-  stopPlaying,
-  toggleLoop,
-  updatePlayerAction
-} from "./store/player/actions";
+import * as actions from "./store";
 
-import { AppState } from "./store";
-import { MediaPlayerState } from "./store/player/types";
+import { IStateProps } from "./store";
 import PlayerZone from "./model/player";
 import React from "react";
 import SelectFolderZone from "./model/folderSelection";
-import { SystemState } from "./store/system/types";
+import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
@@ -51,61 +17,60 @@ import { updateSession } from "./store/system/actions";
 const isElectron = process.env.REACT_APP_MODE === "electron";
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
-interface AppProps {
-  system: SystemState;
+interface IDispatchProps {
   updateSession: typeof updateSession;
 
-  tree: ActiveFolderState;
-  fileAdded: typeof fileAdded;
-  mediaAdded: typeof mediaAdded;
-  fileChanged: typeof fileChanged;
-  mediaChanged: typeof mediaChanged;
-  fileDeleted: typeof fileDeleted;
-  updateActiveFolder: typeof updateActiveFolder;
-  updateTree: typeof updateTree;
-
-  player: MediaPlayerState;
-  onEnded: typeof onEnded;
-  onPlay: typeof onPlay;
-  onProgress: typeof onProgress;
-  playPause: typeof playPause;
-  stopPlaying: typeof stopPlaying;
-  toggleLoop: typeof toggleLoop;
-  updatePlayerAction: typeof updatePlayerAction;
-
-  annotation: AnnotationState;
-  addCategory: typeof addCategory;
-  addAnnotation: typeof addAnnotation;
-  addOralAnnotation: typeof addOralAnnotation;
-  pushAnnotation: typeof pushAnnotation;
-  pushTimeline: typeof pushTimeline;
-  enableAudtranscMain: typeof enableAudtranscMain;
-  resetAnnotationAction: typeof resetAnnotationAction;
-  wipeAnnotationAction: typeof wipeAnnotationAction;
-
+  fileAdded: typeof actions.fileAdded;
+  fileChanged: typeof actions.fileChanged;
+  fileDeleted: typeof actions.fileDeleted;
   getDirectoryListing: typeof getDirectoryListing;
+  mediaAdded: typeof actions.mediaAdded;
+  mediaChanged: typeof actions.mediaChanged;
   processEAF: typeof processEAF;
+  updateActiveFolder: typeof actions.updateActiveFolder;
+  updateTree: typeof actions.updateTree;
+
+  onEnded: typeof actions.onEnded;
+  onPlay: typeof actions.onPlay;
+  onProgress: typeof actions.onProgress;
+  playPause: typeof actions.playPause;
+  stopPlaying: typeof actions.stopPlaying;
+  toggleLoop: typeof actions.toggleLoop;
+  updatePlayerAction: typeof actions.updatePlayerAction;
+
+  addAnnotation: typeof actions.addAnnotation;
+  addCategory: typeof actions.addCategory;
+  addOralAnnotation: typeof actions.addOralAnnotation;
+  enableAudtranscMain: typeof actions.enableAudtranscMain;
+  pushAnnotation: typeof actions.pushAnnotation;
+  pushTimeline: typeof actions.pushTimeline;
+  resetAnnotationAction: typeof actions.resetAnnotationAction;
+  wipeAnnotationAction: typeof actions.wipeAnnotationAction;
+}
+
+interface AppProps extends IStateProps, IDispatchProps {
+  //local state props go here
 }
 
 class App extends React.Component<AppProps> {
   componentDidMount() {
     if (isElectron) {
       this.props.updateTree({
+        availableFiles: [],
+        availableMedia: [],
         env: "electron",
         folderName: "",
         folderPath: "",
-        loaded: false,
-        availableFiles: [],
-        availableMedia: []
+        loaded: false
       });
     } else {
       this.props.updateTree({
+        availableFiles: [],
+        availableMedia: [],
         env: "web",
         folderName: "",
         folderPath: "",
-        loaded: false,
-        availableFiles: [],
-        availableMedia: []
+        loaded: false
       });
     }
     this.props.updateSession({
@@ -133,7 +98,7 @@ class App extends React.Component<AppProps> {
     this.props.updatePlayerAction({
       controls: false,
       duration: -1,
-      loaded: false,
+      loaded: 0,
       loop: false,
       muted: false,
       pip: false,
@@ -150,26 +115,7 @@ class App extends React.Component<AppProps> {
   }
 
   // Player Features
-  playPause = () => {
-    this.props.playPause();
-    console.log("onPlay/PauseApp");
-  };
-  stopPlaying = () => {
-    this.props.stopPlaying();
-    console.log("onStopApp");
-  };
-  toggleLoop = () => {
-    this.props.toggleLoop();
-    console.log("ToggleLoopApp");
-  };
-  onPlay = () => {
-    this.props.onPlay();
-    console.log("onPlayApp");
-  };
-  onEnded = () => {
-    this.props.onEnded();
-    console.log("onEndedApp");
-  };
+
   onProgress = (playState: any) => {
     this.props.onProgress(playState);
     console.log("onProgressApp", playState);
@@ -178,24 +124,7 @@ class App extends React.Component<AppProps> {
       //this.setState(playState)
     }
   };
-  updateActiveFolder = (inputFolder: Folders) => {
-    this.props.updateActiveFolder(inputFolder);
-    //this.processFolderService(inputFolder.folderPath);
-  };
-  fileAdded = (inputFile: FileDesc) => {
-    this.props.fileAdded(inputFile);
-  };
-  mediaAdded = (inputFile: FileDesc) => {
-    this.props.mediaAdded(inputFile);
-  };
-  pushAnnotation = (inMilestones: Array<Milestone>) => {
-    console.log("onPushAnnotation");
-    this.props.pushAnnotation(inMilestones);
-  };
-  pushTimeline = (inTimeline: LooseObject) => {
-    console.log("onPushTimeline");
-    this.props.pushTimeline(inTimeline);
-  };
+
   callProcessEAF = (inputFile: string) => {
     processEAF(inputFile, this.props);
     console.log(inputFile);
@@ -212,21 +141,7 @@ class App extends React.Component<AppProps> {
         </header>
         <div className="App-body">
           <div className="App-sidebar">
-            <PlayerZone
-              loop={this.props.player.loop}
-              muted={this.props.player.muted}
-              onEnded={this.onEnded}
-              onPlay={this.onPlay}
-              onProgress={this.onProgress}
-              playbackRate={this.props.player.playbackRate}
-              played={this.props.player.played}
-              playing={this.props.player.playing}
-              playPause={this.playPause}
-              stopPlaying={this.stopPlaying}
-              toggleLoop={this.toggleLoop}
-              url={this.props.player.url}
-              volume={this.props.player.volume}
-            />
+            <PlayerZone />
           </div>
           <div className="DetailsZone">
             <p>
@@ -251,42 +166,49 @@ class App extends React.Component<AppProps> {
   }
 }
 
-const mapStateToProps = (state: AppState) => ({
+const mapStateToProps = (state: IStateProps): IStateProps => ({
   system: state.system,
   tree: state.tree,
   player: state.player,
-  annotation: state.annotations
+  annotations: state.annotations
+});
+
+const mapDispatchToProps = (dispatch: any): IDispatchProps => ({
+  ...bindActionCreators(
+    {
+      addAnnotation: actions.addAnnotation,
+      addOralAnnotation: actions.addOralAnnotation,
+      addCategory: actions.addCategory,
+      pushAnnotation: actions.pushAnnotation,
+      enableAudtranscMain: actions.enableAudtranscMain,
+      fileAdded: actions.fileAdded,
+      fileChanged: actions.fileChanged,
+      fileDeleted: actions.fileDeleted,
+      getDirectoryListing,
+      mediaAdded: actions.mediaAdded,
+      mediaChanged: actions.mediaChanged,
+      onEnded: actions.onEnded,
+      onPlay: actions.onPlay,
+      onProgress: actions.onProgress,
+      playPause: actions.playPause,
+      pushTimeline: actions.pushTimeline,
+      processEAF,
+      resetAnnotationAction: actions.resetAnnotationAction,
+      stopPlaying: actions.stopPlaying,
+      toggleLoop: actions.toggleLoop,
+      updateActiveFolder: actions.updateActiveFolder,
+      updatePlayerAction: actions.updatePlayerAction,
+      updateSession,
+      updateTree: actions.updateTree,
+      wipeAnnotationAction: actions.wipeAnnotationAction
+    },
+    dispatch
+  )
 });
 
 export default hot(module)(
   connect(
     mapStateToProps,
-    {
-      addAnnotation,
-      addOralAnnotation,
-      addCategory,
-      pushAnnotation,
-      enableAudtranscMain,
-      fileAdded,
-      fileChanged,
-      fileDeleted,
-      getDirectoryListing,
-      mediaAdded,
-      mediaChanged,
-      onEnded,
-      onPlay,
-      onProgress,
-      playPause,
-      pushTimeline,
-      processEAF,
-      resetAnnotationAction,
-      stopPlaying,
-      toggleLoop,
-      updateActiveFolder,
-      updatePlayerAction,
-      updateSession,
-      updateTree,
-      wipeAnnotationAction
-    }
+    mapDispatchToProps
   )(App)
 );

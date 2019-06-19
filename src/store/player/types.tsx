@@ -2,7 +2,7 @@
 export interface MediaPlayerState {
   controls?: boolean;
   duration?: number;
-  loaded: boolean;
+  loaded: number;
   loop: boolean;
   muted: boolean;
   pip: boolean;
@@ -13,6 +13,7 @@ export interface MediaPlayerState {
   url: string;
   volume: number;
 }
+
 // Describing the different ACTION NAMES available
 export const ON_ENDED = "ON_ENDED";
 export const ON_PLAY = "ON_PLAY";

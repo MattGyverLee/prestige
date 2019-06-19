@@ -1,14 +1,11 @@
+//timeline
 import { LooseObject } from "../store/annotations/types";
-import { number } from "prop-types";
 
 var timeline: LooseObject = {};
-//export timeline
 var nextId = 0;
+
 export class Timelines {
-  //vars
-  //TODO: Remove one
   public readonly timeline: LooseObject = timeline;
-  //Typescript, add ? to st
   constructor(sources: LooseObject) {
     timeline["instantiated"] = true;
     timeline["refName"] = sources["refname"];
@@ -20,10 +17,18 @@ export class Timelines {
   public addMilestone(index: number, newMilestone: LooseObject) {
     var m: number;
     var dup: boolean = false;
+    const pushMilestones = (
+      newstones: LooseObject,
+      outArray: Array<LooseObject>
+    ) => {
+      newstones.forEach((annot: LooseObject) => {
+        outArray.push(annot);
+      });
+    };
     for (m = 0; m < timeline["milestones"].length; m++) {
       if (
-        timeline["milestones"][m]["startTime"] == newMilestone["startTime"] &&
-        timeline["milestones"][m]["stopTime"] == newMilestone["stopTime"]
+        timeline["milestones"][m]["startTime"] === newMilestone["startTime"] &&
+        timeline["milestones"][m]["stopTime"] === newMilestone["stopTime"]
       ) {
         //alert("Dup!")
         dup = true;
@@ -32,9 +37,8 @@ export class Timelines {
           timeline["milestones"][m]["annotationID"] =
             newMilestone["annotationID"];
         }
-        newMilestone["data"].forEach((annot: LooseObject) => {
-          timeline["milestones"][m]["data"].push(annot);
-        });
+        //todo: solve this rather than hiding it.
+        pushMilestones(newMilestone["data"], timeline["milestones"][m]["data"]);
       }
     }
     if (!dup) {
@@ -57,7 +61,7 @@ export class Timelines {
   public addEAFToIndex(index: number, filelist: Array<string>) {
     var f;
     for (f = 0; f < filelist.length; f++) {
-      if (timeline[index]["filename"].indexOf(filelist[f]) == -1) {
+      if (timeline[index]["filename"].indexOf(filelist[f]) === -1) {
         timeline["eaf"].push(filelist[f]);
       }
     }
@@ -65,7 +69,7 @@ export class Timelines {
   public addMediaToIndex(index: number, filelist: Array<string>) {
     var f;
     for (f = 0; f < filelist.length; f++) {
-      if (timeline[index]["filename"].indexOf(filelist[f]) == -1) {
+      if (timeline[index]["filename"].indexOf(filelist[f]) === -1) {
         timeline["syncedMedia"].push(filelist[f]);
       }
     }

@@ -1,21 +1,11 @@
 // src/store/tree/reducers.ts
 
-import {
-  MediaPlayerState,
-  ON_ENDED,
-  ON_PLAY,
-  ON_PROGRESS,
-  PLAY_PAUSE,
-  PlayerActionTypes,
-  STOP_PLAYING,
-  TOGGLE_LOOP,
-  UPDATE_PLAYER_SESSION
-} from "./types";
+import * as types from "./types";
 
-const initialState: MediaPlayerState = {
+const initialState: types.MediaPlayerState = {
   controls: false,
   duration: -1,
-  loaded: false,
+  loaded: 0,
   loop: false,
   muted: false,
   pip: false,
@@ -28,47 +18,47 @@ const initialState: MediaPlayerState = {
 
 export function playerReducer(
   state = initialState,
-  action: PlayerActionTypes
-): MediaPlayerState {
+  action: types.PlayerActionTypes
+): types.MediaPlayerState {
   switch (action.type) {
-    case UPDATE_PLAYER_SESSION: {
+    case types.UPDATE_PLAYER_SESSION: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case PLAY_PAUSE: {
+    case types.PLAY_PAUSE: {
       return {
         ...state,
         playing: !state.playing
       };
     }
-    case STOP_PLAYING: {
+    case types.STOP_PLAYING: {
       return {
         ...state,
         playing: false,
         url: "none"
       };
     }
-    case TOGGLE_LOOP: {
+    case types.TOGGLE_LOOP: {
       return {
         ...state,
         loop: !state.loop
       };
     }
-    case ON_PLAY: {
+    case types.ON_PLAY: {
       return {
         ...state,
         playing: true
       };
     }
-    case ON_ENDED: {
+    case types.ON_ENDED: {
       return {
         ...state,
         playing: state.loop
       };
     }
-    case ON_PROGRESS: {
+    case types.ON_PROGRESS: {
       return {
         ...state,
         played: action.payload

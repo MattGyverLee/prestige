@@ -1,8 +1,8 @@
 // src/store/system/reducers.ts
 
-import { SystemActionTypes, SystemState, UPDATE_SESSION } from "./types";
+import * as types from "./types";
 
-const initialState: SystemState = {
+const initialState: types.SystemState = {
   clicks: 0,
   loggedIn: false,
   session: "",
@@ -11,10 +11,10 @@ const initialState: SystemState = {
 
 export function systemReducer(
   state = initialState,
-  action: SystemActionTypes
-): SystemState {
+  action: types.SystemActionTypes
+): types.SystemState {
   switch (action.type) {
-    case UPDATE_SESSION: {
+    case types.UPDATE_SESSION: {
       return {
         ...state,
         ...action.payload

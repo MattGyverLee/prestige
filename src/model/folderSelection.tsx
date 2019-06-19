@@ -1,10 +1,9 @@
 import * as actions from "../store";
 
-import { FileDesc, Folders } from "../store/tree/types";
 import React, { Component } from "react";
 
+import { FileDesc } from "../store/tree/types";
 import { LooseObject } from "../store/annotations/types";
-import { Milestone } from "../store/annotations/types";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
@@ -63,12 +62,8 @@ class SelectFolderZone extends Component<FolderProps> {
       persistent: true,
       ignoreInitial: false
     });
-    /*         function fileHasChanged() {
-          props.fileChange();
-        } */
-    const parentThis = this;
 
-    function chocFileDescribe(path: string) {
+    const chocFileDescribe = (path: string) => {
       const fileUrl = require("file-url");
       const pathParse = require("path");
       const parsedPath = pathParse.parse(path);
@@ -96,7 +91,7 @@ class SelectFolderZone extends Component<FolderProps> {
                   parsedPath.dir + "\\" + parsedPath.name + ".avi",
                   function(error: Error, file: File) {
                     if (!error) console.log("New video file: " + file);
-                    //todo: update Blob
+                    //todo: update/replace Blob on conversion
                   }
                 );
             },
@@ -131,63 +126,52 @@ class SelectFolderZone extends Component<FolderProps> {
         props.callProcessEAF(path);
       }
       return fileDef;
-    }
+    };
 
-    function chokFileadd(path: string) {
-      //const fs = require('fs-extra')
+    const chokFileadd = (path: string) => {
+      //Todo: If Chokidar.notready, go on, otherwise add annotation.
       const fileDef = chocFileDescribe(path);
       let fileDesc: FileDesc = { file: fileDef };
       if (
         fileDef.mimeType.startsWith("video") ||
         fileDef.mimeType.startsWith("audio")
-        /*||
-                fileDef['type'].startsWith("video") ||
-                fileDef['type'].startsWith("audio")*/
       ) {
-        parentThis.props.mediaAdded(fileDesc);
-        //fileDef['blobURL'] =  URL.createObjectURL(fs.readFileSync(localFolder + '/' + file))
-        //fileDef['blobURL'] =  URL.createObjectURL(fileDef)
+        props.mediaAdded(fileDesc);
       } else {
-        parentThis.props.fileAdded(fileDesc);
+        props.fileAdded(fileDesc);
       }
       console.log(`File ${path} has been added`);
-    }
-    function choKAddDir(path: string) {
+    };
+    const choKAddDir = (path: string) => {
       console.log(`Directory ${path} has been added`);
-    }
-    function chokChange(path: string) {
+    };
+    const chokChange = (path: string) => {
       const fileDef = chocFileDescribe(path);
       let fileDesc: FileDesc = { file: fileDef };
       if (
         fileDef.mimeType.startsWith("video") ||
         fileDef.mimeType.startsWith("audio")
-        /*||
-              fileDef['type'].startsWith("video") ||
-              fileDef['type'].startsWith("audio")*/
       ) {
-        parentThis.props.mediaChanged(fileDesc);
-        //fileDef['blobURL'] =  URL.createObjectURL(fs.readFileSync(localFolder + '/' + file))
-        //fileDef['blobURL'] =  URL.createObjectURL(fileDef)
+        props.mediaChanged(fileDesc);
       } else {
-        parentThis.props.fileChanged(fileDesc);
+        props.fileChanged(fileDesc);
       }
       console.log(`File ${path} has been changed`);
-    }
-    function chokUnlink(path: string) {
+    };
+    const chokUnlink = (path: string) => {
       const pathParse = require("path");
       const parsedPath = pathParse.parse(path);
-      parentThis.props.fileDeleted(parsedPath.base);
+      props.fileDeleted(parsedPath.base);
       console.log(`File ${path} has been removed`);
-    }
-    function chokUnlinkDir(path: string) {
+    };
+    const chokUnlinkDir = (path: string) => {
       console.log(`Directory ${path} has been removed`);
-    }
-    function chokError(error: Error) {
+    };
+    const chokError = (error: Error) => {
       console.log(`Watcher error: ${error}`);
-    }
+    };
     const chokReady = () => {
-      //todo: copy files to timeline.
-      this.addNewMediaToMilestones();
+      this.addNewMediaToMilestone();
       console.log(`Initial scan complete. Ready for changes`);
     };
 
@@ -227,9 +211,8 @@ class SelectFolderZone extends Component<FolderProps> {
       }
     }
   }
-  addNewMediaToMilestones = () => {
+  addNewMediaToMilestone() {
     this.props.availableMedia.forEach(mediaFile => {
-      const parentThis = this;
       if (mediaFile.isAnnotation && !mediaFile.inMilestones) {
         const pathParse = require("path");
         const parsedPath = pathParse.parse(mediaFile.path);
@@ -242,8 +225,8 @@ class SelectFolderZone extends Component<FolderProps> {
         const refStop = parseFloat(splitPath[2]);
         const refType = splitPath[3];
         const tier = refType + "_audio";
-        if (parentThis.props.categories.indexOf(refType) == -1) {
-          parentThis.props.addCategory(refType);
+        if (this.props.categories.indexOf(tier) === -1) {
+          this.props.addCategory(tier);
         }
         var fileDef: LooseObject = {};
         fileDef["isAnnotation"] = true;
@@ -263,20 +246,10 @@ class SelectFolderZone extends Component<FolderProps> {
           timeline: parsedPath.base
         };
         mediaFile.inMilestones = true;
-        parentThis.props.addOralAnnotation(oralMilestone);
+        this.props.addOralAnnotation(oralMilestone);
       }
-      //console.log(media.name);
-
-      console.log("this.props.tree.availableMedia.length()");
-
-      /*
-
-        
-        
-        props.AddOralAnnotationToTimeline();
-      }*/
     });
-  };
+  }
   /* export function formatTimeline(path: string) {
     console.log("Starting");
     const focus = this.timeline["timeline"][0]["milestones"];
@@ -371,9 +344,8 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   }
 }
-//const mapDispatchToProps = (dispatch: any) => { return { fileChange: () => fileChange(dispatch) } }
-//todo: Define state: Istate from https://github.com/sillsdev/web-transcriber-admin/blob/develop/src/model/state.tsx
-const mapStateToProps = (state: actions.AppState): IStateProps => ({
+
+const mapStateToProps = (state: actions.IStateProps): IStateProps => ({
   annotations: state.annotations.annotations,
   availableFiles: state.tree.availableFiles,
   availableMedia: state.tree.availableMedia,
