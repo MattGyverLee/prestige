@@ -100,8 +100,8 @@ export function playerReducer(
     case types.ON_PROGRESS: {
       if (!state.seeking && action.payload !== undefined) {
         return {
-          ...action.payload,
-          ...state
+          ...state,
+          ...action.payload
         };
       } else {
         return state;
@@ -109,9 +109,38 @@ export function playerReducer(
     }
     case types.SET_DURATION: {
       return {
-        ...state
-        // duration: action.payload
+        ...state, duration: action.payload
       };
+    }
+    case types.SET_PLAYBACK_RATE: {
+      return {
+        ...state, playbackRate: action.payload
+      }
+    }
+    case types.TOGGLE_MUTED: {
+      return {
+        ...state, muted: !state.muted
+      }
+    }
+    case types.ON_SEEK_MOUSE_DOWN: {
+      return {
+        ...state, seeking: true
+      }
+    }
+    case types.ON_SEEK_MOUSE_UP: {
+      return {
+        ...state, seeking: false
+      }
+    }
+    case types.ON_SEEK_CHANGE: {
+      return {
+        ...state, played: action.payload
+      }
+    }
+    case types.ON_VOLUME_CHANGE: {
+      return {
+        ...state, volume: action.payload
+      }
     }
     // this.setState({ url: null, playing: false })
     default:

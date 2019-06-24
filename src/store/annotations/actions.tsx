@@ -3,14 +3,14 @@ import * as types from "./types";
 // TODO: Collapse these to *
 // Object.entries(annTy).forEach(([name, exported]) => window[name] = exported);
 
-export function annHardResetApp(inString: string): types.AnnotationActionTypes {
+export function hardResetApp(inString: string): types.AnnotationActionTypes {
   return {
     type: types.HARD_RESET_APP,
     payload: inString
   };
 }
 
-export function annOnNewFolder(inString: string): types.AnnotationActionTypes {
+export function onNewFolder(inString: string): types.AnnotationActionTypes {
   return {
     type: types.ON_NEW_FOLDER,
     payload: inString

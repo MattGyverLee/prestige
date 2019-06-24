@@ -1,6 +1,6 @@
 import * as types from "./types";
 
-export function onNewFolder(newPath: string): types.OverActionTypes {
+export function onNewFolder(newPath: string) {
   return {
     type: types.ON_NEW_FOLDER,
     payload: newPath

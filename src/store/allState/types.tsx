@@ -1,4 +1,4 @@
-import { Folders, TreeState } from "../tree/types";
+import { TreeState } from "../tree/types";
 
 import { AnnotationState } from "../annotations/types";
 import { MediaPlayerState } from "../player/types";

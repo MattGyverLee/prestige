@@ -30,6 +30,12 @@ export const UPDATE_PLAYER_SESSION = "UPDATE_PLAYER_SESSION";
 export const SET_VID_PLAYER_REF = "SET_VID_PLAYER_REF";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
+export const SET_PLAYBACK_RATE = "SET_PLAYBACK_RATE";
+export const TOGGLE_MUTED = "TOGGLE_MUTED";
+export const ON_SEEK_MOUSE_DOWN = "ON_SEEK_MOUSE_DOWN";
+export const ON_SEEK_MOUSE_UP = "ON_SEEK_MOUSE_UP";
+export const ON_SEEK_CHANGE = "ON_SEEK_CHANGE";
+export const ON_VOLUME_CHANGE = "ON_VOLUME_CHANGE";
 
 interface PlayHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -83,7 +89,28 @@ interface OnProgress {
 }
 interface SetDuration {
   type: typeof SET_DURATION;
-  payload: any;
+  payload: number;
+}
+interface SetPlaybackRate {
+  type: typeof SET_PLAYBACK_RATE;
+  payload: number;
+}
+interface ToggleMuted {
+  type: typeof TOGGLE_MUTED;
+}
+interface OnSeekMouseDown {
+  type: typeof ON_SEEK_MOUSE_DOWN;
+}
+interface OnSeekMouseUp {
+  type: typeof ON_SEEK_MOUSE_UP;
+}
+interface OnSeekChange {
+  type: typeof ON_SEEK_CHANGE;
+  payload: number;
+}
+interface OnVolumeChange {
+  type: typeof ON_VOLUME_CHANGE;
+  payload: number;
 }
 
 export type PlayerActionTypes =
@@ -100,4 +127,10 @@ export type PlayerActionTypes =
   | ToggleLoop
   | UpdatePlayerAction
   | PlayHardResetApp
-  | PlayOnNewFolder;
+  | PlayOnNewFolder
+  | SetPlaybackRate
+  | ToggleMuted
+  | OnSeekMouseDown
+  | OnSeekMouseUp
+  | OnSeekChange
+  | OnVolumeChange;

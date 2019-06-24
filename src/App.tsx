@@ -23,7 +23,6 @@ export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 interface DispatchProps {
   updateSession: typeof updateSession;
-  sysHardResetApp: typeof actions.sysHardResetApp;
 
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
@@ -34,7 +33,6 @@ interface DispatchProps {
   processEAF: typeof processEAF;
   // updateActiveFolder: typeof actions.updateActiveFolder;
   updateTree: typeof actions.updateTree;
-  treeHardResetApp: typeof actions.treeHardResetApp;
 
   onEnded: typeof actions.onEnded;
   onPlay: typeof actions.onPlay;
@@ -43,7 +41,6 @@ interface DispatchProps {
   stopPlaying: typeof actions.stopPlaying;
   toggleLoop: typeof actions.toggleLoop;
   updatePlayerAction: typeof actions.updatePlayerAction;
-  playHardResetApp: typeof actions.playHardResetApp;
 
   addAnnotation: typeof actions.addAnnotation;
   addCategory: typeof actions.addCategory;
@@ -53,8 +50,7 @@ interface DispatchProps {
   pushTimeline: typeof actions.pushTimeline;
   resetAnnotationAction: typeof actions.resetAnnotationAction;
   wipeAnnotationAction: typeof actions.wipeAnnotationAction;
-  annHardResetApp: typeof actions.annHardResetApp;
-  annOnNewFolder: typeof actions.annOnNewFolder;
+  hardResetApp: typeof actions.hardResetApp;
 }
 
 interface AppProps extends actions.StateProps, DispatchProps {
@@ -124,10 +120,7 @@ class App extends React.Component<AppProps> {
         <div className="App-body">
           <div className="App-sidebar">
             <PlayerZone />
-            <button onClick={() => this.props.annHardResetApp("")}>
-              {" "}
-              Reset{" "}
-            </button>
+            <button onClick={() => this.props.hardResetApp("")}> Reset </button>
           </div>
           <div className="DetailsZone">
             <p>
@@ -180,11 +173,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       updateSession,
       updateTree: actions.updateTree,
       wipeAnnotationAction: actions.wipeAnnotationAction,
-      annHardResetApp: actions.annHardResetApp,
-      sysHardResetApp: actions.sysHardResetApp,
-      treeHardResetApp: actions.treeHardResetApp,
-      playHardResetApp: actions.playHardResetApp,
-      annOnNewFolder: actions.annOnNewFolder
+      hardResetApp: actions.hardResetApp
     },
     dispatch
   )

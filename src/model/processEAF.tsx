@@ -31,7 +31,7 @@ export default function processEAF(
     const refMedia = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
     for (g = 0; g < props.tree.availableMedia.length; g++) {
       if (props.tree.availableMedia[g].name === refMedia) {
-        // toDo: Do this right with Promise
+        // toDo: Do this right with Redux
         props.tree.availableMedia[g]["hasAnnotation"] = true;
         props.tree.availableMedia[g]["annotationRef"] = path;
       }

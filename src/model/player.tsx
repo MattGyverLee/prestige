@@ -10,6 +10,8 @@ import Paper from "@material-ui/core/Paper";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import { findDOMNode } from 'react-dom';
+import screenfull from 'screenfull';
 
 interface StateProps {
   controls?: boolean;
@@ -41,6 +43,12 @@ interface DispatchProps {
   play: typeof actions.play;
   setURL: typeof actions.setURL;
   setDuration: typeof actions.setDuration;
+  setPlaybackRate: typeof actions.setPlaybackRate;
+  toggleMuted: typeof actions.toggleMuted;
+  onSeekMouseDown: typeof actions.onSeekMouseDown;
+  onSeekMouseUp: typeof actions.onSeekMouseUp;
+  onSeekChange: typeof actions.onSeekChange;
+  onVolumeChange: typeof actions.onVolumeChange;
 }
 interface PlayerProps extends StateProps, DispatchProps {
   // todo: do i need this?
@@ -57,27 +65,26 @@ class PlayerZone extends Component<PlayerProps> {
   pip = () => {
     // this.setState({ pip: !this.props.pip });
   };
-  setVolume = (e: any) => {
-    // this.setState({ volume: parseFloat(e.target.value) });
-  };
-  toggleMuted = () => {
-    // this.setState({ muted: !this.props.muted });
+  onVolumeChange = (e: any) => {
+    this.props.onVolumeChange(parseFloat(e.target.value));
   };
   setPlaybackRate = (e: any) => {
-    // this.setState({ playbackRate: parseFloat(e.target.value) });
+    this.props.setPlaybackRate(parseFloat(e.target.value));
   };
   onPause = () => {
     // console.log("onPause");
     // this.setState({ playing: false });
   };
   onSeekMouseDown = (e: any) => {
-    // this.setState({ seeking: true });
+    this.props.onSeekMouseDown();
   };
   onSeekChange = (e: any) => {
+    this.props.onSeekChange(parseFloat(e.target.value));
     // this.setState({ played: parseFloat(e.target.value) });
   };
   onSeekMouseUp = (e: any) => {
     // this.setState({ seeking: false });
+    this.props.onSeekMouseUp();
     this.player.seekTo(parseFloat(e.target.value));
   };
   seekToSec = (player: any, time: number) => {
@@ -103,12 +110,12 @@ class PlayerZone extends Component<PlayerProps> {
         this.setState(state)
     }
     } */
-  onDuration = (duration: any) => {
-    // console.log("onDuration", duration);
-    actions.setDuration({ duration });
+  onDuration = (duration: number) => {
+    console.log("onDuration", duration);
+    this.props.setDuration({ duration });
   };
   onClickFullscreen = () => {
-    // screenfull.request(findDOMNode(this.player))
+    //screenfull.request(findDOMNode(this.player))
   };
 
   ref = (player: any) => {
@@ -216,7 +223,7 @@ class PlayerZone extends Component<PlayerProps> {
                   <input
                     max={1}
                     min={0}
-                    onChange={this.setVolume}
+                    onChange={this.onVolumeChange}
                     step="any"
                     type="range"
                     value={this.props.volume}
@@ -231,7 +238,7 @@ class PlayerZone extends Component<PlayerProps> {
                   <input
                     checked={this.props.muted}
                     id="muted"
-                    onChange={this.toggleMuted}
+                    onChange={this.props.toggleMuted}
                     type="checkbox"
                   />
                 </td>
@@ -260,7 +267,7 @@ class PlayerZone extends Component<PlayerProps> {
                 <td>
                   <Duration
                     className="Total Duration"
-                    seconds={this.props.duration.toFixed(3)}
+                    seconds={this.props.duration}
                   />
                 </td>
               </tr>
@@ -269,9 +276,7 @@ class PlayerZone extends Component<PlayerProps> {
                 <td>
                   <Duration
                     className="Duration-elapsed"
-                    seconds={(this.props.duration * this.props.played).toFixed(
-                      3
-                    )}
+                    seconds={(this.props.duration * this.props.played)}
                   />
                 </td>
               </tr>
@@ -343,7 +348,13 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onPlay: actions.onPlay,
       onEnded: actions.onEnded,
       onProgress: actions.onProgress,
-      setDuration: actions.setDuration
+      setDuration: actions.setDuration,
+      setPlaybackRate: actions.setPlaybackRate,
+      toggleMuted: actions.toggleMuted,
+      onSeekMouseDown: actions.onSeekMouseDown,
+      onSeekMouseUp: actions.onSeekMouseUp,
+      onSeekChange: actions.onSeekChange,
+      onVolumeChange: actions.onVolumeChange
     },
     dispatch
   )

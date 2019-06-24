@@ -35,7 +35,7 @@ interface DispatchProps {
   pushAnnotation: typeof actions.pushAnnotation;
   pushTimeline: typeof actions.pushTimeline;
   setURL: typeof actions.setURL;
-  onNewFolder: typeof actions.annOnNewFolder;
+  onNewFolder: typeof actions.onNewFolder;
   resetAnnotationAction: typeof actions.resetAnnotationAction;
 }
 
@@ -178,11 +178,13 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log(`Watcher error: ${error}`);
     };
     const chokReady = () => {
-      // Todo: Re-Enable playing on load.
-      //props.setURL(this.props.availableMedia[0].blobURL);
-      // todo: Re-Enable Media Milestones
       this.addNewMediaToMilestone();
-      console.log(`Initial scan complete. Ready for changes`);
+      if (this.props.availableMedia.length !== 0) {
+        props.setURL(this.props.availableMedia[0].blobURL);
+        console.log(`Initial scan complete. Ready for changes`);
+      } else {
+        console.log("Empty Directory")
+      }
     };
 
     // Declare the listeners of the watcher
@@ -204,12 +206,14 @@ class SelectFolderZone extends Component<FolderProps> {
   }
 
   loadLocalFolder(inputElement: any) {
-    if (
+    if (inputElement.files.length === 0) {
+      console.log("Undefined Directory Selected");
+      return;
+    } else if (
       inputElement.files[0].path !== undefined &&
       inputElement.files[0].path !== oldPath
     ) {
       console.log("Setting Folder to: " + inputElement.files[0].path);
-      //this.props.resetAnnotationAction(annCleanStore);
       this.props.onNewFolder(inputElement.files[0].path);
       // toDo: Make this fire on Update
       const path = inputElement.files[0].path.toString();
@@ -307,7 +311,7 @@ class SelectFolderZone extends Component<FolderProps> {
 
       table.push(row);
     });
-    actions.pushAnnotationTable(table);
+    this.props.pushAnnotationTable(table);
     //actions.pushAnnotationTable(this.formatTimeline(this.props.timeline[0]));
     //  return table;
   };
@@ -371,7 +375,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       pushAnnotationTable: actions.pushAnnotationTable,
       pushTimeline: actions.pushTimeline,
       setURL: actions.setURL,
-      onNewFolder: actions.annOnNewFolder,
+      onNewFolder: actions.onNewFolder,
       resetAnnotationAction: actions.resetAnnotationAction
     },
     dispatch
