@@ -2,7 +2,7 @@
 
 import * as types from "./types";
 
-const initialState: types.SystemState = {
+export const systemCleanStore: types.SystemState = {
   clicks: 0,
   loggedIn: false,
   session: "",
@@ -10,10 +10,17 @@ const initialState: types.SystemState = {
 };
 
 export function systemReducer(
-  state = initialState,
+  state = systemCleanStore,
   action: types.SystemActionTypes
 ): types.SystemState {
   switch (action.type) {
+    case types.HARD_RESET_APP: {
+      state = systemCleanStore;
+      return state;
+    }
+    case types.ON_NEW_FOLDER: {
+      return state;
+    }
     case types.UPDATE_SESSION: {
       return {
         ...state,

@@ -7,26 +7,27 @@ import { systemReducer } from "./system/reducers";
 import thunkMiddleware from "redux-thunk";
 import { treeReducer } from "./tree/reducers";
 
-const rootReducer = combineReducers({
+export const allReducers = combineReducers({
   system: systemReducer,
   tree: treeReducer,
   player: playerReducer,
   annotations: annotationReducer
 });
 
-export type StateProps = ReturnType<typeof rootReducer>;
+export type StateProps = ReturnType<typeof allReducers>;
 
 export default function configureStore() {
   const middlewares = [thunkMiddleware];
   const middleWareEnhancer = applyMiddleware(...middlewares);
 
   const store = createStore(
-    rootReducer,
+    allReducers,
     composeWithDevTools(middleWareEnhancer)
   );
 
   return store;
 }
+//export * from "./allState/actions";
 export * from "./annotations/actions";
 export * from "./system/actions";
 export * from "./player/actions";

@@ -23,7 +23,7 @@ class Player extends Component {
         this.setState({ playbackRate: parseFloat(e.target.value) })
       }
       onPlay = () => {
-        console.log('onPlay')
+        //console.log('onPlay')
         this.setState({ playing: true })
       }
       onEnablePIP = () => {

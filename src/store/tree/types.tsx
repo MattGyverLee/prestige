@@ -1,5 +1,5 @@
 // Describing the shape of the tree's slice of state
-export interface ActiveFolderState {
+export interface TreeState {
   env: string;
   folderPath: string;
   folderName: string;
@@ -25,12 +25,24 @@ export const MEDIA_ADDED = "MEDIA_ADDED";
 export const FILE_CHANGED = "FILE_CHANGED";
 export const MEDIA_CHANGED = "MEDIA_CHANGED";
 export const FILE_DELETED = "FILE_DELETED";
+export const HARD_RESET_APP = "HARD_RESET_APP";
+export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 
+interface TreeHardResetApp {
+  type: typeof HARD_RESET_APP;
+  payload: string;
+}
+
+interface TreeOnNewFolder {
+  type: typeof ON_NEW_FOLDER;
+  payload: string;
+}
 interface UpdateTree {
   type: typeof UPDATE_TREE;
-  payload: ActiveFolderState;
+  payload: TreeState;
 }
 interface UpdateActiveFolder {
+  // deprecate
   type: typeof UPDATE_ACTIVE_FOLDER;
   payload: Folders;
 }
@@ -62,4 +74,6 @@ export type TreeActionTypes =
   | MediaAdded
   | MediaChanged
   | UpdateActiveFolder
+  | TreeHardResetApp
+  | TreeOnNewFolder
   | UpdateTree;

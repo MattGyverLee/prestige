@@ -4,14 +4,16 @@ import * as actions from "../store";
 
 import React, { Component } from "react";
 
+import Duration from "./duration";
+import { LooseObject } from "../store/annotations/types";
+import Paper from "@material-ui/core/Paper";
 import ReactPlayer from "react-player";
-import { UpdatePlayerParam } from "../App";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
 interface StateProps {
   controls?: boolean;
-  duration?: number;
+  duration: any;
   loop: boolean;
   muted: boolean;
   parent?: any;
@@ -25,6 +27,8 @@ interface StateProps {
   url: string;
   volume: number;
   loaded: number;
+  availableMedia: LooseObject[];
+  vidPlayerRef: ReactPlayer;
 }
 
 interface DispatchProps {
@@ -34,42 +38,64 @@ interface DispatchProps {
   onPlay: typeof actions.onPlay;
   onEnded: typeof actions.onEnded;
   onProgress: typeof actions.onProgress;
+  play: typeof actions.play;
+  setURL: typeof actions.setURL;
+  setDuration: typeof actions.setDuration;
 }
 interface PlayerProps extends StateProps, DispatchProps {
   // todo: do i need this?
-  refreshApp?: (event: UpdatePlayerParam) => void;
 }
 
 class PlayerZone extends Component<PlayerProps> {
+  componentDidMount() {
+    // Runs on load
+    actions.setVidPlayerRef(this.player);
+  }
   private player!: ReactPlayer;
   // private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
 
   pip = () => {
-    this.setState({ pip: !this.props.pip });
+    // this.setState({ pip: !this.props.pip });
   };
   setVolume = (e: any) => {
-    this.setState({ volume: parseFloat(e.target.value) });
+    // this.setState({ volume: parseFloat(e.target.value) });
   };
   toggleMuted = () => {
-    this.setState({ muted: !this.props.muted });
+    // this.setState({ muted: !this.props.muted });
   };
   setPlaybackRate = (e: any) => {
-    this.setState({ playbackRate: parseFloat(e.target.value) });
+    // this.setState({ playbackRate: parseFloat(e.target.value) });
   };
   onPause = () => {
-    console.log("onPause");
-    this.setState({ playing: false });
+    // console.log("onPause");
+    // this.setState({ playing: false });
   };
   onSeekMouseDown = (e: any) => {
-    this.setState({ seeking: true });
+    // this.setState({ seeking: true });
   };
   onSeekChange = (e: any) => {
-    this.setState({ played: parseFloat(e.target.value) });
+    // this.setState({ played: parseFloat(e.target.value) });
   };
   onSeekMouseUp = (e: any) => {
-    this.setState({ seeking: false });
+    // this.setState({ seeking: false });
     this.player.seekTo(parseFloat(e.target.value));
   };
+  seekToSec = (player: any, time: number) => {
+    // todo: test this.
+    player = this.props.player;
+    const length = player.getDuration();
+    const newTime = time / length;
+    player.seekTo(newTime);
+    actions.play();
+  };
+  loadNewFile(idx: number) {
+    this.props.play();
+    this.props.setURL(this.props.availableMedia[idx].blobURL);
+    // todo: manage Index
+  }
+  sourceMedia() {
+    return this.props.availableMedia.filter(file => !file.isAnnotation);
+  }
   /* onProgress = (state: any) => {
     console.log('onProgress', state)
     // We only want to update time slider if we are not currently seeking
@@ -78,8 +104,8 @@ class PlayerZone extends Component<PlayerProps> {
     }
     } */
   onDuration = (duration: any) => {
-    console.log("onDuration", duration);
-    this.setState({ duration });
+    // console.log("onDuration", duration);
+    actions.setDuration({ duration });
   };
   onClickFullscreen = () => {
     // screenfull.request(findDOMNode(this.player))
@@ -230,6 +256,38 @@ class PlayerZone extends Component<PlayerProps> {
                 </td>
               </tr>
               <tr>
+                <th>duration</th>
+                <td>
+                  <Duration
+                    className="Total Duration"
+                    seconds={this.props.duration.toFixed(3)}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <th>elapsed</th>
+                <td>
+                  <Duration
+                    className="Duration-elapsed"
+                    seconds={(this.props.duration * this.props.played).toFixed(
+                      3
+                    )}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <th>remaining</th>
+                <td>
+                  <Duration
+                    className="Duration-Remaining"
+                    seconds={(
+                      this.props.duration *
+                      (1 - this.props.played)
+                    ).toFixed(3)}
+                  />
+                </td>
+              </tr>
+              <tr>
                 <th>Loaded</th>
                 <td>
                   <progress max={1} value={this.props.loaded} />
@@ -237,6 +295,22 @@ class PlayerZone extends Component<PlayerProps> {
               </tr>
             </tbody>
           </table>
+        </div>
+        <div>
+          <Paper>
+            <ul className="list-group list-group-flush">
+              {" "}
+              {this.sourceMedia().map((d, idx) => (
+                <li
+                  key={idx}
+                  className="list-group-item flex-container"
+                  onClick={() => this.loadNewFile(idx)}
+                >
+                  <div> {d.name} </div>
+                </li>
+              ))}{" "}
+            </ul>
+          </Paper>
         </div>
       </div>
     );
@@ -253,18 +327,23 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   url: state.player.url,
   loop: state.player.loop,
   volume: state.player.volume,
-  loaded: state.player.loaded
+  loaded: state.player.loaded,
+  availableMedia: state.tree.availableMedia,
+  vidPlayerRef: state.player.vidPlayerRef
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
+      play: actions.play,
+      setURL: actions.setURL,
       playPause: actions.playPause,
       stopPlaying: actions.stopPlaying,
       toggleLoop: actions.toggleLoop,
       onPlay: actions.onPlay,
       onEnded: actions.onEnded,
-      onProgress: actions.onProgress
+      onProgress: actions.onProgress,
+      setDuration: actions.setDuration
     },
     dispatch
   )

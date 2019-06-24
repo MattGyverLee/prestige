@@ -2,22 +2,28 @@ import "./App.css";
 
 import * as actions from "./store";
 
+import AnnotationTable from "./model/annotTable";
 import PlayerZone from "./model/player";
 import React from "react";
 import SelectFolderZone from "./model/folderSelection";
+import { annCleanStore } from "./store/annotations/reducers";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
+import { playerCleanStore } from "./store/player/reducers";
 import processEAF from "./model/processEAF";
 import { updateSession } from "./store/system/actions";
+
+// import { playerCleanStore } from "./store";
 
 const isElectron = process.env.REACT_APP_MODE === "electron";
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 interface DispatchProps {
   updateSession: typeof updateSession;
+  sysHardResetApp: typeof actions.sysHardResetApp;
 
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
@@ -26,8 +32,9 @@ interface DispatchProps {
   mediaAdded: typeof actions.mediaAdded;
   mediaChanged: typeof actions.mediaChanged;
   processEAF: typeof processEAF;
-  updateActiveFolder: typeof actions.updateActiveFolder;
+  // updateActiveFolder: typeof actions.updateActiveFolder;
   updateTree: typeof actions.updateTree;
+  treeHardResetApp: typeof actions.treeHardResetApp;
 
   onEnded: typeof actions.onEnded;
   onPlay: typeof actions.onPlay;
@@ -36,6 +43,7 @@ interface DispatchProps {
   stopPlaying: typeof actions.stopPlaying;
   toggleLoop: typeof actions.toggleLoop;
   updatePlayerAction: typeof actions.updatePlayerAction;
+  playHardResetApp: typeof actions.playHardResetApp;
 
   addAnnotation: typeof actions.addAnnotation;
   addCategory: typeof actions.addCategory;
@@ -45,6 +53,8 @@ interface DispatchProps {
   pushTimeline: typeof actions.pushTimeline;
   resetAnnotationAction: typeof actions.resetAnnotationAction;
   wipeAnnotationAction: typeof actions.wipeAnnotationAction;
+  annHardResetApp: typeof actions.annHardResetApp;
+  annOnNewFolder: typeof actions.annOnNewFolder;
 }
 
 interface AppProps extends actions.StateProps, DispatchProps {
@@ -78,46 +88,19 @@ class App extends React.Component<AppProps> {
       userName: "Matthew",
       clicks: 0
     });
-    const cleanStore = {
-      annotations: [],
-      annotationSet: [],
-      audCareful_Main: false,
-      audTransl_Main: false,
-      categories: [],
-      fileInfo_Main: false,
-      sayMoreMeta_Main: false,
-      timeline: [],
-      txtTransc_Main: false,
-      txtTransc_Subtitle: false,
-      txtTransl_Main: false,
-      txtTransl_Subtitle: false
-    };
-    this.props.wipeAnnotationAction(cleanStore);
 
-    this.props.updatePlayerAction({
-      controls: false,
-      duration: -1,
-      loaded: 0,
-      loop: false,
-      muted: false,
-      pip: false,
-      playbackRate: 1.0,
-      played: false,
-      playing: false,
-      seeking: false,
-      url: "http://www.youtube.com/watch?v=Fc1P-AEaEp8",
-      // url: "https://www.youtube.com/watch?v=Hz63M3v11nE&t=7",
-      volume: 0.8
-    });
+    this.props.wipeAnnotationAction(annCleanStore);
 
-    this.props.enableAudtranscMain();
+    this.props.updatePlayerAction(playerCleanStore);
+
+    // this.props.enableAudtranscMain();
   }
 
   // Player Features
 
   onProgress = (playState: any) => {
     this.props.onProgress(playState);
-    console.log("onProgressApp", playState);
+    console.log("??onProgressApp", playState); // ??Missed
     if (!this.props.player.seeking) {
       // this.setState({player: {played: playState.played}})
       // this.setState(playState)
@@ -126,7 +109,7 @@ class App extends React.Component<AppProps> {
 
   callProcessEAF = (inputFile: string) => {
     processEAF(inputFile, this.props);
-    console.log(inputFile);
+    console.log("#Scanning EAF", inputFile);
   };
 
   render() {
@@ -141,19 +124,16 @@ class App extends React.Component<AppProps> {
         <div className="App-body">
           <div className="App-sidebar">
             <PlayerZone />
+            <button onClick={() => this.props.annHardResetApp("")}>
+              {" "}
+              Reset{" "}
+            </button>
           </div>
           <div className="DetailsZone">
             <p>
               {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
             </p>
-            <p>
-              <textarea
-                cols={60}
-                value={getDirectoryListing(this.props.tree.availableMedia)}
-                readOnly
-                rows={20}
-              />
-            </p>
+            <AnnotationTable />
           </div>
         </div>
         <p>{this.props.tree.loaded}</p>
@@ -195,11 +175,16 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       resetAnnotationAction: actions.resetAnnotationAction,
       stopPlaying: actions.stopPlaying,
       toggleLoop: actions.toggleLoop,
-      updateActiveFolder: actions.updateActiveFolder,
+      // updateActiveFolder: actions.updateActiveFolder,
       updatePlayerAction: actions.updatePlayerAction,
       updateSession,
       updateTree: actions.updateTree,
-      wipeAnnotationAction: actions.wipeAnnotationAction
+      wipeAnnotationAction: actions.wipeAnnotationAction,
+      annHardResetApp: actions.annHardResetApp,
+      sysHardResetApp: actions.sysHardResetApp,
+      treeHardResetApp: actions.treeHardResetApp,
+      playHardResetApp: actions.playHardResetApp,
+      annOnNewFolder: actions.annOnNewFolder
     },
     dispatch
   )

@@ -1,19 +1,21 @@
 import * as actions from "../store";
 
+import { AnnotationRow, LooseObject } from "../store/annotations/types";
 import React, { Component } from "react";
 
 import { FileDesc } from "../store/tree/types";
-import { LooseObject } from "../store/annotations/types";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
 let oldPath = "";
+var watcherRef: any;
 interface StateProps {
   annotations: object;
   availableFiles: LooseObject[];
   availableMedia: LooseObject[];
   categories: string[];
   env: string;
+  timeline: any;
   folderName: string;
   folderPath: string;
   loaded: boolean;
@@ -27,10 +29,14 @@ interface DispatchProps {
   fileDeleted: typeof actions.fileDeleted;
   mediaAdded: typeof actions.mediaAdded;
   mediaChanged: typeof actions.mediaChanged;
-  updateActiveFolder: typeof actions.updateActiveFolder;
+  // updateActiveFolder: typeof actions.updateActiveFolder;
   addAnnotation: typeof actions.addAnnotation;
+  pushAnnotationTable: typeof actions.pushAnnotationTable;
   pushAnnotation: typeof actions.pushAnnotation;
   pushTimeline: typeof actions.pushTimeline;
+  setURL: typeof actions.setURL;
+  onNewFolder: typeof actions.annOnNewFolder;
+  resetAnnotationAction: typeof actions.resetAnnotationAction;
 }
 
 interface FolderProps extends StateProps, DispatchProps {
@@ -46,21 +52,17 @@ class SelectFolderZone extends Component<FolderProps> {
     };
   }
 
-  componentDidMount() {
-    /*     storage.get('watch_folder', (error: Error, data: any) => {
-        if (data)
-        this.StartWatcher(data.path, this.props);
-    }); */
-  }
-
   startWatcher = (path: string, props: any) => {
+    if (watcherRef !== undefined) {
+      watcherRef.close();
+    }
     const chokidar = require("chokidar");
     const watcher = chokidar.watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
       ignoreInitial: false
     });
-
+    watcherRef = watcher;
     const chocFileDescribe = (path: string) => {
       const fileUrl = require("file-url");
       const pathParse = require("path");
@@ -78,6 +80,8 @@ class SelectFolderZone extends Component<FolderProps> {
       if (tempMime.startsWith("model") && tempMime.endsWith(".mts")) {
         try {
           const ffmpeg = require("ffmpeg");
+
+          // eslint-disable-next-line
           const process = new ffmpeg(blobURL);
           process.then(
             function(video: any) {
@@ -105,7 +109,10 @@ class SelectFolderZone extends Component<FolderProps> {
         }
       }
       let isAnnotation = false;
-      if (parsedPath.dir.endsWith("_Annotations")) {
+      if (
+        parsedPath.dir.endsWith("_Annotations") ||
+        parsedPath.base.includes("oralAnnotations")
+      ) {
         isAnnotation = true;
       }
       const fileDef: LooseObject = {
@@ -171,6 +178,9 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log(`Watcher error: ${error}`);
     };
     const chokReady = () => {
+      // Todo: Re-Enable playing on load.
+      //props.setURL(this.props.availableMedia[0].blobURL);
+      // todo: Re-Enable Media Milestones
       this.addNewMediaToMilestone();
       console.log(`Initial scan complete. Ready for changes`);
     };
@@ -199,11 +209,9 @@ class SelectFolderZone extends Component<FolderProps> {
       inputElement.files[0].path !== oldPath
     ) {
       console.log("Setting Folder to: " + inputElement.files[0].path);
-      this.props.updateActiveFolder({
-        folderName: inputElement.files[0].name,
-        folderPath: inputElement.files[0].path
-      });
-      // toDo: Make this Fire on Update
+      //this.props.resetAnnotationAction(annCleanStore);
+      this.props.onNewFolder(inputElement.files[0].path);
+      // toDo: Make this fire on Update
       const path = inputElement.files[0].path.toString();
       if (path !== "" && path !== oldPath) {
         this.startWatcher(path, this.props);
@@ -213,7 +221,11 @@ class SelectFolderZone extends Component<FolderProps> {
   }
   addNewMediaToMilestone() {
     this.props.availableMedia.forEach(mediaFile => {
-      if (mediaFile.isAnnotation && !mediaFile.inMilestones) {
+      if (
+        mediaFile.isAnnotation &&
+        !mediaFile.name.includes("oralAnnotation") &&
+        !mediaFile.inMilestones
+      ) {
         const pathParse = require("path");
         const parsedPath = pathParse.parse(mediaFile.path);
         const splitPath = parsedPath.name.split("_");
@@ -235,7 +247,7 @@ class SelectFolderZone extends Component<FolderProps> {
         mediaFile["inMilestones"] = true;
         fileDef["linguisticType"] = tier;
         fileDef["channel"] = refType;
-        fileDef["minmeType"] = mediaFile.mimeType;
+        fileDef["mimeType"] = mediaFile.mimeType;
         fileDef["name"] = mediaFile.name;
         fileDef["blobURL"] = mediaFile.blobURL;
         const oralMilestone: LooseObject = {
@@ -250,14 +262,18 @@ class SelectFolderZone extends Component<FolderProps> {
         this.props.addOralAnnotation(oralMilestone);
       }
     });
+    // Do here:
   }
-  /* export function formatTimeline(path: string) {
-    console.log("Starting");
-    const focus = this.timeline["timeline"][0]["milestones"];
+  formatTimeline = (timeline: LooseObject) => {
+    // console.log("Starting");
+    // tslint:disable-next-line
+    let focus = timeline["milestones"];
     // TODO 0 is Temporary
-    let table = [];
-    focus.forEach(milestone => {
-      console.log(milestone.data);
+    // tslint:disable-next-line
+    let table: AnnotationRow[] = [];
+    focus.forEach((milestone: LooseObject) => {
+      // console.log(milestone.data);
+      // tslint:disable-next-line
       let row = {
         id: milestone["id"],
         startTime: milestone["startTime"],
@@ -267,58 +283,35 @@ class SelectFolderZone extends Component<FolderProps> {
         txtTransc: "",
         txtTransl: ""
       };
-      let c, d;
-      for (c = 0; c < this.state.category.length; c++) {
-        for (d = 0; d < milestone["data"].length; d++) {
-          console.log(this.state.category[c]);
-          console.log(milestone["data"][d]);
-
-          if (
-            milestone["data"][d]["mimeType"].startsWith("audio") &&
-            this.state.category[c].endsWith("audio")
-          ) {
-            console.log("Audio");
-            if (milestone["data"][d]["refType"] == "Careful") {
-              row["audCareful"] = milestone["data"][d]["blobURL"];
-            }
-            if (milestone["data"][d]["refType"] == "Translation") {
-              row["audTransl"] = milestone["data"][d]["blobURL"];
-            }
+      let d;
+      for (d = 0; d < milestone["data"].length; d++) {
+        if (milestone["data"][d]["mimeType"].startsWith("audio")) {
+          // console.log("Audio");
+          if (milestone["data"][d]["channel"] === "Careful") {
+            row["audCareful"] = milestone["data"][d]["blobURL"];
           }
-          if (
-            milestone["data"][d]["mimeType"].startsWith("string") &&
-            this.state.category[c].endsWith("text")
-          ) {
-            console.log("Text");
-            if (milestone["data"][d]["channel"] == "Transcription") {
-              row["txtTransc"] = milestone["data"][d]["data"];
-            }
-            if (milestone["data"][d]["channel"] == "Translation") {
-              row["txtTransl"] = milestone["data"][d]["data"];
-            }
+          if (milestone["data"][d]["channel"] === "Translation") {
+            row["audTransl"] = milestone["data"][d]["blobURL"];
+          }
+        }
+        if (milestone["data"][d]["mimeType"].startsWith("string")) {
+          // console.log("Text");
+          if (milestone["data"][d]["channel"] === "Transcription") {
+            row["txtTransc"] = milestone["data"][d]["data"];
+          }
+          if (milestone["data"][d]["channel"] === "Translation") {
+            row["txtTransl"] = milestone["data"][d]["data"];
           }
         }
       }
+
       table.push(row);
     });
-    console.log(table);
-    this.setState(
-      {
-        annotations: [
-          ...this.state.annotations,
-          {
-            eaf: path,
-            times: table
-          }
-        ]
-      },
-      function() {
-        this.setState({ annotationLoaded: true });
-        console.log("TimelineAnnotations Set");
-      }
-    );
-  }
- */
+    actions.pushAnnotationTable(table);
+    //actions.pushAnnotationTable(this.formatTimeline(this.props.timeline[0]));
+    //  return table;
+  };
+
   render() {
     if (this.props.env === "electron") {
       return (
@@ -338,6 +331,10 @@ class SelectFolderZone extends Component<FolderProps> {
             {" "}
             Load Folder{" "}
           </button>
+          <button onClick={() => this.formatTimeline(this.props.timeline[0])}>
+            {" "}
+            Reset{" "}
+          </button>
         </div>
       );
     } else {
@@ -354,7 +351,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   env: state.tree.env,
   folderName: state.tree.folderName,
   folderPath: state.tree.folderPath,
-  loaded: state.tree.loaded
+  loaded: state.tree.loaded,
+  timeline: state.annotations.timeline
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -367,10 +365,14 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       fileDeleted: actions.fileDeleted,
       mediaAdded: actions.mediaAdded,
       mediaChanged: actions.mediaChanged,
-      updateActiveFolder: actions.updateActiveFolder,
+      // updateActiveFolder: actions.updateActiveFolder,
       addAnnotation: actions.addAnnotation,
       pushAnnotation: actions.pushAnnotation,
-      pushTimeline: actions.pushTimeline
+      pushAnnotationTable: actions.pushAnnotationTable,
+      pushTimeline: actions.pushTimeline,
+      setURL: actions.setURL,
+      onNewFolder: actions.annOnNewFolder,
+      resetAnnotationAction: actions.resetAnnotationAction
     },
     dispatch
   )
@@ -379,4 +381,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(SelectFolderZone);
-// export default connect(null,mapDispatchToProps)(SelectFolderZone)

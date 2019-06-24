@@ -10,8 +10,17 @@ export class AnnotDetail extends Object {
   txtTransl?: string;
 }
 
-export interface LooseObject {
+export interface LooseObject extends Object {
   [key: string]: any;
+}
+export interface AnnotationRow {
+  id: number;
+  startTime: number;
+  stopTime: number;
+  audCareful: string;
+  audTransl: string;
+  txtTransc: string;
+  txtTransl: string;
 }
 export interface Milestone {
   annotationID: string;
@@ -30,16 +39,17 @@ export interface Milestone {
 export interface AnnotationState {
   annotations: any[];
   annotationSet: any[];
-  audCareful_Main: boolean;
-  audTransl_Main: boolean;
+  annotationTable: any[];
+  audCarefulMain: boolean;
+  audTranslMain: boolean;
   categories: string[];
-  fileInfo_Main: boolean;
-  sayMoreMeta_Main: boolean;
+  fileInfoMain: boolean;
+  sayMoreMetaMain: boolean;
   timeline: LooseObject;
-  txtTransc_Main: boolean;
-  txtTransc_Subtitle: boolean;
-  txtTransl_Main: boolean;
-  txtTransl_Subtitle: boolean;
+  txtTranscMain: boolean;
+  txtTranscSubtitle: boolean;
+  txtTranslMain: boolean;
+  txtTranslSubtitle: boolean;
 }
 
 // Describing the different ACTION NAMES available
@@ -65,6 +75,7 @@ export const ENABLE_TXTTRANSL_MAIN = "ENABLE_TXTTRANSL_MAIN";
 export const ENABLE_AUDTRANSL_SUB = "ENABLE_AUDTRANSL_SUB";
 export const PUSH_ANNOTATION = "REMOVE_ANNOTATION";
 export const PUSH_TIMELINE = "PUSH_TIMELINE";
+export const PUSH_ANNOTATION_TABLE = "PUSH_ANNOTATION_TABLE";
 export const PUSH_WHICH_TIMELINE = "PUSH_WHICH_TIMELINE";
 export const REMOVE_ANNOTATION = "REMOVE_ANNOTATION";
 export const REMOVE_ANNOTATIONSET = "REMOVE_ANNOTATIONSET";
@@ -72,6 +83,18 @@ export const RESET_ANNOTATION_SESSION = "RESET_ANNOTATION_SESSION";
 export const UPDATE_ANNOTATION = "UPDATE_ANNOTATION";
 export const UPDATE_ANNOTATIONSET = "UPDATE_ANNOTATIONSET";
 export const WIPE_ANNOTATION_SESSION = "WIPE_ANNOTATION_SESSION";
+export const HARD_RESET_APP = "HARD_RESET_APP";
+export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
+
+interface HardResetApp {
+  type: typeof HARD_RESET_APP;
+  payload: string;
+}
+
+interface OnNewFolder {
+  type: typeof ON_NEW_FOLDER;
+  payload: string;
+}
 
 interface ResetAnnotationAction {
   type: typeof RESET_ANNOTATION_SESSION;
@@ -94,6 +117,10 @@ interface AddOralAnnotation {
 interface PushAnnotation {
   type: typeof PUSH_ANNOTATION;
   payload: Milestone[];
+}
+interface PushAnnotationTable {
+  type: typeof PUSH_ANNOTATION_TABLE;
+  payload: AnnotationRow[];
 }
 interface PushWhichTimeline {
   type: typeof PUSH_WHICH_TIMELINE;
@@ -198,6 +225,7 @@ export type AnnotationActionTypes =
   | EnableTranscSub
   | EnableTxttranslMain
   | PushAnnotation
+  | PushAnnotationTable
   | PushTimeline
   | PushWhichTimeline
   | RemoveAnnotation
@@ -205,4 +233,6 @@ export type AnnotationActionTypes =
   | ResetAnnotationAction
   | UpdateAnnotation
   | UpdateAnnotationset
-  | WipeAnnotationAction;
+  | WipeAnnotationAction
+  | HardResetApp
+  | OnNewFolder;

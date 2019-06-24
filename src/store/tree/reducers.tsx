@@ -2,34 +2,34 @@
 
 import * as types from "./types";
 
-const initialState: types.ActiveFolderState = {
+const env = process.env.REACT_APP_MODE + "";
+
+export const treeCleanStore: types.TreeState = {
   availableFiles: [],
   availableMedia: [],
-  env: "",
+  env: env,
   folderName: "",
   folderPath: "",
   loaded: false
 };
 
 export function treeReducer(
-  state = initialState,
+  state = treeCleanStore,
   action: types.TreeActionTypes
-): types.ActiveFolderState {
+): types.TreeState {
   switch (action.type) {
+    case types.HARD_RESET_APP: {
+      state = treeCleanStore;
+      return state;
+    }
+    case types.ON_NEW_FOLDER: {
+      state = treeCleanStore;
+      return { ...state, folderPath: action.payload };
+    }
     case types.UPDATE_TREE: {
       return {
         ...state,
         ...action.payload
-      };
-    }
-    case types.UPDATE_ACTIVE_FOLDER: {
-      return {
-        ...state,
-        availableFiles: [],
-        availableMedia: [],
-        folderName: action.payload.folderName,
-        folderPath: action.payload.folderPath,
-        loaded: true
       };
     }
     case types.FILE_ADDED: {
@@ -77,6 +77,7 @@ export function treeReducer(
     }
     // TODO add Media/File Deletion
     default:
+      // console.log("Failed Tree Action", action);
       return state;
   }
 }

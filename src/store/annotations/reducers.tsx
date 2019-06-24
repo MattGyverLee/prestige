@@ -1,244 +1,223 @@
 // src/store/tree/reducers.ts
 
-import {
-  ADD_ANNOTATION,
-  ADD_ANNOTATIONSET,
-  ADD_CATEGORY,
-  ADD_ORAL_ANNOTATION,
-  AnnotationActionTypes,
-  AnnotationState,
-  DISABLE_AUDCAREFUL_MAIN,
-  DISABLE_AUDTRANSC_MAIN,
-  DISABLE_AUDTRANSL_MAIN,
-  DISABLE_AUDTRANSL_SUB,
-  DISABLE_FILEINFO,
-  DISABLE_META_MAIN,
-  DISABLE_TRANSC_SUB,
-  DISABLE_TXTTRANSL_MAIN,
-  ENABLE_AUDCAREFUL_MAIN,
-  ENABLE_AUDTRANSC_MAIN,
-  ENABLE_AUDTRANSL_MAIN,
-  ENABLE_AUDTRANSL_SUB,
-  ENABLE_FILEINFO,
-  ENABLE_META_MAIN,
-  ENABLE_TRANSC_SUB,
-  ENABLE_TXTTRANSL_MAIN,
-  LooseObject,
-  PUSH_ANNOTATION,
-  PUSH_TIMELINE,
-  PUSH_WHICH_TIMELINE,
-  REMOVE_ANNOTATION,
-  REMOVE_ANNOTATIONSET,
-  RESET_ANNOTATION_SESSION,
-  UPDATE_ANNOTATION,
-  UPDATE_ANNOTATIONSET,
-  WIPE_ANNOTATION_SESSION
-} from "./types";
+import * as types from "./types";
 
-//import {map} from "redux-data-structures"
-
-/* export function audCareful_Main() {
- return map({
-  trueActionTypes: ['ENABLE_AUDCAREFUL_MAIN'],
-  falseActionTypes: ['DISABLE_AUDCAREFUL_MAIN']
-})
-} */
-
-const initialState: AnnotationState = {
+export const annCleanStore: types.AnnotationState = {
   annotations: [],
   annotationSet: [],
-  audCareful_Main: false,
-  audTransl_Main: false,
+  annotationTable: [
+    {
+      id: "0",
+      startTime: 0,
+      txtTransc: "Not Loaded"
+    }
+  ],
+  audCarefulMain: false,
+  audTranslMain: false,
   categories: [],
-  fileInfo_Main: false,
-  sayMoreMeta_Main: false,
-  timeline: {},
-  txtTransc_Main: false,
-  txtTransc_Subtitle: false,
-  txtTransl_Main: false,
-  txtTransl_Subtitle: false
+  fileInfoMain: false,
+  sayMoreMetaMain: false,
+  timeline: [],
+  txtTranscMain: false,
+  txtTranscSubtitle: false,
+  txtTranslMain: false,
+  txtTranslSubtitle: false
 };
 
 export function annotationReducer(
-  state = initialState,
-  action: AnnotationActionTypes
-): AnnotationState {
+  state = annCleanStore,
+  action: types.AnnotationActionTypes
+): types.AnnotationState {
   switch (action.type) {
-    case RESET_ANNOTATION_SESSION: {
+    case types.HARD_RESET_APP: {
+      state = annCleanStore;
+      return state;
+    }
+    case types.ON_NEW_FOLDER: {
+      state = annCleanStore;
+      return state;
+    }
+    case types.RESET_ANNOTATION_SESSION: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case WIPE_ANNOTATION_SESSION: {
+    case types.WIPE_ANNOTATION_SESSION: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case ADD_ANNOTATION: {
+    case types.ADD_ANNOTATION: {
       return {
         ...state,
         annotations: [...state.annotations, action.payload]
       };
     }
-    case ADD_ORAL_ANNOTATION: {
-      //TODO: Need to clean this up, it's awfully messy!
-      //todo: pass BLOBURL inside
-      const milestones = state.timeline[0].milestones.map((m: LooseObject) =>
-        m.startTime === action.payload.startTime &&
-        m.stopTime === action.payload.stopTime
-          ? { ...m, data: m.data.concat(action.payload.data) }
-          : m
+    case types.ADD_ORAL_ANNOTATION: {
+      // todo: pass BLOBURL inside
+      const milestones = state.timeline[0].milestones.map(
+        (m: types.LooseObject) =>
+          m.startTime === action.payload.startTime &&
+          m.stopTime === action.payload.stopTime
+            ? { ...m, data: m.data.concat(action.payload.data) }
+            : m
       );
-      //action.payload.annotationID = targetMilestone.annotationID;
       return {
         ...state,
-        timeline: state.timeline.map((t: LooseObject, i: number) =>
+        timeline: state.timeline.map((t: types.LooseObject, i: number) =>
           i === 0 ? { ...t, milestones } : t
         )
       };
     }
-    case ADD_CATEGORY: {
+    case types.ADD_CATEGORY: {
       return {
         ...state,
         categories: [...state.categories, action.payload]
       };
     }
-    case PUSH_ANNOTATION: {
+    case types.PUSH_ANNOTATION: {
       return {
         ...state,
         annotations: [action.payload]
       };
     }
-    case PUSH_TIMELINE: {
+    case types.PUSH_ANNOTATION_TABLE: {
+      return {
+        ...state,
+        annotationTable: [action.payload]
+      };
+    }
+    case types.PUSH_TIMELINE: {
       return {
         ...state,
         timeline: state.timeline.concat(action.payload.timeline)
       };
     }
-    case PUSH_WHICH_TIMELINE: {
+    case types.PUSH_WHICH_TIMELINE: {
       return {
         ...state,
         timeline: [action.payload]
       };
     }
-    case UPDATE_ANNOTATION: {
+    case types.UPDATE_ANNOTATION: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case REMOVE_ANNOTATION: {
+    case types.REMOVE_ANNOTATION: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case ADD_ANNOTATIONSET: {
+    case types.ADD_ANNOTATIONSET: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case UPDATE_ANNOTATIONSET: {
+    case types.UPDATE_ANNOTATIONSET: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case REMOVE_ANNOTATIONSET: {
+    case types.REMOVE_ANNOTATIONSET: {
       return {
         ...state,
         ...action.payload
       };
     }
-    case ENABLE_AUDCAREFUL_MAIN: {
+    case types.ENABLE_AUDCAREFUL_MAIN: {
       return {
         ...state
       };
     }
-    case DISABLE_AUDCAREFUL_MAIN: {
+    case types.DISABLE_AUDCAREFUL_MAIN: {
       return {
         ...state
       };
     }
-    case ENABLE_AUDTRANSL_MAIN: {
+    case types.ENABLE_AUDTRANSL_MAIN: {
       return {
         ...state,
-        audTransl_Main: true
+        audTranslMain: true
       };
     }
-    case DISABLE_AUDTRANSL_MAIN: {
+    case types.DISABLE_AUDTRANSL_MAIN: {
       return {
         ...state,
-        audTransl_Main: false
+        audTranslMain: false
       };
     }
-    case ENABLE_AUDTRANSC_MAIN: {
+    case types.ENABLE_AUDTRANSC_MAIN: {
       return {
         ...state,
-        txtTransc_Main: true
+        txtTranscMain: true
       };
     }
-    case DISABLE_AUDTRANSC_MAIN: {
+    case types.DISABLE_AUDTRANSC_MAIN: {
       return {
         ...state,
-        txtTransc_Main: false
+        txtTranscMain: false
       };
     }
-    case ENABLE_TRANSC_SUB: {
+    case types.ENABLE_TRANSC_SUB: {
       return {
         ...state
       };
     }
-    case DISABLE_TRANSC_SUB: {
+    case types.DISABLE_TRANSC_SUB: {
       return {
         ...state
       };
     }
-    case ENABLE_TXTTRANSL_MAIN: {
+    case types.ENABLE_TXTTRANSL_MAIN: {
       return {
         ...state
       };
     }
-    case DISABLE_TXTTRANSL_MAIN: {
+    case types.DISABLE_TXTTRANSL_MAIN: {
       return {
         ...state
       };
     }
-    case ENABLE_AUDTRANSL_SUB: {
+    case types.ENABLE_AUDTRANSL_SUB: {
       return {
         ...state
       };
     }
-    case DISABLE_AUDTRANSL_SUB: {
+    case types.DISABLE_AUDTRANSL_SUB: {
       return {
         ...state
       };
     }
-    case ENABLE_META_MAIN: {
+    case types.ENABLE_META_MAIN: {
       return {
         ...state
       };
     }
-    case DISABLE_META_MAIN: {
+    case types.DISABLE_META_MAIN: {
       return {
         ...state
       };
     }
-    case ENABLE_FILEINFO: {
+    case types.ENABLE_FILEINFO: {
       return {
         ...state
       };
     }
-    case DISABLE_FILEINFO: {
+    case types.DISABLE_FILEINFO: {
       return {
         ...state
       };
     }
 
     default:
+      // console.log("Failed Tree Action", action);
       return state;
   }
 }

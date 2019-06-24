@@ -11,6 +11,9 @@ export default function processEAF(
   let content: any = "";
   const file = fs.readFileSync(path);
   parseString(file, function(err: Error, result: any) {
+    if (err) {
+      console.log(err.stack);
+    }
     content = result;
   });
   const fileData = content.ANNOTATION_DOCUMENT;
@@ -61,7 +64,7 @@ export default function processEAF(
     for (i = 0; i < timeSlotPointer.length; i++) {
       if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef2) {
         stopTime = timeSlotPointer[i].$.TIME_VALUE;
-        console.log(stopTime);
+        // console.log(stopTime);
         return stopTime;
       }
     }
@@ -200,8 +203,8 @@ export default function processEAF(
   // this.setState({ category: parentThis.category });
   // -----------------------------------------
   // this.state.rawAnnotationLoaded = true;
-  console.log("Pause Here");
+  console.log("EAF Processed");
 
   // TODO: FormatTimeline
-  // this.formatTimeline(path);
+  // props.formatTimeline(path);
 }
