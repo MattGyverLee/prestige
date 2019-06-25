@@ -1,5 +1,3 @@
-// timeline
-
 import { LooseObject } from "../store/annotations/types";
 
 const timeline: LooseObject = {};
@@ -31,7 +29,6 @@ export class Timelines {
         timeline["milestones"][m]["startTime"] === newMilestone["startTime"] &&
         timeline["milestones"][m]["stopTime"] === newMilestone["stopTime"]
       ) {
-        // alert("Dup!")
         dup = true;
         // Todo Test Dups
         if ("annotationID" in newMilestone) {
@@ -43,21 +40,15 @@ export class Timelines {
       }
     }
     if (!dup) {
-      newMilestone["id"] = this.getNextAnnotRef(0); // todo the 0 is temporary
+      newMilestone["id"] = nextId;
       timeline["milestones"].push(newMilestone);
       nextId += 1;
     }
-
-    // alert("pushed milestone")
   }
 
   public countMilestones(): number {
     // need to handle multiple instances
     return timeline["milestones"].length();
-  }
-  public getNextAnnotRef(index: number): number {
-    // need to handle multiple instances
-    return nextId;
   }
   public addEAFToIndex(index: number, filelist: string[]) {
     let f;

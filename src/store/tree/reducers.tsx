@@ -6,11 +6,13 @@ const env = process.env.REACT_APP_MODE + "";
 
 export const treeCleanStore: types.TreeState = {
   availableFiles: [],
-  availableMedia: [],
+  sourceMedia: [],
+  annotMedia: [],
   env: env,
   folderName: "",
   folderPath: "",
-  loaded: false
+  loaded: false,
+  prevPath: ""
 };
 
 export function treeReducer(
@@ -26,6 +28,10 @@ export function treeReducer(
       state = treeCleanStore;
       return { ...state, folderPath: action.payload };
     }
+    case types.CHANGE_PREV_PATH: {
+      state = treeCleanStore;
+      return { ...state, prevPath: action.payload };
+    }
     case types.UPDATE_TREE: {
       return {
         ...state,
@@ -38,10 +44,16 @@ export function treeReducer(
         availableFiles: [...state.availableFiles, action.payload.file]
       };
     }
-    case types.MEDIA_ADDED: {
+    case types.SOURCE_MEDIA_ADDED: {
       return {
         ...state,
-        availableMedia: [...state.availableMedia, action.payload.file]
+        sourceMedia: [...state.sourceMedia, action.payload.file]
+      };
+    }
+    case types.ANNOT_MEDIA_ADDED: {
+      return {
+        ...state,
+        annotMedia: [...state.annotMedia, action.payload.file]
       };
     }
     case types.FILE_CHANGED: {
@@ -54,21 +66,33 @@ export function treeReducer(
         availableFiles: [...tempState, action.payload.file]
       };
     }
-    case types.MEDIA_CHANGED: {
-      const tempState = state.availableMedia.filter(
+    case types.SOURCE_MEDIA_CHANGED: {
+      const tempState = state.sourceMedia.filter(
         file => file.name !== action.payload.file.name
       );
       return {
         ...state,
-        availableMedia: [...tempState, action.payload.file]
+        sourceMedia: [...tempState, action.payload.file]
+      };
+    }
+    case types.ANNOT_MEDIA_CHANGED: {
+      const tempState = state.annotMedia.filter(
+        file => file.name !== action.payload.file.name
+      );
+      return {
+        ...state,
+        sourceMedia: [...tempState, action.payload.file]
       };
     }
     case types.FILE_DELETED: {
       return {
         ...state,
         // ToDo: Minor memory waste: try to determine which category has the file instead of double filter.
-        availableMedia: [
-          ...state.availableMedia.filter(file => file.name !== action.payload)
+        sourceMedia: [
+          ...state.sourceMedia.filter(file => file.name !== action.payload)
+        ],
+        annotMedia: [
+          ...state.annotMedia.filter(file => file.name !== action.payload)
         ],
         availableFiles: [
           ...state.availableFiles.filter(file => file.name !== action.payload)

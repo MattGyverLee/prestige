@@ -7,18 +7,19 @@ import { FileDesc } from "../store/tree/types";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
-let oldPath = "";
 var watcherRef: any;
 interface StateProps {
   annotations: object;
   availableFiles: LooseObject[];
-  availableMedia: LooseObject[];
+  sourceMedia: LooseObject[];
+  annotMedia: LooseObject[];
   categories: string[];
   env: string;
   timeline: any;
   folderName: string;
   folderPath: string;
   loaded: boolean;
+  prevPath: string;
 }
 
 interface DispatchProps {
@@ -27,8 +28,10 @@ interface DispatchProps {
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
-  mediaAdded: typeof actions.mediaAdded;
-  mediaChanged: typeof actions.mediaChanged;
+  sourceMediaAdded: typeof actions.sourceMediaAdded;
+  annotMediaAdded: typeof actions.annotMediaAdded;
+  sourceMediaChanged: typeof actions.sourceMediaChanged;
+  annotMediaChanged: typeof actions.annotMediaChanged;
   // updateActiveFolder: typeof actions.updateActiveFolder;
   addAnnotation: typeof actions.addAnnotation;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
@@ -37,6 +40,7 @@ interface DispatchProps {
   setURL: typeof actions.setURL;
   onNewFolder: typeof actions.onNewFolder;
   resetAnnotationAction: typeof actions.resetAnnotationAction;
+  changePrevPath: typeof actions.changePrevPath;
 }
 
 interface FolderProps extends StateProps, DispatchProps {
@@ -48,6 +52,7 @@ class SelectFolderZone extends Component<FolderProps> {
   constructor(props: any) {
     super(props);
     this.state = {
+      prevPath: "",
       open: false
     };
   }
@@ -56,8 +61,7 @@ class SelectFolderZone extends Component<FolderProps> {
     if (watcherRef !== undefined) {
       watcherRef.close();
     }
-    const chokidar = require("chokidar");
-    const watcher = chokidar.watch(path, {
+    const watcher = require("chokidar").watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
       ignoreInitial: false
@@ -143,7 +147,11 @@ class SelectFolderZone extends Component<FolderProps> {
         fileDef.mimeType.startsWith("video") ||
         fileDef.mimeType.startsWith("audio")
       ) {
-        props.mediaAdded(fileDesc);
+        if (fileDef["isAnnotation"]) {
+          props.annotMediaAdded(fileDesc);
+        } else {
+          props.sourceMediaAdded(fileDesc);
+        }
       } else {
         props.fileAdded(fileDesc);
       }
@@ -179,9 +187,9 @@ class SelectFolderZone extends Component<FolderProps> {
     };
     const chokReady = () => {
       this.addNewMediaToMilestone();
-      if (this.props.availableMedia.length !== 0) {
+      if (this.props.sourceMedia.length !== 0) {
         this.formatTimeline(this.props.timeline[0]);
-        props.setURL(this.props.availableMedia[0].blobURL);
+        props.setURL(this.props.sourceMedia[0].blobURL);
         console.log(`Initial scan complete. Ready for changes`);
       } else {
         console.log("Empty Directory")
@@ -212,20 +220,20 @@ class SelectFolderZone extends Component<FolderProps> {
       return;
     } else if (
       inputElement.files[0].path !== undefined &&
-      inputElement.files[0].path !== oldPath
+      inputElement.files[0].path !== this.props.prevPath
     ) {
       console.log("Setting Folder to: " + inputElement.files[0].path);
       this.props.onNewFolder(inputElement.files[0].path);
       // toDo: Make this fire on Update
       const path = inputElement.files[0].path.toString();
-      if (path !== "" && path !== oldPath) {
+      if (path !== "" && path !== this.props.prevPath) {
         this.startWatcher(path, this.props);
-        oldPath = path;
+        this.props.changePrevPath(path);
       }
     }
   }
   addNewMediaToMilestone() {
-    this.props.availableMedia.forEach(mediaFile => {
+    this.props.annotMedia.forEach(mediaFile => {
       if (
         mediaFile.isAnnotation &&
         !mediaFile.name.includes("oralAnnotation") &&
@@ -338,10 +346,6 @@ class SelectFolderZone extends Component<FolderProps> {
             {" "}
             Load Folder{" "}
           </button>
-          <button onClick={() => this.formatTimeline(this.props.timeline[0])}>
-            {" "}
-            Reset{" "}
-          </button>
         </div>
       );
     } else {
@@ -353,13 +357,15 @@ class SelectFolderZone extends Component<FolderProps> {
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotations: state.annotations.annotations,
   availableFiles: state.tree.availableFiles,
-  availableMedia: state.tree.availableMedia,
+  sourceMedia: state.tree.sourceMedia,
+  annotMedia: state.tree.annotMedia,
   categories: state.annotations.categories,
   env: state.tree.env,
   folderName: state.tree.folderName,
   folderPath: state.tree.folderPath,
   loaded: state.tree.loaded,
-  timeline: state.annotations.timeline
+  timeline: state.annotations.timeline,
+  prevPath: state.tree.prevPath
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -370,8 +376,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
-      mediaAdded: actions.mediaAdded,
-      mediaChanged: actions.mediaChanged,
+      sourceMediaAdded: actions.sourceMediaAdded,
+      annotMediaAdded: actions.annotMediaAdded,
+      sourceMediaChanged: actions.sourceMediaChanged,
+      annotMediaChanged: actions.annotMediaChanged,
       // updateActiveFolder: actions.updateActiveFolder,
       addAnnotation: actions.addAnnotation,
       pushAnnotation: actions.pushAnnotation,
@@ -379,7 +387,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       pushTimeline: actions.pushTimeline,
       setURL: actions.setURL,
       onNewFolder: actions.onNewFolder,
-      resetAnnotationAction: actions.resetAnnotationAction
+      resetAnnotationAction: actions.resetAnnotationAction,
+      changePrevPath: actions.changePrevPath
     },
     dispatch
   )

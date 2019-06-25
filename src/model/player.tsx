@@ -27,7 +27,8 @@ interface StateProps {
   url: string;
   volume: number;
   loaded: number;
-  availableMedia: LooseObject[];
+  sourceMedia: LooseObject[];
+  annotMedia: LooseObject[];
 }
 
 interface DispatchProps {
@@ -66,18 +67,15 @@ class PlayerZone extends Component<PlayerProps> {
     this.props.setPlaybackRate(parseFloat(e.target.value));
   };
   onPause = () => {
-    // console.log("onPause");
-    // this.setState({ playing: false });
+    console.log("onPause");
   };
   onSeekMouseDown = (e: any) => {
     this.props.onSeekMouseDown();
   };
   onSeekChange = (e: any) => {
     this.props.onSeekChange(parseFloat(e.target.value));
-    // this.setState({ played: parseFloat(e.target.value) });
   };
   onSeekMouseUp = (e: any) => {
-    // this.setState({ seeking: false });
     this.props.onSeekMouseUp();
     this.player.seekTo(parseFloat(e.target.value));
   };
@@ -87,19 +85,32 @@ class PlayerZone extends Component<PlayerProps> {
   }
   loadNewFile(idx: number) {
     this.props.play();
-    this.props.setURL(this.props.availableMedia[idx].blobURL);
+    this.props.setURL(this.props.sourceMedia[idx].blobURL);
     // todo: manage Index
   }
   sourceMedia() {
-    return this.props.availableMedia.filter(file => !file.isAnnotation);
+    let sourceVids = this.props.sourceMedia.filter(file => !file.isAnnotation && file["mimeType"].startsWith("video")).sort(function(a: LooseObject, b: LooseObject) {
+      const nameA = a["name"].toLowerCase();
+      const nameB = b["name"].toLowerCase();
+      if (nameA < nameB) {
+        // sort string ascending
+        return -1;
+      };
+      if (nameA > nameB) return 1;
+      return 0; // default return value (no sorting)
+    });
+    let sourceAud = this.props.sourceMedia.filter(file => !file.isAnnotation && file["mimeType"].startsWith("audio")).sort(function(a: LooseObject, b: LooseObject) {
+      const nameA = a["name"].toLowerCase();
+      const nameB = b["name"].toLowerCase();
+      if (nameA < nameB) {
+        // sort string ascending
+        return -1;
+      };
+      if (nameA > nameB) return 1;
+      return 0; // default return value (no sorting)
+    });
+    return [...sourceVids, ...sourceAud];
   }
-  /* onProgress = (state: any) => {
-    console.log('onProgress', state)
-    // We only want to update time slider if we are not currently seeking
-    if (!this.props.seeking) {
-        this.setState(state)
-    }
-    } */
   onDuration = (duration: number) => {
     console.log("onDuration", duration);
     this.props.setDuration(duration);
@@ -323,7 +334,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   loop: state.player.loop,
   volume: state.player.volume,
   loaded: state.player.loaded,
-  availableMedia: state.tree.availableMedia,
+  sourceMedia: state.tree.sourceMedia,
+  annotMedia: state.tree.annotMedia
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

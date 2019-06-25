@@ -15,6 +15,7 @@ import logo from "./assets/icons/png/256x256.png";
 import { playerCleanStore } from "./store/player/reducers";
 import processEAF from "./model/processEAF";
 import { updateSession } from "./store/system/actions";
+import { findDOMNode } from "react-dom";
 
 // import { playerCleanStore } from "./store";
 
@@ -28,8 +29,10 @@ interface DispatchProps {
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
   getDirectoryListing: typeof getDirectoryListing;
-  mediaAdded: typeof actions.mediaAdded;
-  mediaChanged: typeof actions.mediaChanged;
+  sourceMediaAdded: typeof actions.sourceMediaAdded;
+  annotMediaAdded: typeof actions.annotMediaAdded;
+  sourceMediaChanged: typeof actions.sourceMediaChanged;
+  annotMediaChanged: typeof actions.annotMediaChanged;
   processEAF: typeof processEAF;
   // updateActiveFolder: typeof actions.updateActiveFolder;
   updateTree: typeof actions.updateTree;
@@ -62,20 +65,24 @@ class App extends React.Component<AppProps> {
     if (isElectron) {
       this.props.updateTree({
         availableFiles: [],
-        availableMedia: [],
+        sourceMedia: [],
+        annotMedia: [],
         env: "electron",
         folderName: "",
         folderPath: "",
-        loaded: false
+        loaded: false,
+        prevPath: ""
       });
     } else {
       this.props.updateTree({
         availableFiles: [],
-        availableMedia: [],
+        sourceMedia: [],
+        annotMedia: [],
         env: "web",
         folderName: "",
         folderPath: "",
-        loaded: false
+        loaded: false,
+        prevPath: ""
       });
     }
     this.props.updateSession({
@@ -93,6 +100,17 @@ class App extends React.Component<AppProps> {
   }
 
   // Player Features
+
+  hardResetApp = (inString: string) => {
+    this.props.hardResetApp(inString);
+    this.hardResetHelper(document.querySelector("[id=selectFolder]"));
+  }
+
+  hardResetHelper = (input: any) => {
+    if (input !== null) {
+      input.value = "";
+    }
+  }
 
   onProgress = (playState: any) => {
     this.props.onProgress(playState);
@@ -120,7 +138,7 @@ class App extends React.Component<AppProps> {
         <div className="App-body">
           <div className="App-sidebar">
             <PlayerZone />
-            <button onClick={() => this.props.hardResetApp("")}> Reset </button>
+            <button onClick={() => this.hardResetApp("")}> Reset </button>
           </div>
           <div className="DetailsZone">
             <p>
@@ -157,8 +175,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
       getDirectoryListing,
-      mediaAdded: actions.mediaAdded,
-      mediaChanged: actions.mediaChanged,
+      sourceMediaAdded: actions.sourceMediaAdded,
+      annotMediaAdded: actions.annotMediaAdded,
+      sourceMediaChanged: actions.sourceMediaChanged,
+      annotMediaChanged: actions.annotMediaChanged,
       onEnded: actions.onEnded,
       onPlay: actions.onPlay,
       onProgress: actions.onProgress,

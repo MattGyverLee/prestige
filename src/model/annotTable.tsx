@@ -26,8 +26,6 @@ import { connect } from "react-redux";
 // import formatTimeline from "./folderSelection";
 
 interface StateProps {
-  // These come from the stores.
-  // annotations: object;
   player: any;
   timeline: LooseObject;
   categories: string[];
@@ -35,8 +33,6 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  // These come from the actions
-  // addCategory: typeof actions.addCategory;
   play: typeof actions.play;
   setURL: typeof actions.setURL;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
@@ -61,15 +57,12 @@ class AnnotationTable extends Component<ComponentProps> {
 
   render() {
     // Table Values
-
-    // tslint:disable-next-line
     const TableRow = ({ row, ...restProps }: any) => (
       <Table.Row
         {...restProps}
         onClick={() => seekToSec(this.props.player, row.startTime)}
       />
     );
-    // tslint:disable-next-line
     const FlowingCellC = ({ value, style, ...restProps }: any) => (
       <Table.Cell
         {...restProps}
@@ -90,7 +83,6 @@ class AnnotationTable extends Component<ComponentProps> {
       </Table.Cell>
     );
     // Translation
-    // tslint:disable-next-line
     const FlowingCellL = ({ value, style, ...restProps }: any) => (
       <Table.Cell
         {...restProps}

@@ -1,5 +1,3 @@
-// src/store/tree/reducers.ts
-
 import * as types from "./types";
 
 export const annCleanStore: types.AnnotationState = {

@@ -45,9 +45,15 @@ export function fileAdded(inFile: types.FileDesc): types.TreeActionTypes {
     payload: inFile
   };
 }
-export function mediaAdded(inFile: types.FileDesc): types.TreeActionTypes {
+export function sourceMediaAdded(inFile: types.FileDesc): types.TreeActionTypes {
   return {
-    type: types.MEDIA_ADDED,
+    type: types.SOURCE_MEDIA_ADDED,
+    payload: inFile
+  };
+}
+export function annotMediaAdded(inFile: types.FileDesc): types.TreeActionTypes {
+  return {
+    type: types.ANNOT_MEDIA_ADDED,
     payload: inFile
   };
 }
@@ -57,9 +63,15 @@ export function fileChanged(inFile: types.FileDesc): types.TreeActionTypes {
     payload: inFile
   };
 }
-export function mediaChanged(inFile: types.FileDesc): types.TreeActionTypes {
+export function sourceMediaChanged(inFile: types.FileDesc): types.TreeActionTypes {
   return {
-    type: types.MEDIA_CHANGED,
+    type: types.SOURCE_MEDIA_CHANGED,
+    payload: inFile
+  };
+}
+export function annotMediaChanged(inFile: types.FileDesc): types.TreeActionTypes {
+  return {
+    type: types.ANNOT_MEDIA_CHANGED,
     payload: inFile
   };
 }
@@ -68,4 +80,10 @@ export function fileDeleted(inPath: string): types.TreeActionTypes {
     type: types.FILE_DELETED,
     payload: inPath
   };
+}
+export function changePrevPath(inPath: string): types.TreeActionTypes {
+  return {
+    type: types.CHANGE_PREV_PATH,
+    payload: inPath
+  }
 }

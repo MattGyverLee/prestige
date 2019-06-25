@@ -5,7 +5,9 @@ export interface TreeState {
   folderName: string;
   loaded: boolean;
   availableFiles: any[];
-  availableMedia: any[];
+  sourceMedia: any[];
+  annotMedia: any[];
+  prevPath: string,
 }
 
 export interface Folders {
@@ -21,12 +23,15 @@ export interface FileDesc {
 export const UPDATE_TREE = "UPDATE_TREE";
 export const UPDATE_ACTIVE_FOLDER = "UPDATE_ACTIVE_FOLDER";
 export const FILE_ADDED = "FILE_ADDED";
-export const MEDIA_ADDED = "MEDIA_ADDED";
+export const SOURCE_MEDIA_ADDED = "SOURCE_MEDIA_ADDED";
+export const ANNOT_MEDIA_ADDED = "ANNOT_MEDIA_ADDED";
 export const FILE_CHANGED = "FILE_CHANGED";
-export const MEDIA_CHANGED = "MEDIA_CHANGED";
+export const SOURCE_MEDIA_CHANGED = "SOURCE_MEDIA_CHANGED";
+export const ANNOT_MEDIA_CHANGED = "ANNOT_MEDIA_CHANGED";
 export const FILE_DELETED = "FILE_DELETED";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
+export const CHANGE_PREV_PATH = "CHANGE_PREV_PATH";
 
 interface TreeHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -50,20 +55,33 @@ interface FileAdded {
   type: typeof FILE_ADDED;
   payload: FileDesc;
 }
-interface MediaAdded {
-  type: typeof MEDIA_ADDED;
+interface SourceMediaAdded {
+  type: typeof SOURCE_MEDIA_ADDED;
+  payload: FileDesc;
+}
+interface AnnotMediaAdded {
+  type: typeof ANNOT_MEDIA_ADDED;
   payload: FileDesc;
 }
 interface FileChanged {
   type: typeof FILE_CHANGED;
   payload: FileDesc;
 }
-interface MediaChanged {
-  type: typeof MEDIA_CHANGED;
+// TODO: Verify whether this needs to be split between SRC & ANNOT
+interface SourceMediaChanged {
+  type: typeof SOURCE_MEDIA_CHANGED;
+  payload: FileDesc;
+}
+interface AnnotMediaChanged {
+  type: typeof ANNOT_MEDIA_CHANGED;
   payload: FileDesc;
 }
 interface FileDeleted {
   type: typeof FILE_DELETED;
+  payload: string;
+}
+interface ChangePrevPath {
+  type: typeof CHANGE_PREV_PATH;
   payload: string;
 }
 
@@ -71,9 +89,12 @@ export type TreeActionTypes =
   | FileAdded
   | FileChanged
   | FileDeleted
-  | MediaAdded
-  | MediaChanged
+  | SourceMediaAdded
+  | AnnotMediaAdded
+  | SourceMediaChanged
+  | AnnotMediaChanged
   | UpdateActiveFolder
   | TreeHardResetApp
   | TreeOnNewFolder
-  | UpdateTree;
+  | UpdateTree
+  | ChangePrevPath;

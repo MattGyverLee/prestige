@@ -26,11 +26,11 @@ export default function processEAF(
   const syncMedia: string[] = [];
   for (h = 0; h < fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h++) {
     const refMedia = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
-    for (g = 0; g < props.tree.availableMedia.length; g++) {
-      if (props.tree.availableMedia[g].name === refMedia) {
+    for (g = 0; g < props.tree.sourceMedia.length; g++) {
+      if (props.tree.sourceMedia[g].name === refMedia) {
         // toDo: Do this right with Redux
-        props.tree.availableMedia[g]["hasAnnotation"] = true;
-        props.tree.availableMedia[g]["annotationRef"] = path;
+        props.tree.sourceMedia[g]["hasAnnotation"] = true;
+        props.tree.sourceMedia[g]["annotationRef"] = path;
       }
     }
     syncMedia.push(refMedia);
