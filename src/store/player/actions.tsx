@@ -65,11 +65,11 @@ export function onEnded(): types.PlayerActionTypes {
     type: types.ON_ENDED
   };
 }
-export function setDuration(duration: any): types.PlayerActionTypes {
+export function setDuration(duration: number): types.PlayerActionTypes {
   // onsole.log("setDuration", duration);
   return {
     type: types.SET_DURATION,
-    payload: duration.duration
+    payload: duration
   };
 }
 export function onProgress(playState: any): types.PlayerActionTypes {

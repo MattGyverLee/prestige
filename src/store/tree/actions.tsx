@@ -39,7 +39,7 @@ export function treeOnNewFolder(inString: string): types.TreeActionTypes {
   };
 }
 
-export function fileAdded(inFile: types.FileDesc) {
+export function fileAdded(inFile: types.FileDesc): types.TreeActionTypes {
   return {
     type: types.FILE_ADDED,
     payload: inFile

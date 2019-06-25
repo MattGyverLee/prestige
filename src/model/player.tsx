@@ -10,8 +10,6 @@ import Paper from "@material-ui/core/Paper";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { findDOMNode } from 'react-dom';
-import screenfull from 'screenfull';
 
 interface StateProps {
   controls?: boolean;
@@ -104,7 +102,7 @@ class PlayerZone extends Component<PlayerProps> {
     } */
   onDuration = (duration: number) => {
     console.log("onDuration", duration);
-    this.props.setDuration({ duration });
+    this.props.setDuration(duration);
   };
   onClickFullscreen = () => {
     //screenfull.request(findDOMNode(this.player))

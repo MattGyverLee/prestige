@@ -15,7 +15,7 @@ export class Timelines {
     timeline["milestones"] = [];
   }
   // add functions here
-  public addMilestone(index: number, newMilestone: LooseObject) {
+  public addMilestone(newMilestone: LooseObject) {
     let m: number;
     let dup = false;
     const pushMilestones = (
