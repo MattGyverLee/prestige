@@ -86,7 +86,7 @@ export function annotationReducer(
     case types.PUSH_ANNOTATION_TABLE: {
       return {
         ...state,
-        annotationTable: [action.payload]
+        annotationTable: action.payload
       };
     }
     case types.PUSH_TIMELINE: {

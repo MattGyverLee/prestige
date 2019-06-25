@@ -1,15 +1,5 @@
 // Describing the shape of the tree's slice of state
 
-export class AnnotDetail extends Object {
-  audCareful?: string;
-  audTransl?: string;
-  id?: number;
-  startTime?: number;
-  stopTime?: number;
-  txtTransc?: string;
-  txtTransl?: string;
-}
-
 export interface LooseObject extends Object {
   [key: string]: any;
 }

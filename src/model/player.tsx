@@ -22,7 +22,7 @@ interface StateProps {
   pip: boolean;
   playbackRate: number;
   played: number;
-  player?: any;
+  player: any;
   playing: boolean;
   seeking?: boolean;
   state?: any;
@@ -30,7 +30,6 @@ interface StateProps {
   volume: number;
   loaded: number;
   availableMedia: LooseObject[];
-  vidPlayerRef: ReactPlayer;
 }
 
 interface DispatchProps {
@@ -49,16 +48,13 @@ interface DispatchProps {
   onSeekMouseUp: typeof actions.onSeekMouseUp;
   onSeekChange: typeof actions.onSeekChange;
   onVolumeChange: typeof actions.onVolumeChange;
+  setPlayer: typeof actions.setPlayer;
 }
 interface PlayerProps extends StateProps, DispatchProps {
   // todo: do i need this?
 }
 
 class PlayerZone extends Component<PlayerProps> {
-  componentDidMount() {
-    // Runs on load
-    actions.setVidPlayerRef(this.player);
-  }
   private player!: ReactPlayer;
   // private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
 
@@ -87,14 +83,10 @@ class PlayerZone extends Component<PlayerProps> {
     this.props.onSeekMouseUp();
     this.player.seekTo(parseFloat(e.target.value));
   };
-  seekToSec = (player: any, time: number) => {
-    // todo: test this.
-    player = this.props.player;
-    const length = player.getDuration();
-    const newTime = time / length;
-    player.seekTo(newTime);
-    actions.play();
-  };
+  onPlay = () => {
+    this.props.onPlay();
+    this.props.setPlayer(this.player);
+  }
   loadNewFile(idx: number) {
     this.props.play();
     this.props.setURL(this.props.availableMedia[idx].blobURL);
@@ -117,7 +109,6 @@ class PlayerZone extends Component<PlayerProps> {
   onClickFullscreen = () => {
     //screenfull.request(findDOMNode(this.player))
   };
-
   ref = (player: any) => {
     this.player = player;
   };
@@ -136,7 +127,7 @@ class PlayerZone extends Component<PlayerProps> {
             onEnded={this.props.onEnded}
             onError={e => console.log("onError", e)}
             onPause={this.onPause}
-            onPlay={this.props.onPlay}
+            onPlay={this.onPlay}
             onProgress={this.props.onProgress}
             onReady={() => console.log("onReady")}
             onSeek={e => console.log("onSeek", e)}
@@ -324,6 +315,7 @@ class PlayerZone extends Component<PlayerProps> {
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   playbackRate: state.player.playbackRate,
   played: state.player.played,
+  player: state.player.player,
   muted: state.player.muted,
   controls: state.player.controls,
   duration: state.player.duration,
@@ -334,7 +326,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   volume: state.player.volume,
   loaded: state.player.loaded,
   availableMedia: state.tree.availableMedia,
-  vidPlayerRef: state.player.vidPlayerRef
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -354,7 +345,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onSeekMouseDown: actions.onSeekMouseDown,
       onSeekMouseUp: actions.onSeekMouseUp,
       onSeekChange: actions.onSeekChange,
-      onVolumeChange: actions.onVolumeChange
+      onVolumeChange: actions.onVolumeChange,
+      setPlayer: actions.setPlayer
     },
     dispatch
   )

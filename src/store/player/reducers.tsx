@@ -9,11 +9,11 @@ export const playerCleanStore: types.MediaPlayerState = {
   pip: false,
   playbackRate: 1.0,
   played: false,
+  player: null,
   playing: false,
   seeking: false,
   url: "",
   volume: 0.8,
-  vidPlayerRef: undefined
 };
 
 export function playerReducer(
@@ -26,8 +26,7 @@ export function playerReducer(
       return state;
     }
     case types.ON_NEW_FOLDER: {
-      state = playerCleanStore;
-      return state;
+      return {...playerCleanStore, player: state.player};
     }
     case types.UPDATE_PLAYER_SESSION: {
       // I might Deprecate This Action
@@ -53,10 +52,10 @@ export function playerReducer(
         url: action.payload
       };
     }
-    case types.SET_VID_PLAYER_REF: {
+    case types.SET_PLAYER: {
       return {
         ...state,
-        vidPlayerRef: action.payload
+        player: action.payload
       };
     }
     case types.PLAY: {

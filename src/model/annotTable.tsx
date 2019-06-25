@@ -28,7 +28,7 @@ import { connect } from "react-redux";
 interface StateProps {
   // These come from the stores.
   // annotations: object;
-  vidPlayerRef: any;
+  player: any;
   timeline: LooseObject;
   categories: string[];
   annotationTable: AnnotationRow[];
@@ -66,7 +66,7 @@ class AnnotationTable extends Component<ComponentProps> {
     const TableRow = ({ row, ...restProps }: any) => (
       <Table.Row
         {...restProps}
-        onClick={() => seekToSec(this.props.vidPlayerRef, row.startTime)}
+        onClick={() => seekToSec(this.props.player, row.startTime)}
       />
     );
     // tslint:disable-next-line
@@ -132,7 +132,7 @@ class AnnotationTable extends Component<ComponentProps> {
         }}
       >
         <button
-          onClick={() => actions.setURL(value.toString())}
+          onClick={() => this.props.setURL(value.toString())}
           style={{
             display: value < 1000 ? "none" : undefined
             // color: value !="" ? 'lightgreen' : undefined,
@@ -219,7 +219,7 @@ class AnnotationTable extends Component<ComponentProps> {
 
     // End Table Values
     const seekToSec = (player: ReactPlayer, time: number) => {
-      const length = this.props.vidPlayerRef.getDuration();
+      const length = this.props.player.getDuration();
       const newTime = time / length;
       player.seekTo(newTime);
       this.setState({ playing: true });
@@ -249,7 +249,7 @@ class AnnotationTable extends Component<ComponentProps> {
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   // annotations: state.annotations.annotations,
-  vidPlayerRef: state.player.vidPlayerRef,
+  player: state.player.player,
   timeline: state.annotations.timeline[0], // ToDo: Un-Hardwire this
   categories: state.annotations.categories,
   annotationTable: state.annotations.annotationTable

@@ -180,6 +180,7 @@ class SelectFolderZone extends Component<FolderProps> {
     const chokReady = () => {
       this.addNewMediaToMilestone();
       if (this.props.availableMedia.length !== 0) {
+        this.formatTimeline(this.props.timeline[0]);
         props.setURL(this.props.availableMedia[0].blobURL);
         console.log(`Initial scan complete. Ready for changes`);
       } else {
@@ -275,11 +276,12 @@ class SelectFolderZone extends Component<FolderProps> {
     // TODO 0 is Temporary
     // tslint:disable-next-line
     let table: AnnotationRow[] = [];
+    let index = 1;
     focus.forEach((milestone: LooseObject) => {
       // console.log(milestone.data);
       // tslint:disable-next-line
-      let row = {
-        id: milestone["id"],
+      let row: AnnotationRow = {
+        id: index,
         startTime: milestone["startTime"],
         stopTime: milestone["stopTime"],
         audCareful: "",
@@ -287,6 +289,7 @@ class SelectFolderZone extends Component<FolderProps> {
         txtTransc: "",
         txtTransl: ""
       };
+      index++;
       let d;
       for (d = 0; d < milestone["data"].length; d++) {
         if (milestone["data"][d]["mimeType"].startsWith("audio")) {

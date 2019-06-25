@@ -29,12 +29,6 @@ export function setURL(inURL: string): types.PlayerActionTypes {
     payload: inURL
   };
 }
-export function setVidPlayerRef(inRef: any): types.PlayerActionTypes {
-  return {
-    type: types.SET_VID_PLAYER_REF,
-    payload: inRef
-  };
-}
 export function play(): types.PlayerActionTypes {
   return {
     type: types.PLAY
@@ -116,5 +110,11 @@ export function onVolumeChange(volume: number): types.PlayerActionTypes {
   return {
     type: types.ON_VOLUME_CHANGE,
     payload: volume
+  }
+}
+export function setPlayer(player: any): types.PlayerActionTypes {
+  return {
+    type: types.SET_PLAYER,
+    payload: player
   }
 }

@@ -8,11 +8,11 @@ export interface MediaPlayerState {
   pip: boolean;
   playbackRate: number;
   played: any;
+  player: any;
   playing: boolean;
   seeking?: boolean;
   url: string;
   volume: number;
-  vidPlayerRef: any;
 }
 
 // Describing the different ACTION NAMES available
@@ -27,7 +27,6 @@ export const SET_VOLUME = "SET_VOLUME";
 export const STOP_PLAYING = "STOP_PLAYING";
 export const TOGGLE_LOOP = "TOGGLE_LOOP";
 export const UPDATE_PLAYER_SESSION = "UPDATE_PLAYER_SESSION";
-export const SET_VID_PLAYER_REF = "SET_VID_PLAYER_REF";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const SET_PLAYBACK_RATE = "SET_PLAYBACK_RATE";
@@ -36,6 +35,7 @@ export const ON_SEEK_MOUSE_DOWN = "ON_SEEK_MOUSE_DOWN";
 export const ON_SEEK_MOUSE_UP = "ON_SEEK_MOUSE_UP";
 export const ON_SEEK_CHANGE = "ON_SEEK_CHANGE";
 export const ON_VOLUME_CHANGE = "ON_VOLUME_CHANGE";
+export const SET_PLAYER = "SET_PLAYER";
 
 interface PlayHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -73,10 +73,6 @@ interface SetVolume {
   type: typeof SET_VOLUME;
   payload: number;
 }
-interface SetVidPlayerRef {
-  type: typeof SET_VID_PLAYER_REF;
-  payload: number;
-}
 interface OnPlay {
   type: typeof ON_PLAY;
 }
@@ -112,6 +108,10 @@ interface OnVolumeChange {
   type: typeof ON_VOLUME_CHANGE;
   payload: number;
 }
+interface SetPlayer {
+  type: typeof SET_PLAYER;
+  payload: any;
+}
 
 export type PlayerActionTypes =
   | OnEnded
@@ -121,7 +121,6 @@ export type PlayerActionTypes =
   | SetDuration
   | OnProgress
   | PlayPause
-  | SetVidPlayerRef
   | SetVolume
   | StopPlaying
   | ToggleLoop
@@ -133,4 +132,5 @@ export type PlayerActionTypes =
   | OnSeekMouseDown
   | OnSeekMouseUp
   | OnSeekChange
-  | OnVolumeChange;
+  | OnVolumeChange
+  | SetPlayer;
