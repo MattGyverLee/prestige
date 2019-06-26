@@ -16,7 +16,7 @@ if (process.env.REACT_APP_MODE === "electron") {
 } else {
   console.log("Running on the Web, Filesystem access disabled.");
 }
-// tslint:disable-next-line
+// eslint:disable-next-line
 const Root = () => (
   <Provider store={store}>
     <App />

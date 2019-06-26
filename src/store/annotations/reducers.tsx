@@ -1,4 +1,5 @@
 import * as types from "./types";
+
 import { getTimelineIndex } from "../../model/globalFunctions";
 
 export const annCleanStore: types.AnnotationState = {
@@ -58,11 +59,11 @@ export function annotationReducer(
     case types.SET_URL: {
       const idx = getTimelineIndex(state.timeline, action.payload);
       return {
-        ...state, currentTimeline: idx
+        ...state,
+        currentTimeline: idx
       };
     }
     case types.ADD_ORAL_ANNOTATION: {
-      // todo: pass BLOBURL inside
       const milestones = state.timeline[action.payload.idx].milestones.map(
         (m: types.LooseObject) =>
           m.startTime === action.payload.newMilestone.startTime &&

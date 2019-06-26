@@ -1,8 +1,5 @@
 import * as types from "./types";
 
-// TODO: Collapse these to *
-// Object.entries(annTy).forEach(([name, exported]) => window[name] = exported);
-
 export function hardResetApp(inString: string): types.AnnotationActionTypes {
   return {
     type: types.HARD_RESET_APP,
@@ -49,7 +46,7 @@ export function addOralAnnotation(
 ): types.AnnotationActionTypes {
   return {
     type: types.ADD_ORAL_ANNOTATION,
-    payload: {newMilestone, idx}
+    payload: { newMilestone, idx }
   };
 }
 export function addCategory(inString: string): types.AnnotationActionTypes {

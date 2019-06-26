@@ -1,48 +1,47 @@
 import * as actions from "../store";
 import * as types from "../store/annotations/types";
 
-import { AnnotationRow, LooseObject } from "../store/annotations/types";
 import React, { Component } from "react";
+import { getTimelineIndex, sourceMedia } from "./globalFunctions";
 
 import { FileDesc } from "../store/tree/types";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { getTimelineIndex, sourceMedia } from "./globalFunctions";
 
 var watcherRef: any;
 interface StateProps {
+  annotMedia: types.LooseObject[];
   annotations: object;
-  availableFiles: LooseObject[];
-  sourceMedia: LooseObject[];
-  annotMedia: LooseObject[];
+  availableFiles: types.LooseObject[];
   categories: string[];
   env: string;
-  timeline: LooseObject[];
   folderName: string;
   folderPath: string;
   loaded: boolean;
   prevPath: string;
+  sourceMedia: types.LooseObject[];
+  timeline: types.LooseObject[];
 }
 
 interface DispatchProps {
+  // updateActiveFolder: typeof actions.updateActiveFolder;
+  addAnnotation: typeof actions.addAnnotation;
   addCategory: typeof actions.addCategory;
   addOralAnnotation: typeof actions.addOralAnnotation;
+  annotMediaAdded: typeof actions.annotMediaAdded;
+  annotMediaChanged: typeof actions.annotMediaChanged;
+  changePrevPath: typeof actions.changePrevPath;
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
-  sourceMediaAdded: typeof actions.sourceMediaAdded;
-  annotMediaAdded: typeof actions.annotMediaAdded;
-  sourceMediaChanged: typeof actions.sourceMediaChanged;
-  annotMediaChanged: typeof actions.annotMediaChanged;
-  // updateActiveFolder: typeof actions.updateActiveFolder;
-  addAnnotation: typeof actions.addAnnotation;
-  pushAnnotationTable: typeof actions.pushAnnotationTable;
-  pushAnnotation: typeof actions.pushAnnotation;
-  pushTimeline: typeof actions.pushTimeline;
-  setURL: typeof actions.setURL;
   onNewFolder: typeof actions.onNewFolder;
+  pushAnnotation: typeof actions.pushAnnotation;
+  pushAnnotationTable: typeof actions.pushAnnotationTable;
+  pushTimeline: typeof actions.pushTimeline;
   resetAnnotationAction: typeof actions.resetAnnotationAction;
-  changePrevPath: typeof actions.changePrevPath;
+  setURL: typeof actions.setURL;
+  sourceMediaAdded: typeof actions.sourceMediaAdded;
+  sourceMediaChanged: typeof actions.sourceMediaChanged;
 }
 
 interface FolderProps extends StateProps, DispatchProps {
@@ -71,12 +70,11 @@ class SelectFolderZone extends Component<FolderProps> {
     watcherRef = watcher;
     const chocFileDescribe = (path: string) => {
       const fileUrl = require("file-url");
-      const pathParse = require("path");
-      const parsedPath = pathParse.parse(path);
+      const parsedPath = require("path").parse(path);
       const mime = require("mime");
       const blobURL = fileUrl(path);
       let tempMime = "";
-      // tslint:disable-next-line
+      // eslint:disable-next-line
       if (mime.getType(path) !== null) {
         tempMime = mime.getType(path);
       } else {
@@ -121,7 +119,7 @@ class SelectFolderZone extends Component<FolderProps> {
       ) {
         isAnnotation = true;
       }
-      const fileDef: LooseObject = {
+      const fileDef: types.LooseObject = {
         annotationRef: "",
         blobURL: fileUrl(path),
         extension: parsedPath.ext,
@@ -130,7 +128,7 @@ class SelectFolderZone extends Component<FolderProps> {
         inMilestones: false,
         mimeType: tempMime,
         name: parsedPath.base,
-        // tslint:disable-next-line
+        // eslint:disable-next-line
         path: path
       };
 
@@ -193,7 +191,7 @@ class SelectFolderZone extends Component<FolderProps> {
         props.setURL(sourceMedia(this.props.sourceMedia)[0].blobURL);
         console.log(`Initial scan complete. Ready for changes`);
       } else {
-        console.log("Empty Directory")
+        console.log("Empty Directory");
       }
     };
 
@@ -218,14 +216,12 @@ class SelectFolderZone extends Component<FolderProps> {
   loadLocalFolder(inputElement: any) {
     if (inputElement.files.length === 0) {
       console.log("Undefined Directory Selected");
-      return;
     } else if (
       inputElement.files[0].path !== undefined &&
       inputElement.files[0].path !== this.props.prevPath
     ) {
       console.log("Setting Folder to: " + inputElement.files[0].path);
       this.props.onNewFolder(inputElement.files[0].path);
-      // toDo: Make this fire on Update
       const path = inputElement.files[0].path.toString();
       if (path !== "" && path !== this.props.prevPath) {
         this.startWatcher(path, this.props);
@@ -255,7 +251,7 @@ class SelectFolderZone extends Component<FolderProps> {
           this.props.addCategory(tier);
         }
 
-        const fileDef: LooseObject = {};
+        const fileDef: types.LooseObject = {};
         fileDef["isAnnotation"] = true;
         // todo: the following line is cheating redux
         mediaFile["inMilestones"] = true;
@@ -269,18 +265,23 @@ class SelectFolderZone extends Component<FolderProps> {
           annotationRef: refFile,
           data: {
             channel: fileDef["channel"],
-            data: null,
+            data: fileDef["blobURL"],
             linguisticType: fileDef["linguisticType"],
             locale: fileDef["locale"],
             mimeType: fileDef["mimeType"]
           },
           startTime: refStart,
-          stopTime: refStop,
+          stopTime: refStop
         };
         mediaFile.inMilestones = true;
         const fileURL = require("file-url");
-        const blobURL = fileURL(mediaFile.path.substring(0, mediaFile.path.indexOf("_Annotations")));
-        this.props.addOralAnnotation(oralMilestone, getTimelineIndex(this.props.timeline, blobURL));
+        const blobURL = fileURL(
+          mediaFile.path.substring(0, mediaFile.path.indexOf("_Annotations"))
+        );
+        this.props.addOralAnnotation(
+          oralMilestone,
+          getTimelineIndex(this.props.timeline, blobURL)
+        );
       }
     });
     // Do here:
@@ -314,40 +315,40 @@ class SelectFolderZone extends Component<FolderProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
+  annotMedia: state.tree.annotMedia,
   annotations: state.annotations.annotations,
   availableFiles: state.tree.availableFiles,
-  sourceMedia: state.tree.sourceMedia,
-  annotMedia: state.tree.annotMedia,
   categories: state.annotations.categories,
   env: state.tree.env,
   folderName: state.tree.folderName,
   folderPath: state.tree.folderPath,
   loaded: state.tree.loaded,
-  timeline: state.annotations.timeline,
-  prevPath: state.tree.prevPath
+  prevPath: state.tree.prevPath,
+  sourceMedia: state.tree.sourceMedia,
+  timeline: state.annotations.timeline
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
+      // updateActiveFolder: actions.updateActiveFolder,
+      addAnnotation: actions.addAnnotation,
       addCategory: actions.addCategory,
       addOralAnnotation: actions.addOralAnnotation,
+      annotMediaAdded: actions.annotMediaAdded,
+      annotMediaChanged: actions.annotMediaChanged,
+      changePrevPath: actions.changePrevPath,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
-      sourceMediaAdded: actions.sourceMediaAdded,
-      annotMediaAdded: actions.annotMediaAdded,
-      sourceMediaChanged: actions.sourceMediaChanged,
-      annotMediaChanged: actions.annotMediaChanged,
-      // updateActiveFolder: actions.updateActiveFolder,
-      addAnnotation: actions.addAnnotation,
+      onNewFolder: actions.onNewFolder,
       pushAnnotation: actions.pushAnnotation,
       pushAnnotationTable: actions.pushAnnotationTable,
       pushTimeline: actions.pushTimeline,
-      setURL: actions.setURL,
-      onNewFolder: actions.onNewFolder,
       resetAnnotationAction: actions.resetAnnotationAction,
-      changePrevPath: actions.changePrevPath
+      setURL: actions.setURL,
+      sourceMediaAdded: actions.sourceMediaAdded,
+      sourceMediaChanged: actions.sourceMediaChanged
     },
     dispatch
   )

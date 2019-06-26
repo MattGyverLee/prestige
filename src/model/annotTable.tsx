@@ -79,15 +79,14 @@ class AnnotationTable extends Component<ComponentProps> {
       return;
     }
     // console.log("Starting");
-    // tslint:disable-next-line
+    // eslint:disable-next-line
     let focus = timeline["milestones"];
-    // TODO 0 is Temporary
-    // tslint:disable-next-line
+    // eslint:disable-next-line
     let table: AnnotationRow[] = [];
     let index = 1;
     focus.forEach((milestone: LooseObject) => {
       // console.log(milestone.data);
-      // tslint:disable-next-line
+      // eslint:disable-next-line
       let row: AnnotationRow = {
         id: index,
         startTime: milestone["startTime"],
@@ -103,10 +102,10 @@ class AnnotationTable extends Component<ComponentProps> {
         if (milestone["data"][d]["mimeType"].startsWith("audio")) {
           // console.log("Audio");
           if (milestone["data"][d]["channel"] === "Careful") {
-            row["audCareful"] = milestone["data"][d]["blobURL"];
+            row["audCareful"] = milestone["data"][d]["data"];
           }
           if (milestone["data"][d]["channel"] === "Translation") {
-            row["audTransl"] = milestone["data"][d]["blobURL"];
+            row["audTransl"] = milestone["data"][d]["data"];
           }
         }
         if (milestone["data"][d]["mimeType"].startsWith("string")) {
@@ -184,7 +183,7 @@ class AnnotationTable extends Component<ComponentProps> {
         <span>{value}</span>
       </Table.Cell>
     ); */
-    // tslint:disable-next-line
+    // eslint:disable-next-line
     const HighlightedCell = ({ value, style, ...restProps }: any) => (
       <Table.Cell
         {...restProps}
@@ -205,26 +204,25 @@ class AnnotationTable extends Component<ComponentProps> {
       </Table.Cell>
     );
     // const currentAnnotationID = this.state.annotationShowing;
-    // tslint:disable-next-line
+    // eslint:disable-next-line
     let annotDetails = this.props.annotationTable;
 
-    // todo: map this
-    // tslint:disable-next-line
+    // eslint:disable-next-line
     var Cell = (cellProps: any) => {
       const { column } = cellProps;
       if (column.name === "txtTransl") {
-        // tslint:disable-next-line
+        // eslint:disable-next-line
         return <FlowingCellL {...cellProps} />;
       }
       if (column.name === "txtTransc") {
-        // tslint:disable-next-line
+        // eslint:disable-next-line
         return <FlowingCellC {...cellProps} />;
       }
       if (column.name === "audCareful") {
         return <HighlightedCell {...cellProps} />;
       }
       if (column.name === "audTransl") {
-        // tslint:disable-next-line
+        // eslint:disable-next-line
         return <HighlightedCell {...cellProps} />;
       }
       return <Table.Cell {...cellProps} />;
@@ -310,9 +308,8 @@ class AnnotationTable extends Component<ComponentProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  // annotations: state.annotations.annotations,
   player: state.player.player,
-  timelines: state.annotations.timeline, // ToDo: Un-Hardwire this
+  timelines: state.annotations.timeline,
   categories: state.annotations.categories,
   annotationTable: state.annotations.annotationTable,
   sourceMedia: state.tree.sourceMedia,
@@ -322,7 +319,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      // annotations: state.annotations.annotations,
       play: actions.play,
       setURL: actions.setURL,
       pushAnnotationTable: actions.pushAnnotationTable

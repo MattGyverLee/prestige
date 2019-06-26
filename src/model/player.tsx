@@ -50,9 +50,7 @@ interface DispatchProps {
   onVolumeChange: typeof actions.onVolumeChange;
   setPlayer: typeof actions.setPlayer;
 }
-interface PlayerProps extends StateProps, DispatchProps {
-  // todo: do i need this?
-}
+interface PlayerProps extends StateProps, DispatchProps {}
 
 class PlayerZone extends Component<PlayerProps> {
   private player!: ReactPlayer;
@@ -83,18 +81,17 @@ class PlayerZone extends Component<PlayerProps> {
   onPlay = () => {
     this.props.onPlay();
     this.props.setPlayer(this.player);
-  }
+  };
   loadNewFile(blobURL: string) {
     this.props.play();
     this.props.setURL(blobURL);
-    // todo: manage Index
   }
   onDuration = (duration: number) => {
     console.log("onDuration", duration);
     this.props.setDuration(duration);
   };
   onClickFullscreen = () => {
-    //screenfull.request(findDOMNode(this.player))
+    // screenfull.request(findDOMNode(this.player))
   };
   ref = (player: any) => {
     this.player = player;
@@ -254,7 +251,7 @@ class PlayerZone extends Component<PlayerProps> {
                 <td>
                   <Duration
                     className="Duration-elapsed"
-                    seconds={(this.props.duration * this.props.played)}
+                    seconds={this.props.duration * this.props.played}
                   />
                 </td>
               </tr>

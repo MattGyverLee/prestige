@@ -7,7 +7,7 @@ export interface TreeState {
   availableFiles: any[];
   sourceMedia: any[];
   annotMedia: any[];
-  prevPath: string,
+  prevPath: string;
 }
 
 export interface Folders {
@@ -67,7 +67,6 @@ interface FileChanged {
   type: typeof FILE_CHANGED;
   payload: FileDesc;
 }
-// TODO: Verify whether this needs to be split between SRC & ANNOT
 interface SourceMediaChanged {
   type: typeof SOURCE_MEDIA_CHANGED;
   payload: FileDesc;

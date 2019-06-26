@@ -87,7 +87,6 @@ export function treeReducer(
     case types.FILE_DELETED: {
       return {
         ...state,
-        // ToDo: Minor memory waste: try to determine which category has the file instead of double filter.
         sourceMedia: [
           ...state.sourceMedia.filter(file => file.name !== action.payload)
         ],

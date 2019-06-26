@@ -30,12 +30,12 @@ export class Timelines {
         timeline["milestones"][m]["stopTime"] === newMilestone["stopTime"]
       ) {
         dup = true;
-        // Todo Test Dups
+        /*
         if ("annotationID" in newMilestone) {
           timeline["milestones"][m]["annotationID"] =
             newMilestone["annotationID"];
         }
-        // todo: solve this rather than hiding it.
+        */
         pushMilestones(newMilestone["data"], timeline["milestones"][m]["data"]);
       }
     }

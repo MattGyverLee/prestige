@@ -27,7 +27,7 @@ export default function configureStore() {
 
   return store;
 }
-//export * from "./allState/actions";
+// export * from "./allState/actions";
 export * from "./annotations/actions";
 export * from "./system/actions";
 export * from "./player/actions";

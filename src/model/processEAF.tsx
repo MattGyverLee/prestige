@@ -1,9 +1,6 @@
 import Timelines from "./timeline";
 
-export default function processEAF(
-  path: string,
-  props: any
-) {
+export default function processEAF(path: string, props: any) {
   // Define Content
   let content: any = "";
   const file = require("fs-extra").readFileSync(path);
@@ -79,7 +76,8 @@ export default function processEAF(
       // Process Alignable Annotations
       if ("ALIGNABLE_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
         // Find Start/Stop Times for Annotation by Counting Id
-        const alAnnPointer = fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
+        const alAnnPointer =
+          fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
         const thisStartTime: number = findTime(alAnnPointer.$.TIME_SLOT_REF1);
         const thisStopTime: number = findTime(alAnnPointer.$.TIME_SLOT_REF2);
 
@@ -119,8 +117,14 @@ export default function processEAF(
         // Only Process Annotation if it Has Actual Text
         if (refAnnPointer.ANNOTATION_VALUE[0] !== "") {
           // Find Start/Stop Times for Annotations
-          const annotStartTime = findAnnotTime(refAnnPointer.$.ANNOTATION_REF, "startTime");
-          const annotStopTime = findAnnotTime(refAnnPointer.$.ANNOTATION_REF, "stopTime");
+          const annotStartTime = findAnnotTime(
+            refAnnPointer.$.ANNOTATION_REF,
+            "startTime"
+          );
+          const annotStopTime = findAnnotTime(
+            refAnnPointer.$.ANNOTATION_REF,
+            "stopTime"
+          );
 
           // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
           const milestone2 = {
@@ -148,8 +152,8 @@ export default function processEAF(
     }
   }
 
-  // Assign tempTimeline an Annotaiton Index and Push to Timeline
-  // Todo: is this ASYNC Safe?
+  // Assign tempTimeline an Annotation Index and Push to Timeline
+  // FIXME: ASYNC Unsafe
   let annotationIndex = 0;
   if (props.annotations.timeline !== undefined) {
     annotationIndex = props.annotations.timeline.length;
@@ -157,7 +161,4 @@ export default function processEAF(
   tempTimeline.timeline["annotationID"] = annotationIndex;
   props.pushTimeline(tempTimeline);
   console.log("EAF Processed");
-
-  // TODO: FormatTimeline
-  // props.formatTimeline(path);
 }

@@ -18,13 +18,13 @@
     "electron-pack": "build -w",
     "eslint-check": "eslint --print-config . | eslint-config-prettier-check",
     "format": "prettier --write \"src/**/*.js\"",
-    "prelint": "prettier-eslint src --ext .tsx --ext .js",
+    "prelint": "eslint src --ext .tsx --ext .js",
     "precommit": "lint-staged",
-    "lint": "eslint src/**/*.js src/**/*.jsx src/**/*.tsx src/**/*.ts"
+    "lint": "eslint src --ext .tsx --ext .js"
   },
   "lint-staged": {
     "src/**/*.js": [
-      "prettier-eslint src --ext .tsx --ext .js",
+      "eslint src --ext .tsx --ext .js",
       "prettier --write",
       "git add"
     ]
@@ -61,6 +61,7 @@
     "@material-ui/core": "^3.9.2",
     "@material-ui/icons": "^3.0.2",
     "axios": "^0.19.0",
+    "babel-eslint": "10.0.1",
     "chokidar": "^3.0.1",
     "classnames": "^2.2.6",
     "concurrently": "^4.1.0",
@@ -68,6 +69,9 @@
     "electron-json-storage": "^4.1.6",
     "electron-remote": "^1.3.0",
     "env-cmd": "^9.0.3",
+    "eslint-plugin-flowtype": "^3.11.1",
+    "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-react-hooks": "^1.6.1",
     "eslint-plugin-standard": "^4.0.0",
     "ffmpeg": "^0.0.4",
     "file-url": "^3.0.0",
@@ -136,7 +140,6 @@
     "electron-devtools-installer": "^2.2.4",
     "electron-is-dev": "^1.1.0",
     "electron-react-devtools": "^0.5.3",
-    "eslint": "^5.16.0",
     "eslint-config-eslint": "^5.0.1",
     "eslint-config-prettier": "^5.0.0",
     "eslint-config-promise": "^2.0.2",
@@ -151,7 +154,7 @@
     "husky": "^2.4.1",
     "jest-dom": "^3.5.0",
     "lint-staged": "^8.2.1",
-    "prettier": "1.18.2",
+    "prettier": "^1.18.2",
     "redux-devtools-extension": "^2.13.8",
     "tslint": "^5.17.0",
     "typescript": "^3.5.2"
