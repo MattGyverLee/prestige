@@ -1,5 +1,3 @@
-// Describing the shape of the tree's slice of state
-
 export interface LooseObject extends Object {
   [key: string]: any;
 }
@@ -35,7 +33,8 @@ export interface AnnotationState {
   categories: string[];
   fileInfoMain: boolean;
   sayMoreMetaMain: boolean;
-  timeline: LooseObject;
+  timeline: LooseObject[];
+  currentTimeline: number;
   txtTranscMain: boolean;
   txtTranscSubtitle: boolean;
   txtTranslMain: boolean;
@@ -75,6 +74,7 @@ export const UPDATE_ANNOTATIONSET = "UPDATE_ANNOTATIONSET";
 export const WIPE_ANNOTATION_SESSION = "WIPE_ANNOTATION_SESSION";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
+export const SET_URL = "SET_URL";
 
 interface HardResetApp {
   type: typeof HARD_RESET_APP;
@@ -102,7 +102,7 @@ interface AddAnnotation {
 }
 interface AddOralAnnotation {
   type: typeof ADD_ORAL_ANNOTATION;
-  payload: Milestone;
+  payload: LooseObject;
 }
 interface PushAnnotation {
   type: typeof PUSH_ANNOTATION;
@@ -192,6 +192,10 @@ interface EnableFileinfo {
 interface DisableFileinfo {
   type: typeof DISABLE_FILEINFO;
 }
+interface SetURL {
+  type: typeof SET_URL;
+  payload: string;
+}
 
 export type AnnotationActionTypes =
   | AddAnnotation
@@ -225,4 +229,5 @@ export type AnnotationActionTypes =
   | UpdateAnnotationset
   | WipeAnnotationAction
   | HardResetApp
-  | OnNewFolder;
+  | OnNewFolder
+  | SetURL;

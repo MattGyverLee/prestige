@@ -10,6 +10,7 @@ import Paper from "@material-ui/core/Paper";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import { sourceMedia } from "./globalFunctions";
 
 interface StateProps {
   controls?: boolean;
@@ -83,33 +84,10 @@ class PlayerZone extends Component<PlayerProps> {
     this.props.onPlay();
     this.props.setPlayer(this.player);
   }
-  loadNewFile(idx: number) {
+  loadNewFile(blobURL: string) {
     this.props.play();
-    this.props.setURL(this.props.sourceMedia[idx].blobURL);
+    this.props.setURL(blobURL);
     // todo: manage Index
-  }
-  sourceMedia() {
-    let sourceVids = this.props.sourceMedia.filter(file => !file.isAnnotation && file["mimeType"].startsWith("video")).sort(function(a: LooseObject, b: LooseObject) {
-      const nameA = a["name"].toLowerCase();
-      const nameB = b["name"].toLowerCase();
-      if (nameA < nameB) {
-        // sort string ascending
-        return -1;
-      };
-      if (nameA > nameB) return 1;
-      return 0; // default return value (no sorting)
-    });
-    let sourceAud = this.props.sourceMedia.filter(file => !file.isAnnotation && file["mimeType"].startsWith("audio")).sort(function(a: LooseObject, b: LooseObject) {
-      const nameA = a["name"].toLowerCase();
-      const nameB = b["name"].toLowerCase();
-      if (nameA < nameB) {
-        // sort string ascending
-        return -1;
-      };
-      if (nameA > nameB) return 1;
-      return 0; // default return value (no sorting)
-    });
-    return [...sourceVids, ...sourceAud];
   }
   onDuration = (duration: number) => {
     console.log("onDuration", duration);
@@ -305,11 +283,11 @@ class PlayerZone extends Component<PlayerProps> {
           <Paper>
             <ul className="list-group list-group-flush">
               {" "}
-              {this.sourceMedia().map((d, idx) => (
+              {sourceMedia(this.props.sourceMedia).map(d => (
                 <li
-                  key={idx}
+                  key={d.blobURL}
                   className="list-group-item flex-container"
-                  onClick={() => this.loadNewFile(idx)}
+                  onClick={() => this.loadNewFile(d.blobURL)}
                 >
                   <div> {d.name} </div>
                 </li>

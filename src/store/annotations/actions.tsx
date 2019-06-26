@@ -44,11 +44,12 @@ export function addAnnotation(
   };
 }
 export function addOralAnnotation(
-  newMilestone: any
+  newMilestone: types.Milestone,
+  idx: number
 ): types.AnnotationActionTypes {
   return {
     type: types.ADD_ORAL_ANNOTATION,
-    payload: newMilestone
+    payload: {newMilestone, idx}
   };
 }
 export function addCategory(inString: string): types.AnnotationActionTypes {

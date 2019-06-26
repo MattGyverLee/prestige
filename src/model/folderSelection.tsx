@@ -1,4 +1,5 @@
 import * as actions from "../store";
+import * as types from "../store/annotations/types";
 
 import { AnnotationRow, LooseObject } from "../store/annotations/types";
 import React, { Component } from "react";
@@ -6,6 +7,7 @@ import React, { Component } from "react";
 import { FileDesc } from "../store/tree/types";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import { getTimelineIndex, sourceMedia } from "./globalFunctions";
 
 var watcherRef: any;
 interface StateProps {
@@ -15,7 +17,7 @@ interface StateProps {
   annotMedia: LooseObject[];
   categories: string[];
   env: string;
-  timeline: any;
+  timeline: LooseObject[];
   folderName: string;
   folderPath: string;
   loaded: boolean;
@@ -188,8 +190,7 @@ class SelectFolderZone extends Component<FolderProps> {
     const chokReady = () => {
       this.addNewMediaToMilestone();
       if (this.props.sourceMedia.length !== 0) {
-        this.formatTimeline(this.props.timeline[0]);
-        props.setURL(this.props.sourceMedia[0].blobURL);
+        props.setURL(sourceMedia(this.props.sourceMedia)[0].blobURL);
         console.log(`Initial scan complete. Ready for changes`);
       } else {
         console.log("Empty Directory")
@@ -263,69 +264,27 @@ class SelectFolderZone extends Component<FolderProps> {
         fileDef["mimeType"] = mediaFile.mimeType;
         fileDef["name"] = mediaFile.name;
         fileDef["blobURL"] = mediaFile.blobURL;
-        const oralMilestone: LooseObject = {
+        const oralMilestone: types.Milestone = {
           annotationID: "",
           annotationRef: refFile,
-          data: fileDef,
+          data: {
+            channel: fileDef["channel"],
+            data: null,
+            linguisticType: fileDef["linguisticType"],
+            locale: fileDef["locale"],
+            mimeType: fileDef["mimeType"]
+          },
           startTime: refStart,
           stopTime: refStop,
-          timeline: parsedPath.base
         };
         mediaFile.inMilestones = true;
-        this.props.addOralAnnotation(oralMilestone);
+        const fileURL = require("file-url");
+        const blobURL = fileURL(mediaFile.path.substring(0, mediaFile.path.indexOf("_Annotations")));
+        this.props.addOralAnnotation(oralMilestone, getTimelineIndex(this.props.timeline, blobURL));
       }
     });
     // Do here:
   }
-  formatTimeline = (timeline: LooseObject) => {
-    // console.log("Starting");
-    // tslint:disable-next-line
-    let focus = timeline["milestones"];
-    // TODO 0 is Temporary
-    // tslint:disable-next-line
-    let table: AnnotationRow[] = [];
-    let index = 1;
-    focus.forEach((milestone: LooseObject) => {
-      // console.log(milestone.data);
-      // tslint:disable-next-line
-      let row: AnnotationRow = {
-        id: index,
-        startTime: milestone["startTime"],
-        stopTime: milestone["stopTime"],
-        audCareful: "",
-        audTransl: "",
-        txtTransc: "",
-        txtTransl: ""
-      };
-      index++;
-      let d;
-      for (d = 0; d < milestone["data"].length; d++) {
-        if (milestone["data"][d]["mimeType"].startsWith("audio")) {
-          // console.log("Audio");
-          if (milestone["data"][d]["channel"] === "Careful") {
-            row["audCareful"] = milestone["data"][d]["blobURL"];
-          }
-          if (milestone["data"][d]["channel"] === "Translation") {
-            row["audTransl"] = milestone["data"][d]["blobURL"];
-          }
-        }
-        if (milestone["data"][d]["mimeType"].startsWith("string")) {
-          // console.log("Text");
-          if (milestone["data"][d]["channel"] === "Transcription") {
-            row["txtTransc"] = milestone["data"][d]["data"];
-          }
-          if (milestone["data"][d]["channel"] === "Translation") {
-            row["txtTransl"] = milestone["data"][d]["data"];
-          }
-        }
-      }
-
-      table.push(row);
-    });
-    this.props.pushAnnotationTable(table);
-    //actions.pushAnnotationTable(this.formatTimeline(this.props.timeline[0]));
-    //  return table;
-  };
 
   render() {
     if (this.props.env === "electron") {

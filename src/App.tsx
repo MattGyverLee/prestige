@@ -15,7 +15,6 @@ import logo from "./assets/icons/png/256x256.png";
 import { playerCleanStore } from "./store/player/reducers";
 import processEAF from "./model/processEAF";
 import { updateSession } from "./store/system/actions";
-import { findDOMNode } from "react-dom";
 
 // import { playerCleanStore } from "./store";
 

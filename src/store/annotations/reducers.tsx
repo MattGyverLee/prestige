@@ -1,11 +1,12 @@
 import * as types from "./types";
+import { getTimelineIndex } from "../../model/globalFunctions";
 
 export const annCleanStore: types.AnnotationState = {
   annotations: [],
   annotationSet: [],
   annotationTable: [
     {
-      id: "0",
+      id: 0,
       startTime: 0,
       txtTransc: "Not Loaded"
     }
@@ -16,6 +17,7 @@ export const annCleanStore: types.AnnotationState = {
   fileInfoMain: false,
   sayMoreMetaMain: false,
   timeline: [],
+  currentTimeline: -1,
   txtTranscMain: false,
   txtTranscSubtitle: false,
   txtTranslMain: false,
@@ -53,13 +55,19 @@ export function annotationReducer(
         annotations: [...state.annotations, action.payload]
       };
     }
+    case types.SET_URL: {
+      const idx = getTimelineIndex(state.timeline, action.payload);
+      return {
+        ...state, currentTimeline: idx
+      };
+    }
     case types.ADD_ORAL_ANNOTATION: {
       // todo: pass BLOBURL inside
-      const milestones = state.timeline[0].milestones.map(
+      const milestones = state.timeline[action.payload.idx].milestones.map(
         (m: types.LooseObject) =>
-          m.startTime === action.payload.startTime &&
-          m.stopTime === action.payload.stopTime
-            ? { ...m, data: m.data.concat(action.payload.data) }
+          m.startTime === action.payload.newMilestone.startTime &&
+          m.stopTime === action.payload.newMilestone.stopTime
+            ? { ...m, data: m.data.concat(action.payload.newMilestone.data) }
             : m
       );
       return {

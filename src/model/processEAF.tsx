@@ -25,7 +25,7 @@ export default function processEAF(
   const eafFile: string = parsedPath.base;
   const syncMedia: string[] = [];
   for (h = 0; h < fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h++) {
-    const refMedia = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
+    const refMedia: string = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
     for (g = 0; g < props.tree.sourceMedia.length; g++) {
       if (props.tree.sourceMedia[g].name === refMedia) {
         // toDo: Do this right with Redux
@@ -33,13 +33,14 @@ export default function processEAF(
         props.tree.sourceMedia[g]["annotationRef"] = path;
       }
     }
-    syncMedia.push(refMedia);
+    const fileURL = require("file-url");
+    syncMedia.push(fileURL(parsedPath.dir + "/" + refMedia));
   }
 
   // Instantiate tempTimeline
   let tempTimeline = new Timelines({
     refName: parsedPath.name,
-    syncMedia: { syncMedia },
+    syncMedia: syncMedia,
     eafFile: { eafFile }
   });
 

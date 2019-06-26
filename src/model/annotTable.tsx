@@ -27,9 +27,11 @@ import { connect } from "react-redux";
 
 interface StateProps {
   player: any;
-  timeline: LooseObject;
+  timelines: LooseObject[];
+  currentTimeline: number;
   categories: string[];
   annotationTable: AnnotationRow[];
+  sourceMedia: LooseObject[];
 }
 
 interface DispatchProps {
@@ -44,6 +46,8 @@ interface ComponentProps extends StateProps, DispatchProps {
 }
 
 class AnnotationTable extends Component<ComponentProps> {
+  private prevTimeline = -1;
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -51,9 +55,75 @@ class AnnotationTable extends Component<ComponentProps> {
     };
   }
 
-  componentDidMount() {
-    // Runs on load
+  componentDidUpdate() {
+    if (this.props.currentTimeline !== this.prevTimeline) {
+      this.formatTimeline(this.props.timelines[this.props.currentTimeline]);
+      this.prevTimeline = this.props.currentTimeline;
+    }
   }
+
+  formatTimeline = (timeline: LooseObject) => {
+    if (timeline === undefined) {
+      console.log("Undefined timeline.");
+      this.props.pushAnnotationTable([
+        {
+          id: 0,
+          startTime: 0,
+          stopTime: 0,
+          txtTransc: "Not Loaded",
+          audCareful: "",
+          audTransl: "",
+          txtTransl: "Not Loaded"
+        }
+      ]);
+      return;
+    }
+    // console.log("Starting");
+    // tslint:disable-next-line
+    let focus = timeline["milestones"];
+    // TODO 0 is Temporary
+    // tslint:disable-next-line
+    let table: AnnotationRow[] = [];
+    let index = 1;
+    focus.forEach((milestone: LooseObject) => {
+      // console.log(milestone.data);
+      // tslint:disable-next-line
+      let row: AnnotationRow = {
+        id: index,
+        startTime: milestone["startTime"],
+        stopTime: milestone["stopTime"],
+        audCareful: "",
+        audTransl: "",
+        txtTransc: "",
+        txtTransl: ""
+      };
+      index++;
+      let d;
+      for (d = 0; d < milestone["data"].length; d++) {
+        if (milestone["data"][d]["mimeType"].startsWith("audio")) {
+          // console.log("Audio");
+          if (milestone["data"][d]["channel"] === "Careful") {
+            row["audCareful"] = milestone["data"][d]["blobURL"];
+          }
+          if (milestone["data"][d]["channel"] === "Translation") {
+            row["audTransl"] = milestone["data"][d]["blobURL"];
+          }
+        }
+        if (milestone["data"][d]["mimeType"].startsWith("string")) {
+          // console.log("Text");
+          if (milestone["data"][d]["channel"] === "Transcription") {
+            row["txtTransc"] = milestone["data"][d]["data"];
+          }
+          if (milestone["data"][d]["channel"] === "Translation") {
+            row["txtTransl"] = milestone["data"][d]["data"];
+          }
+        }
+      }
+
+      table.push(row);
+    });
+    this.props.pushAnnotationTable(table);
+  };
 
   render() {
     // Table Values
@@ -242,9 +312,11 @@ class AnnotationTable extends Component<ComponentProps> {
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   // annotations: state.annotations.annotations,
   player: state.player.player,
-  timeline: state.annotations.timeline[0], // ToDo: Un-Hardwire this
+  timelines: state.annotations.timeline, // ToDo: Un-Hardwire this
   categories: state.annotations.categories,
-  annotationTable: state.annotations.annotationTable
+  annotationTable: state.annotations.annotationTable,
+  sourceMedia: state.tree.sourceMedia,
+  currentTimeline: state.annotations.currentTimeline
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
