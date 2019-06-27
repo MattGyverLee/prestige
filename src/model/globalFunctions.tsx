@@ -19,6 +19,15 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
       }
     }
   }
+  for (i = 0; i < timelines.length; i++) {
+    if (
+      timelines[i].eafFile.includes(
+        blobURL.substring(0, blobURL.lastIndexOf("."))
+      )
+    ) {
+      return i;
+    }
+  }
   return -1;
 }
 

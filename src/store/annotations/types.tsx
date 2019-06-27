@@ -19,7 +19,7 @@ export interface Milestone {
     linguisticType: string;
     locale: string;
     mimeType: string;
-  };
+  }[];
   startTime: number;
   stopTime: number;
 }
@@ -35,6 +35,7 @@ export interface AnnotationState {
   sayMoreMetaMain: boolean;
   timeline: LooseObject[];
   currentTimeline: number;
+  prevTimeline: number;
   txtTranscMain: boolean;
   txtTranscSubtitle: boolean;
   txtTranslMain: boolean;
@@ -42,7 +43,6 @@ export interface AnnotationState {
 }
 
 // Describing the different ACTION NAMES available
-export const ADD_ANNOTATION = "ADD_ANNOTATION";
 export const ADD_ANNOTATIONSET = "ADD_ANNOTATIONSET";
 export const ADD_ORAL_ANNOTATION = "ADD_ORAL_ANNOTATION";
 export const ADD_CATEGORY = "ADD_CATEGORY";
@@ -75,6 +75,8 @@ export const WIPE_ANNOTATION_SESSION = "WIPE_ANNOTATION_SESSION";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const SET_URL = "SET_URL";
+export const FILE_DELETED = "FILE_DELETED";
+export const UPDATE_PREV_TIMELINE = "UPDATE_PREV_TIMELINE";
 
 interface HardResetApp {
   type: typeof HARD_RESET_APP;
@@ -96,10 +98,6 @@ interface WipeAnnotationAction {
   payload: AnnotationState;
 }
 
-interface AddAnnotation {
-  type: typeof ADD_ANNOTATION;
-  payload: Milestone;
-}
 interface AddOralAnnotation {
   type: typeof ADD_ORAL_ANNOTATION;
   payload: LooseObject;
@@ -196,9 +194,16 @@ interface SetURL {
   type: typeof SET_URL;
   payload: string;
 }
+interface FileDeleted {
+  type: typeof FILE_DELETED;
+  payload: string;
+}
+interface UpdatePrevTimeline {
+  type: typeof UPDATE_PREV_TIMELINE;
+  payload: number;
+}
 
 export type AnnotationActionTypes =
-  | AddAnnotation
   | AddOralAnnotation
   | AddAnnotationset
   | AddCategory
@@ -230,4 +235,6 @@ export type AnnotationActionTypes =
   | WipeAnnotationAction
   | HardResetApp
   | OnNewFolder
-  | SetURL;
+  | SetURL
+  | FileDeleted
+  | UpdatePrevTimeline;

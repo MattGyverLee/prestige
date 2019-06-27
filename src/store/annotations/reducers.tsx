@@ -19,6 +19,7 @@ export const annCleanStore: types.AnnotationState = {
   sayMoreMetaMain: false,
   timeline: [],
   currentTimeline: -1,
+  prevTimeline: -1,
   txtTranscMain: false,
   txtTranscSubtitle: false,
   txtTranslMain: false,
@@ -50,12 +51,6 @@ export function annotationReducer(
         ...action.payload
       };
     }
-    case types.ADD_ANNOTATION: {
-      return {
-        ...state,
-        annotations: [...state.annotations, action.payload]
-      };
-    }
     case types.SET_URL: {
       const idx = getTimelineIndex(state.timeline, action.payload);
       return {
@@ -64,17 +59,46 @@ export function annotationReducer(
       };
     }
     case types.ADD_ORAL_ANNOTATION: {
-      const milestones = state.timeline[action.payload.idx].milestones.map(
-        (m: types.LooseObject) =>
-          m.startTime === action.payload.newMilestone.startTime &&
-          m.stopTime === action.payload.newMilestone.stopTime
-            ? { ...m, data: m.data.concat(action.payload.newMilestone.data) }
-            : m
+      // TODO: Possibly add milestones to timeline without EAF file
+      if (action.payload.idx === -1) {
+        // TODO: Generalize this zero
+        let eafFile = action.payload.newMilestone.data[0].data;
+        eafFile = eafFile.substring(0, eafFile.indexOf("_Annotations"));
+        const syncMedia = eafFile;
+        eafFile = eafFile.substring(0, eafFile.lastIndexOf(".")) + ".eaf";
+        const timeline: types.LooseObject = {
+          milestones: [action.payload.newMilestone],
+          eafFile: eafFile,
+          syncMedia: [syncMedia],
+          instantiated: true
+        };
+        return { ...state, timeline: [...state.timeline, timeline] };
+      }
+      let added: boolean = false;
+      let milestones = state.timeline[action.payload.idx].milestones.map(
+        (m: types.LooseObject) => {
+          if (
+            m.startTime === action.payload.newMilestone.startTime &&
+            m.stopTime === action.payload.newMilestone.stopTime
+          ) {
+            added = true;
+            return {
+              ...m,
+              data: [...m.data, ...action.payload.newMilestone.data]
+            };
+          } else {
+            return m;
+          }
+        }
       );
+      const newM = action.payload.newMilestone;
+      if (!added) {
+        milestones = [...milestones, newM];
+      }
       return {
         ...state,
         timeline: state.timeline.map((t: types.LooseObject, i: number) =>
-          i === 0 ? { ...t, milestones } : t
+          i === action.payload.idx ? { ...t, milestones } : t
         )
       };
     }
@@ -222,7 +246,50 @@ export function annotationReducer(
         ...state
       };
     }
-
+    case types.FILE_DELETED: {
+      let gone: boolean =
+        state.timeline.filter((t: any) => {
+          if (t.eafFile !== action.payload) {
+            return false;
+          }
+          return true;
+        }).length !== 0;
+      return {
+        ...state,
+        annotationTable: state.annotationTable.map(annot => {
+          if (annot.audCareful === action.payload) {
+            return { ...annot, audCareful: "" };
+          } else if (annot.audTransl === action.payload) {
+            return { ...annot, audTransl: "" };
+          }
+          return annot;
+        }),
+        timeline: state.timeline
+          .map(t => {
+            let tempTimeline = {
+              ...t,
+              milestones: t.milestones.map((m: any) => {
+                return {
+                  ...m,
+                  data: m.data.filter((md: any) => md !== action.payload)
+                };
+              }),
+              syncMedia: t.syncMedia.filter((s: any) => s !== action.payload)
+            };
+            return tempTimeline;
+          })
+          .filter((t: any) => {
+            if (t.eafFile !== action.payload) {
+              return true;
+            }
+            return false;
+          }),
+        currentTimeline: gone ? -1 : state.currentTimeline
+      };
+    }
+    case types.UPDATE_PREV_TIMELINE: {
+      return { ...state, prevTimeline: action.payload };
+    }
     default:
       // console.log("Failed Tree Action", action);
       return state;

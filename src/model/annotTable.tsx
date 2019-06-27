@@ -29,6 +29,7 @@ interface StateProps {
   player: any;
   timelines: LooseObject[];
   currentTimeline: number;
+  prevTimeline: number;
   categories: string[];
   annotationTable: AnnotationRow[];
   sourceMedia: LooseObject[];
@@ -38,6 +39,7 @@ interface DispatchProps {
   play: typeof actions.play;
   setURL: typeof actions.setURL;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
+  updatePrevTimeline: typeof actions.updatePrevTimeline;
 }
 
 interface ComponentProps extends StateProps, DispatchProps {
@@ -46,8 +48,6 @@ interface ComponentProps extends StateProps, DispatchProps {
 }
 
 class AnnotationTable extends Component<ComponentProps> {
-  private prevTimeline = -1;
-
   constructor(props: any) {
     super(props);
     this.state = {
@@ -56,9 +56,9 @@ class AnnotationTable extends Component<ComponentProps> {
   }
 
   componentDidUpdate() {
-    if (this.props.currentTimeline !== this.prevTimeline) {
+    if (this.props.currentTimeline !== this.props.prevTimeline) {
       this.formatTimeline(this.props.timelines[this.props.currentTimeline]);
-      this.prevTimeline = this.props.currentTimeline;
+      this.props.updatePrevTimeline(this.props.currentTimeline);
     }
   }
 
@@ -313,7 +313,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   categories: state.annotations.categories,
   annotationTable: state.annotations.annotationTable,
   sourceMedia: state.tree.sourceMedia,
-  currentTimeline: state.annotations.currentTimeline
+  currentTimeline: state.annotations.currentTimeline,
+  prevTimeline: state.annotations.prevTimeline
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -321,7 +322,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       play: actions.play,
       setURL: actions.setURL,
-      pushAnnotationTable: actions.pushAnnotationTable
+      pushAnnotationTable: actions.pushAnnotationTable,
+      updatePrevTimeline: actions.updatePrevTimeline
     },
     dispatch
   )

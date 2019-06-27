@@ -31,15 +31,6 @@ export function wipeAnnotationAction(
     payload: annotState
   };
 }
-
-export function addAnnotation(
-  milestone: types.Milestone
-): types.AnnotationActionTypes {
-  return {
-    type: types.ADD_ANNOTATION,
-    payload: milestone
-  };
-}
 export function addOralAnnotation(
   newMilestone: types.Milestone,
   idx: number
@@ -233,5 +224,11 @@ export function disableFileinfo(
 ): types.AnnotationActionTypes {
   return {
     type: types.DISABLE_FILEINFO
+  };
+}
+export function updatePrevTimeline(idx: number): types.AnnotationActionTypes {
+  return {
+    type: types.UPDATE_PREV_TIMELINE,
+    payload: idx
   };
 }

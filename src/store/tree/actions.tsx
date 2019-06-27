@@ -45,7 +45,9 @@ export function fileAdded(inFile: types.FileDesc): types.TreeActionTypes {
     payload: inFile
   };
 }
-export function sourceMediaAdded(inFile: types.FileDesc): types.TreeActionTypes {
+export function sourceMediaAdded(
+  inFile: types.FileDesc
+): types.TreeActionTypes {
   return {
     type: types.SOURCE_MEDIA_ADDED,
     payload: inFile
@@ -63,27 +65,47 @@ export function fileChanged(inFile: types.FileDesc): types.TreeActionTypes {
     payload: inFile
   };
 }
-export function sourceMediaChanged(inFile: types.FileDesc): types.TreeActionTypes {
+export function sourceMediaChanged(
+  inFile: types.FileDesc
+): types.TreeActionTypes {
   return {
     type: types.SOURCE_MEDIA_CHANGED,
     payload: inFile
   };
 }
-export function annotMediaChanged(inFile: types.FileDesc): types.TreeActionTypes {
+export function annotMediaChanged(
+  inFile: types.FileDesc
+): types.TreeActionTypes {
   return {
     type: types.ANNOT_MEDIA_CHANGED,
     payload: inFile
   };
 }
-export function fileDeleted(inPath: string): types.TreeActionTypes {
+export function fileDeleted(blobURL: string): types.TreeActionTypes {
   return {
     type: types.FILE_DELETED,
-    payload: inPath
+    payload: blobURL
   };
 }
 export function changePrevPath(inPath: string): types.TreeActionTypes {
   return {
     type: types.CHANGE_PREV_PATH,
     payload: inPath
-  }
+  };
+}
+export function setAnnotMediaInMilestones(
+  blobURL: string
+): types.TreeActionTypes {
+  return {
+    type: types.SET_ANNOT_MEDIA_IN_MILESTONES,
+    payload: blobURL
+  };
+}
+export function setSourceMediaAnnotRef(
+  pair: types.PairPathURL
+): types.TreeActionTypes {
+  return {
+    type: types.SET_SOURCE_MEDIA_ANNOT_REF,
+    payload: pair
+  };
 }

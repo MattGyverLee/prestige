@@ -19,6 +19,11 @@ export interface FileDesc {
   file: any;
 }
 
+export interface PairPathURL {
+  blobURL: string;
+  blobPath: string;
+}
+
 // Describing the different ACTION NAMES available
 export const UPDATE_TREE = "UPDATE_TREE";
 export const UPDATE_ACTIVE_FOLDER = "UPDATE_ACTIVE_FOLDER";
@@ -32,6 +37,8 @@ export const FILE_DELETED = "FILE_DELETED";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const CHANGE_PREV_PATH = "CHANGE_PREV_PATH";
+export const SET_ANNOT_MEDIA_IN_MILESTONES = "SET_ANNOT_MEDIA_IN_MILESTONES";
+export const SET_SOURCE_MEDIA_ANNOT_REF = "SET_SOURCE_MEDIA_ANNOT_REF";
 
 interface TreeHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -83,6 +90,14 @@ interface ChangePrevPath {
   type: typeof CHANGE_PREV_PATH;
   payload: string;
 }
+interface SetAnnotMediaInMilestones {
+  type: typeof SET_ANNOT_MEDIA_IN_MILESTONES;
+  payload: string;
+}
+interface SetSourceMediaAnnotRef {
+  type: typeof SET_SOURCE_MEDIA_ANNOT_REF;
+  payload: PairPathURL;
+}
 
 export type TreeActionTypes =
   | FileAdded
@@ -96,4 +111,6 @@ export type TreeActionTypes =
   | TreeHardResetApp
   | TreeOnNewFolder
   | UpdateTree
-  | ChangePrevPath;
+  | ChangePrevPath
+  | SetAnnotMediaInMilestones
+  | SetSourceMediaAnnotRef;

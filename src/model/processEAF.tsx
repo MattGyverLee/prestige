@@ -14,31 +14,27 @@ export default function processEAF(path: string, props: any) {
   // Miscellaneous Local Variables
   const fileData = content.ANNOTATION_DOCUMENT;
   const timeSlotPointer = fileData.TIME_ORDER[0].TIME_SLOT;
-  let g, h, i, j, k;
+  let h, i, j, k;
   const miles: any[] = [];
 
   // Define Instance Variables for tempTimeline
   const parsedPath = require("path").parse(path);
-  const eafFile: string = parsedPath.base;
+  const fileURL = require("file-url");
+  const eafFile: string = fileURL(path);
   const syncMedia: string[] = [];
   for (h = 0; h < fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h++) {
     const refMedia: string = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
-    for (g = 0; g < props.tree.sourceMedia.length; g++) {
-      if (props.tree.sourceMedia[g].name === refMedia) {
-        // toDo: Do this right with Redux
-        props.tree.sourceMedia[g]["hasAnnotation"] = true;
-        props.tree.sourceMedia[g]["annotationRef"] = path;
-      }
-    }
-    const fileURL = require("file-url");
-    syncMedia.push(fileURL(parsedPath.dir + "/" + refMedia));
+    const blobURL: string = fileURL(parsedPath.dir + "/" + refMedia);
+    const blobPath: string = fileURL(path);
+    props.setSourceMediaAnnotRef({ blobURL, blobPath });
+    syncMedia.push(blobURL);
   }
 
   // Instantiate tempTimeline
   let tempTimeline = new Timelines({
     refName: parsedPath.name,
     syncMedia: syncMedia,
-    eafFile: { eafFile }
+    eafFile: eafFile
   });
 
   // Inline Function Definition for findTime and findAnnotTime
@@ -154,6 +150,7 @@ export default function processEAF(path: string, props: any) {
 
   // Assign tempTimeline an Annotation Index and Push to Timeline
   // FIXME: ASYNC Unsafe
+  // TODO: Don't Need AnnotationID or RefMedia in Timeline
   let annotationIndex = 0;
   if (props.annotations.timeline !== undefined) {
     annotationIndex = props.annotations.timeline.length;

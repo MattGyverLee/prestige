@@ -16,8 +16,6 @@ import { playerCleanStore } from "./store/player/reducers";
 import processEAF from "./model/processEAF";
 import { updateSession } from "./store/system/actions";
 
-// import { playerCleanStore } from "./store";
-
 const isElectron = process.env.REACT_APP_MODE === "electron";
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
@@ -35,6 +33,7 @@ interface DispatchProps {
   processEAF: typeof processEAF;
   // updateActiveFolder: typeof actions.updateActiveFolder;
   updateTree: typeof actions.updateTree;
+  setSourceMediaAnnotRef: typeof actions.setSourceMediaAnnotRef;
 
   onEnded: typeof actions.onEnded;
   onPlay: typeof actions.onPlay;
@@ -44,7 +43,6 @@ interface DispatchProps {
   toggleLoop: typeof actions.toggleLoop;
   updatePlayerAction: typeof actions.updatePlayerAction;
 
-  addAnnotation: typeof actions.addAnnotation;
   addCategory: typeof actions.addCategory;
   addOralAnnotation: typeof actions.addOralAnnotation;
   enableAudtranscMain: typeof actions.enableAudtranscMain;
@@ -103,13 +101,13 @@ class App extends React.Component<AppProps> {
   hardResetApp = (inString: string) => {
     this.props.hardResetApp(inString);
     this.hardResetHelper(document.querySelector("[id=selectFolder]"));
-  }
+  };
 
   hardResetHelper = (input: any) => {
     if (input !== null) {
       input.value = "";
     }
-  }
+  };
 
   onProgress = (playState: any) => {
     this.props.onProgress(playState);
@@ -165,7 +163,6 @@ const mapStateToProps = (state: actions.StateProps): actions.StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      addAnnotation: actions.addAnnotation,
       addOralAnnotation: actions.addOralAnnotation,
       addCategory: actions.addCategory,
       pushAnnotation: actions.pushAnnotation,
@@ -192,7 +189,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       updateSession,
       updateTree: actions.updateTree,
       wipeAnnotationAction: actions.wipeAnnotationAction,
-      hardResetApp: actions.hardResetApp
+      hardResetApp: actions.hardResetApp,
+      setSourceMediaAnnotRef: actions.setSourceMediaAnnotRef
     },
     dispatch
   )

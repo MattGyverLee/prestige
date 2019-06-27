@@ -25,7 +25,6 @@ interface StateProps {
 
 interface DispatchProps {
   // updateActiveFolder: typeof actions.updateActiveFolder;
-  addAnnotation: typeof actions.addAnnotation;
   addCategory: typeof actions.addCategory;
   addOralAnnotation: typeof actions.addOralAnnotation;
   annotMediaAdded: typeof actions.annotMediaAdded;
@@ -42,6 +41,7 @@ interface DispatchProps {
   setURL: typeof actions.setURL;
   sourceMediaAdded: typeof actions.sourceMediaAdded;
   sourceMediaChanged: typeof actions.sourceMediaChanged;
+  setAnnotMediaInMilestons: typeof actions.setAnnotMediaInMilestones;
 }
 
 interface FolderProps extends StateProps, DispatchProps {
@@ -174,9 +174,9 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log(`File ${path} has been changed`);
     };
     const chokUnlink = (path: string) => {
-      const pathParse = require("path");
-      const parsedPath = pathParse.parse(path);
-      props.fileDeleted(parsedPath.base);
+      const fileURL = require("file-url");
+      const blobURL = fileURL(path);
+      props.fileDeleted(blobURL);
       console.log(`File ${path} has been removed`);
     };
     const chokUnlinkDir = (path: string) => {
@@ -242,7 +242,8 @@ class SelectFolderZone extends Component<FolderProps> {
         const tempMatch = parsedPath.dir.match(
           /[^\\/\n\r]*(?=_Annotations)/
         )[0];
-        const refFile = tempMatch;
+        const fileURL = require("file-url");
+        const refFile = fileURL(tempMatch);
         const refStart = parseFloat(splitPath[0]);
         const refStop = parseFloat(splitPath[2]);
         const refType = splitPath[3];
@@ -253,28 +254,28 @@ class SelectFolderZone extends Component<FolderProps> {
 
         const fileDef: types.LooseObject = {};
         fileDef["isAnnotation"] = true;
-        // todo: the following line is cheating redux
-        mediaFile["inMilestones"] = true;
         fileDef["linguisticType"] = tier;
         fileDef["channel"] = refType;
         fileDef["mimeType"] = mediaFile.mimeType;
         fileDef["name"] = mediaFile.name;
         fileDef["blobURL"] = mediaFile.blobURL;
+        this.props.setAnnotMediaInMilestons(mediaFile.blobURL);
         const oralMilestone: types.Milestone = {
           annotationID: "",
           annotationRef: refFile,
-          data: {
-            channel: fileDef["channel"],
-            data: fileDef["blobURL"],
-            linguisticType: fileDef["linguisticType"],
-            locale: fileDef["locale"],
-            mimeType: fileDef["mimeType"]
-          },
+          data: [
+            {
+              channel: fileDef["channel"],
+              data: fileDef["blobURL"],
+              linguisticType: fileDef["linguisticType"],
+              locale: fileDef["locale"],
+              mimeType: fileDef["mimeType"]
+            }
+          ],
           startTime: refStart,
           stopTime: refStop
         };
         mediaFile.inMilestones = true;
-        const fileURL = require("file-url");
         const blobURL = fileURL(
           mediaFile.path.substring(0, mediaFile.path.indexOf("_Annotations"))
         );
@@ -332,7 +333,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
       // updateActiveFolder: actions.updateActiveFolder,
-      addAnnotation: actions.addAnnotation,
       addCategory: actions.addCategory,
       addOralAnnotation: actions.addOralAnnotation,
       annotMediaAdded: actions.annotMediaAdded,
@@ -348,7 +348,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       resetAnnotationAction: actions.resetAnnotationAction,
       setURL: actions.setURL,
       sourceMediaAdded: actions.sourceMediaAdded,
-      sourceMediaChanged: actions.sourceMediaChanged
+      sourceMediaChanged: actions.sourceMediaChanged,
+      setAnnotMediaInMilestons: actions.setAnnotMediaInMilestones
     },
     dispatch
   )

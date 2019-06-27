@@ -88,14 +88,46 @@ export function treeReducer(
       return {
         ...state,
         sourceMedia: [
-          ...state.sourceMedia.filter(file => file.name !== action.payload)
+          ...state.sourceMedia
+            .filter(file => file.blobURL !== action.payload)
+            .map(file =>
+              file.annotationRef === action.payload
+                ? { ...file, annotationRef: "" }
+                : file
+            )
         ],
         annotMedia: [
-          ...state.annotMedia.filter(file => file.name !== action.payload)
+          ...state.annotMedia.filter(file => file.blobURL !== action.payload)
         ],
         availableFiles: [
-          ...state.availableFiles.filter(file => file.name !== action.payload)
+          ...state.availableFiles.filter(
+            file => file.blobURL !== action.payload
+          )
         ]
+      };
+    }
+    case types.SET_ANNOT_MEDIA_IN_MILESTONES: {
+      const tempAnnot = state.annotMedia.map(m => {
+        return m.blobURL === action.payload ? { ...m, inMilestones: true } : m;
+      });
+      return {
+        ...state,
+        annotMedia: tempAnnot
+      };
+    }
+    case types.SET_SOURCE_MEDIA_ANNOT_REF: {
+      const tempSource = state.sourceMedia.map(m => {
+        return m.blobURL === action.payload.blobURL
+          ? {
+              ...m,
+              hasAnnotation: true,
+              annotationRef: action.payload.blobPath
+            }
+          : m;
+      });
+      return {
+        ...state,
+        sourceMedia: tempSource
       };
     }
     // TODO add Media/File Deletion

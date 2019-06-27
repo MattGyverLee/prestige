@@ -57,7 +57,8 @@
       "url": "http://localhost:3000",
       "port": 9223,
       "webRoot": "${workspaceFolder}",
-      "timeout": 150000
+      "timeout": 150000,
+      "skipFiles": ["node_modules/**/*.js", "lib/**/*.js"]
     }
   ],
   "compounds": [
