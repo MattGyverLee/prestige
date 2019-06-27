@@ -13,7 +13,7 @@ export const playerCleanStore: types.MediaPlayerState = {
   playing: false,
   seeking: false,
   url: "",
-  volume: 0.8,
+  volume: 0.8
 };
 
 export function playerReducer(
@@ -26,7 +26,14 @@ export function playerReducer(
       return state;
     }
     case types.ON_NEW_FOLDER: {
-      return {...playerCleanStore, player: state.player};
+      if (action.payload.blobURL !== undefined) {
+        return {
+          ...playerCleanStore,
+          player: state.player,
+          url: action.payload.blobURL
+        };
+      }
+      return { ...playerCleanStore, player: state.player };
     }
     case types.UPDATE_PLAYER_SESSION: {
       // I might Deprecate This Action
@@ -108,38 +115,45 @@ export function playerReducer(
     }
     case types.SET_DURATION: {
       return {
-        ...state, duration: action.payload
+        ...state,
+        duration: action.payload
       };
     }
     case types.SET_PLAYBACK_RATE: {
       return {
-        ...state, playbackRate: action.payload
-      }
+        ...state,
+        playbackRate: action.payload
+      };
     }
     case types.TOGGLE_MUTED: {
       return {
-        ...state, muted: !state.muted
-      }
+        ...state,
+        muted: !state.muted
+      };
     }
     case types.ON_SEEK_MOUSE_DOWN: {
       return {
-        ...state, seeking: true
-      }
+        ...state,
+        seeking: true
+      };
     }
     case types.ON_SEEK_MOUSE_UP: {
       return {
-        ...state, seeking: false
-      }
+        ...state,
+        seeking: false
+      };
     }
     case types.ON_SEEK_CHANGE: {
       return {
-        ...state, played: action.payload
-      }
+        ...state,
+        played: action.payload
+      };
     }
     case types.ON_VOLUME_CHANGE: {
       return {
-        ...state, volume: action.payload
-      }
+        ...state,
+        volume: action.payload
+      };
     }
     // this.setState({ url: null, playing: false })
     default:

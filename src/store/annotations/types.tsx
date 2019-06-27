@@ -85,7 +85,7 @@ interface HardResetApp {
 
 interface OnNewFolder {
   type: typeof ON_NEW_FOLDER;
-  payload: string;
+  payload: { inString: string; blobURL?: string };
 }
 
 interface ResetAnnotationAction {

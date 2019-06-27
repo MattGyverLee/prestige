@@ -44,7 +44,7 @@ interface PlayHardResetApp {
 
 interface PlayOnNewFolder {
   type: typeof ON_NEW_FOLDER;
-  payload: string;
+  payload: { path: string; blobURL?: string };
 }
 
 interface UpdatePlayerAction {

@@ -21,6 +21,7 @@ interface StateProps {
   prevPath: string;
   sourceMedia: types.LooseObject[];
   timeline: types.LooseObject[];
+  url: string;
 }
 
 interface DispatchProps {
@@ -57,6 +58,9 @@ class SelectFolderZone extends Component<FolderProps> {
       open: false
     };
   }
+
+  private isChokReady: boolean = false;
+  private currentFolder: any;
 
   startWatcher = (path: string, props: any) => {
     if (watcherRef !== undefined) {
@@ -140,6 +144,10 @@ class SelectFolderZone extends Component<FolderProps> {
     };
 
     const chokFileadd = (path: string) => {
+      if (this.isChokReady && path.endsWith(".eaf")) {
+        this.loadLocalFolder(this.currentFolder, this.props.url);
+        this.isChokReady = false;
+      }
       // Todo: If Chokidar.notready, go on, otherwise add annotation.
       const fileDef = chocFileDescribe(path);
       const fileDesc: FileDesc = { file: fileDef };
@@ -161,6 +169,10 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log(`Directory ${path} has been added`);
     };
     const chokChange = (path: string) => {
+      if (this.isChokReady && path.endsWith(".eaf")) {
+        this.loadLocalFolder(this.currentFolder, this.props.url);
+        this.isChokReady = false;
+      }
       const fileDef = chocFileDescribe(path);
       const fileDesc: FileDesc = { file: fileDef };
       if (
@@ -193,6 +205,7 @@ class SelectFolderZone extends Component<FolderProps> {
       } else {
         console.log("Empty Directory");
       }
+      this.isChokReady = true;
     };
 
     // Declare the listeners of the watcher
@@ -213,7 +226,8 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   }
 
-  loadLocalFolder(inputElement: any) {
+  loadLocalFolder(inputElement: any, currentURL?: string) {
+    this.currentFolder = inputElement;
     if (inputElement.files.length === 0) {
       console.log("Undefined Directory Selected");
     } else if (
@@ -226,6 +240,16 @@ class SelectFolderZone extends Component<FolderProps> {
       if (path !== "" && path !== this.props.prevPath) {
         this.startWatcher(path, this.props);
         this.props.changePrevPath(path);
+      }
+    } else if (
+      inputElement.files[0].path !== undefined &&
+      inputElement.files[0].path === this.props.prevPath
+    ) {
+      this.props.onNewFolder(inputElement.files[0].path);
+      const path = inputElement.files[0].path.toString();
+      this.startWatcher(path, this.props);
+      if (currentURL !== null && currentURL !== undefined) {
+        this.props.setURL(currentURL);
       }
     }
   }
@@ -326,7 +350,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   loaded: state.tree.loaded,
   prevPath: state.tree.prevPath,
   sourceMedia: state.tree.sourceMedia,
-  timeline: state.annotations.timeline
+  timeline: state.annotations.timeline,
+  url: state.player.url
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
