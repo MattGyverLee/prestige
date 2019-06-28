@@ -6,6 +6,9 @@ interface tempTimeline {
 }
 
 export function getTimelineIndex(timelines: any, blobURL: string): number {
+  if (blobURL === undefined || blobURL === null || blobURL === "") {
+    return -1;
+  }
   let temp = timelines.map((t: LooseObject, idx: number) => {
     let syncMedia = t["syncMedia"];
     let x: tempTimeline = { syncMedia, idx };

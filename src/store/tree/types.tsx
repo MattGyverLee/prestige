@@ -36,6 +36,7 @@ export const ANNOT_MEDIA_CHANGED = "ANNOT_MEDIA_CHANGED";
 export const FILE_DELETED = "FILE_DELETED";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
+export const ON_RELOAD_FOLDER = "ON_RELOAD_FOLDER";
 export const CHANGE_PREV_PATH = "CHANGE_PREV_PATH";
 export const SET_ANNOT_MEDIA_IN_MILESTONES = "SET_ANNOT_MEDIA_IN_MILESTONES";
 export const SET_SOURCE_MEDIA_ANNOT_REF = "SET_SOURCE_MEDIA_ANNOT_REF";
@@ -49,6 +50,12 @@ interface TreeOnNewFolder {
   type: typeof ON_NEW_FOLDER;
   payload: string;
 }
+
+interface TreeOnReloadFolder {
+  type: typeof ON_RELOAD_FOLDER;
+  payload: string;
+}
+
 interface UpdateTree {
   type: typeof UPDATE_TREE;
   payload: TreeState;
@@ -110,6 +117,7 @@ export type TreeActionTypes =
   | UpdateActiveFolder
   | TreeHardResetApp
   | TreeOnNewFolder
+  | TreeOnReloadFolder
   | UpdateTree
   | ChangePrevPath
   | SetAnnotMediaInMilestones

@@ -21,6 +21,7 @@ import Paper from "@material-ui/core/Paper";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import { getTimelineIndex } from "./globalFunctions";
 
 // import folderSelection from "./folderSelection";
 // import formatTimeline from "./folderSelection";
@@ -33,6 +34,9 @@ interface StateProps {
   categories: string[];
   annotationTable: AnnotationRow[];
   sourceMedia: LooseObject[];
+  timelineChanged: boolean;
+  timelinesInstantiated: boolean;
+  url: string;
 }
 
 interface DispatchProps {
@@ -56,9 +60,14 @@ class AnnotationTable extends Component<ComponentProps> {
   }
 
   componentDidUpdate() {
-    if (this.props.currentTimeline !== this.props.prevTimeline) {
-      this.formatTimeline(this.props.timelines[this.props.currentTimeline]);
-      this.props.updatePrevTimeline(this.props.currentTimeline);
+    const newIndex = getTimelineIndex(this.props.timelines, this.props.url);
+    if (
+      this.props.timelinesInstantiated &&
+      (this.props.currentTimeline !== this.props.prevTimeline ||
+        this.props.timelineChanged)
+    ) {
+      this.formatTimeline(this.props.timelines[newIndex]);
+      this.props.updatePrevTimeline(newIndex);
     }
   }
 
@@ -314,7 +323,10 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotationTable: state.annotations.annotationTable,
   sourceMedia: state.tree.sourceMedia,
   currentTimeline: state.annotations.currentTimeline,
-  prevTimeline: state.annotations.prevTimeline
+  prevTimeline: state.annotations.prevTimeline,
+  timelineChanged: state.annotations.timelineChanged,
+  timelinesInstantiated: state.annotations.timelinesInstantiated,
+  url: state.player.url
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

@@ -6,17 +6,14 @@ import AnnotationTable from "./model/annotTable";
 import PlayerZone from "./model/player";
 import React from "react";
 import SelectFolderZone from "./model/folderSelection";
-import { annCleanStore } from "./store/annotations/reducers";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
-import { playerCleanStore } from "./store/player/reducers";
 import processEAF from "./model/processEAF";
 import { updateSession } from "./store/system/actions";
 
-const isElectron = process.env.REACT_APP_MODE === "electron";
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 interface DispatchProps {
@@ -34,6 +31,7 @@ interface DispatchProps {
   // updateActiveFolder: typeof actions.updateActiveFolder;
   updateTree: typeof actions.updateTree;
   setSourceMediaAnnotRef: typeof actions.setSourceMediaAnnotRef;
+  onNewFolder: typeof actions.onNewFolder;
 
   onEnded: typeof actions.onEnded;
   onPlay: typeof actions.onPlay;
@@ -48,8 +46,6 @@ interface DispatchProps {
   enableAudtranscMain: typeof actions.enableAudtranscMain;
   pushAnnotation: typeof actions.pushAnnotation;
   pushTimeline: typeof actions.pushTimeline;
-  resetAnnotationAction: typeof actions.resetAnnotationAction;
-  wipeAnnotationAction: typeof actions.wipeAnnotationAction;
   hardResetApp: typeof actions.hardResetApp;
 }
 
@@ -59,29 +55,6 @@ interface AppProps extends actions.StateProps, DispatchProps {
 
 class App extends React.Component<AppProps> {
   componentDidMount() {
-    if (isElectron) {
-      this.props.updateTree({
-        availableFiles: [],
-        sourceMedia: [],
-        annotMedia: [],
-        env: "electron",
-        folderName: "",
-        folderPath: "",
-        loaded: false,
-        prevPath: ""
-      });
-    } else {
-      this.props.updateTree({
-        availableFiles: [],
-        sourceMedia: [],
-        annotMedia: [],
-        env: "web",
-        folderName: "",
-        folderPath: "",
-        loaded: false,
-        prevPath: ""
-      });
-    }
     this.props.updateSession({
       loggedIn: true,
       session: "my_session",
@@ -89,11 +62,7 @@ class App extends React.Component<AppProps> {
       clicks: 0
     });
 
-    this.props.wipeAnnotationAction(annCleanStore);
-
-    this.props.updatePlayerAction(playerCleanStore);
-
-    // this.props.enableAudtranscMain();
+    this.props.onNewFolder("");
   }
 
   // Player Features
@@ -111,11 +80,7 @@ class App extends React.Component<AppProps> {
 
   onProgress = (playState: any) => {
     this.props.onProgress(playState);
-    console.log("??onProgressApp", playState); // ??Missed
-    if (!this.props.player.seeking) {
-      // this.setState({player: {played: playState.played}})
-      // this.setState(playState)
-    }
+    console.log("onProgressApp", playState);
   };
 
   callProcessEAF = (inputFile: string) => {
@@ -181,16 +146,15 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       playPause: actions.playPause,
       pushTimeline: actions.pushTimeline,
       processEAF,
-      resetAnnotationAction: actions.resetAnnotationAction,
       stopPlaying: actions.stopPlaying,
       toggleLoop: actions.toggleLoop,
       // updateActiveFolder: actions.updateActiveFolder,
       updatePlayerAction: actions.updatePlayerAction,
       updateSession,
       updateTree: actions.updateTree,
-      wipeAnnotationAction: actions.wipeAnnotationAction,
       hardResetApp: actions.hardResetApp,
-      setSourceMediaAnnotRef: actions.setSourceMediaAnnotRef
+      setSourceMediaAnnotRef: actions.setSourceMediaAnnotRef,
+      onNewFolder: actions.onNewFolder
     },
     dispatch
   )

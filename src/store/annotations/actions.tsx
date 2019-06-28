@@ -17,23 +17,13 @@ export function onNewFolder(
   };
 }
 
-export function resetAnnotationAction(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
+export function onReloadFolder(inString: string): types.AnnotationActionTypes {
   return {
-    type: types.RESET_ANNOTATION_SESSION,
-    payload: annotState
+    type: types.ON_RELOAD_FOLDER,
+    payload: { inString }
   };
 }
 
-export function wipeAnnotationAction(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.WIPE_ANNOTATION_SESSION,
-    payload: annotState
-  };
-}
 export function addOralAnnotation(
   newMilestone: types.Milestone,
   idx: number
@@ -65,14 +55,6 @@ export function pushAnnotationTable(
     payload: inTable
   };
 }
-export function pushWhichTimeline(
-  whichtimeline: types.LooseObject
-): types.AnnotationActionTypes {
-  return {
-    type: types.PUSH_WHICH_TIMELINE,
-    payload: whichtimeline
-  };
-}
 export function pushTimeline(
   timeline: types.LooseObject
 ): types.AnnotationActionTypes {
@@ -81,46 +63,7 @@ export function pushTimeline(
     payload: timeline
   };
 }
-export function updateAnnotation(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.UPDATE_ANNOTATION,
-    payload: annotState
-  };
-}
-export function removeAnnotation(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.REMOVE_ANNOTATION,
-    payload: annotState
-  };
-}
-export function addAnnotationset(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.ADD_ANNOTATIONSET,
-    payload: annotState
-  };
-}
-export function updateAnnotationset(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.UPDATE_ANNOTATIONSET,
-    payload: annotState
-  };
-}
-export function removeAnnotationset(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.REMOVE_ANNOTATIONSET,
-    payload: annotState
-  };
-}
+
 export function enableAudcarefulMain(
   annotState: types.AnnotationState
 ): types.AnnotationActionTypes {
@@ -233,5 +176,20 @@ export function updatePrevTimeline(idx: number): types.AnnotationActionTypes {
   return {
     type: types.UPDATE_PREV_TIMELINE,
     payload: idx
+  };
+}
+export function setTimelinesInstantiated(
+  bln: boolean
+): types.AnnotationActionTypes {
+  return {
+    type: types.SET_TIMELINES_INSTANTIATED,
+    payload: bln
+  };
+}
+
+export function setTimelineChanged(bln: boolean): types.AnnotationActionTypes {
+  return {
+    type: types.SET_TIMELINE_CHANGED,
+    payload: bln
   };
 }

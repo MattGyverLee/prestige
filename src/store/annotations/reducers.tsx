@@ -23,7 +23,9 @@ export const annCleanStore: types.AnnotationState = {
   txtTranscMain: false,
   txtTranscSubtitle: false,
   txtTranslMain: false,
-  txtTranslSubtitle: false
+  txtTranslSubtitle: false,
+  timelineChanged: false,
+  timelinesInstantiated: false
 };
 
 export function annotationReducer(
@@ -39,17 +41,9 @@ export function annotationReducer(
       state = annCleanStore;
       return state;
     }
-    case types.RESET_ANNOTATION_SESSION: {
-      return {
-        ...state,
-        ...action.payload
-      };
-    }
-    case types.WIPE_ANNOTATION_SESSION: {
-      return {
-        ...state,
-        ...action.payload
-      };
+    case types.ON_RELOAD_FOLDER: {
+      state = annCleanStore;
+      return { ...state, timelineChanged: true };
     }
     case types.SET_URL: {
       const idx = getTimelineIndex(state.timeline, action.payload);
@@ -59,9 +53,7 @@ export function annotationReducer(
       };
     }
     case types.ADD_ORAL_ANNOTATION: {
-      // TODO: Possibly add milestones to timeline without EAF file
       if (action.payload.idx === -1) {
-        // TODO: Generalize this zero
         let eafFile = action.payload.newMilestone.data[0].data;
         eafFile = eafFile.substring(0, eafFile.indexOf("_Annotations"));
         const syncMedia = eafFile;
@@ -117,49 +109,15 @@ export function annotationReducer(
     case types.PUSH_ANNOTATION_TABLE: {
       return {
         ...state,
-        annotationTable: action.payload
+        annotationTable: action.payload,
+        timelineChanged: false
       };
     }
     case types.PUSH_TIMELINE: {
       return {
         ...state,
-        timeline: state.timeline.concat(action.payload.timeline)
-      };
-    }
-    case types.PUSH_WHICH_TIMELINE: {
-      return {
-        ...state,
-        timeline: [action.payload]
-      };
-    }
-    case types.UPDATE_ANNOTATION: {
-      return {
-        ...state,
-        ...action.payload
-      };
-    }
-    case types.REMOVE_ANNOTATION: {
-      return {
-        ...state,
-        ...action.payload
-      };
-    }
-    case types.ADD_ANNOTATIONSET: {
-      return {
-        ...state,
-        ...action.payload
-      };
-    }
-    case types.UPDATE_ANNOTATIONSET: {
-      return {
-        ...state,
-        ...action.payload
-      };
-    }
-    case types.REMOVE_ANNOTATIONSET: {
-      return {
-        ...state,
-        ...action.payload
+        timeline: state.timeline.concat(action.payload.timeline),
+        timelineChanged: true
       };
     }
     case types.ENABLE_AUDCAREFUL_MAIN: {
@@ -247,13 +205,30 @@ export function annotationReducer(
       };
     }
     case types.FILE_DELETED: {
-      let gone: boolean =
-        state.timeline.filter((t: any) => {
-          if (t.eafFile !== action.payload) {
-            return false;
-          }
-          return true;
-        }).length !== 0;
+      const tempTimeline = state.timeline
+        .map(t => {
+          let tempTimeline = {
+            ...t,
+            milestones: t.milestones
+              .map((m: any) => {
+                return {
+                  ...m,
+                  data: m.data.filter(
+                    (md: any) =>
+                      md.data !== action.payload &&
+                      !(
+                        t.eafFile === action.payload &&
+                        !md.data.startsWith("file:///")
+                      )
+                  )
+                };
+              })
+              .filter((m: any) => m.data.length !== 0),
+            syncMedia: t.syncMedia.filter((s: any) => s !== action.payload)
+          };
+          return tempTimeline;
+        })
+        .filter((t: any) => t.milestones.length !== 0);
       return {
         ...state,
         annotationTable: state.annotationTable.map(annot => {
@@ -264,31 +239,18 @@ export function annotationReducer(
           }
           return annot;
         }),
-        timeline: state.timeline
-          .map(t => {
-            let tempTimeline = {
-              ...t,
-              milestones: t.milestones.map((m: any) => {
-                return {
-                  ...m,
-                  data: m.data.filter((md: any) => md !== action.payload)
-                };
-              }),
-              syncMedia: t.syncMedia.filter((s: any) => s !== action.payload)
-            };
-            return tempTimeline;
-          })
-          .filter((t: any) => {
-            if (t.eafFile !== action.payload) {
-              return true;
-            }
-            return false;
-          }),
-        currentTimeline: gone ? -1 : state.currentTimeline
+        timeline: tempTimeline,
+        timelineChanged: true
       };
     }
     case types.UPDATE_PREV_TIMELINE: {
-      return { ...state, prevTimeline: action.payload };
+      return { ...state, prevTimeline: action.payload, timelineChanged: false };
+    }
+    case types.SET_TIMELINES_INSTANTIATED: {
+      return { ...state, timelinesInstantiated: action.payload };
+    }
+    case types.SET_TIMELINE_CHANGED: {
+      return { ...state, timelineChanged: action.payload };
     }
     default:
       // console.log("Failed Tree Action", action);

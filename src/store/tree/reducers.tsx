@@ -28,6 +28,10 @@ export function treeReducer(
       state = treeCleanStore;
       return { ...state, folderPath: action.payload };
     }
+    case types.ON_RELOAD_FOLDER: {
+      state = treeCleanStore;
+      return { ...state, folderPath: action.payload };
+    }
     case types.CHANGE_PREV_PATH: {
       state = treeCleanStore;
       return { ...state, prevPath: action.payload };
@@ -130,9 +134,7 @@ export function treeReducer(
         sourceMedia: tempSource
       };
     }
-    // TODO add Media/File Deletion
     default:
-      // console.log("Failed Tree Action", action);
       return state;
   }
 }

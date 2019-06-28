@@ -4,7 +4,6 @@ import * as types from "../store/annotations/types";
 import React, { Component } from "react";
 import { getTimelineIndex, sourceMedia } from "./globalFunctions";
 
-import { FileDesc } from "../store/tree/types";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
@@ -35,14 +34,16 @@ interface DispatchProps {
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
   onNewFolder: typeof actions.onNewFolder;
+  onReloadFolder: typeof actions.onReloadFolder;
   pushAnnotation: typeof actions.pushAnnotation;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
   pushTimeline: typeof actions.pushTimeline;
-  resetAnnotationAction: typeof actions.resetAnnotationAction;
   setURL: typeof actions.setURL;
   sourceMediaAdded: typeof actions.sourceMediaAdded;
   sourceMediaChanged: typeof actions.sourceMediaChanged;
-  setAnnotMediaInMilestons: typeof actions.setAnnotMediaInMilestones;
+  setAnnotMediaInMilestones: typeof actions.setAnnotMediaInMilestones;
+  setTimelinesInstantiated: typeof actions.setTimelinesInstantiated;
+  setTimelineChanged: typeof actions.setTimelineChanged;
 }
 
 interface FolderProps extends StateProps, DispatchProps {
@@ -61,156 +62,186 @@ class SelectFolderZone extends Component<FolderProps> {
 
   private isChokReady: boolean = false;
   private currentFolder: any;
+  private readyPlayURL: string = "";
 
+  // Starts the Chokidar File Watcher
   startWatcher = (path: string, props: any) => {
+    // Closes Existing Watcher
     if (watcherRef !== undefined) {
       watcherRef.close();
     }
+
+    // Creates a Watcher to Watch Input Path
     const watcher = require("chokidar").watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
       ignoreInitial: false
     });
     watcherRef = watcher;
-    const chocFileDescribe = (path: string) => {
-      const fileUrl = require("file-url");
+
+    const choKAddDir = (path: string) => {
+      console.log(`Directory ${path} has been added`);
+    };
+
+    // Processes File (Convert Media or Process EAF) and Returns File Definition
+    const chocFileDescribe = (path: string): types.LooseObject => {
+      // Define Fields for Returned FileDef
+      const blobURL = require("file-url")(path);
       const parsedPath = require("path").parse(path);
+      const isAnnotation =
+        parsedPath.dir.endsWith("_Annotations") ||
+        parsedPath.base.includes("oralAnnotations");
+
+      // Get Temporary Mime Type of File
       const mime = require("mime");
-      const blobURL = fileUrl(path);
-      let tempMime = "";
-      // eslint:disable-next-line
+      let tempMime = "file/" + parsedPath.ext;
       if (mime.getType(path) !== null) {
         tempMime = mime.getType(path);
-      } else {
-        tempMime = "file/" + parsedPath.ext;
       }
-      // Try converting MTS files:
-      if (tempMime.startsWith("model") && tempMime.endsWith(".mts")) {
-        try {
-          const ffmpeg = require("ffmpeg");
 
-          // eslint-disable-next-line
-          const process = new ffmpeg(blobURL);
-          process.then(
-            function(video: any) {
-              // Callback mode
-              video
-                .setVideoSize("640x?", true, true, "#fff")
-                .setAudioCodec("libfaac")
-                .setAudioChannels(2)
-                .save(
-                  parsedPath.dir + "\\" + parsedPath.name + ".avi",
-                  function(error: Error, file: File) {
-                    if (!error) console.log("New video file: " + file);
-                    // todo: update/replace Blob on conversion
-                  }
-                );
-            },
-            function(err: Error) {
-              console.log("Error: " + err);
-            }
-          );
-        } catch (e) {
-          console.log(e.code);
-          console.log(e.msg);
-          tempMime = "video/MP2T";
-        }
+      // If ".mts" File => Convert
+      // -> If ".eaf" File => Process
+      if (tempMime.startsWith("model") && tempMime.endsWith(".mts")) {
+        require("ffmpeg")(blobURL).then(
+          // Converts Video
+          function(video: any) {
+            // Callback mode
+            video
+              .setVideoSize("640x?", true, true, "#fff")
+              .setAudioCodec("libfaac")
+              .setAudioChannels(2)
+              .save(parsedPath.dir + "\\" + parsedPath.name + ".avi", function(
+                error: Error,
+                file: File
+              ) {
+                if (!error) console.log("New video file: " + file);
+                // todo: update/replace Blob on conversion
+              });
+          },
+          // Reports on Video Conversion Errors
+          function(err: Error) {
+            console.log("Video Conversion Error: " + err);
+          }
+        );
+      } else if (tempMime.endsWith("eaf")) {
+        console.log(parsedPath.base, tempMime);
+        props.callProcessEAF(path);
       }
-      let isAnnotation = false;
-      if (
-        parsedPath.dir.endsWith("_Annotations") ||
-        parsedPath.base.includes("oralAnnotations")
-      ) {
-        isAnnotation = true;
-      }
-      const fileDef: types.LooseObject = {
+
+      // Returns the File Definition
+      return {
         annotationRef: "",
-        blobURL: fileUrl(path),
+        blobURL: blobURL,
         extension: parsedPath.ext,
         hasAnnotation: false,
         isAnnotation: isAnnotation,
         inMilestones: false,
         mimeType: tempMime,
         name: parsedPath.base,
-        // eslint:disable-next-line
         path: path
       };
-
-      if (tempMime.endsWith("eaf")) {
-        console.log(parsedPath.base, tempMime);
-        props.callProcessEAF(path);
-      }
-      return fileDef;
     };
 
-    const chokFileadd = (path: string) => {
+    //
+    const chokFileAdd = (path: string) => {
+      // Show Timeline Has Changed
+      this.props.setTimelineChanged(true);
+
+      // If Chokidar is Ready and New File is ".eaf" => Reload Current Folder
+      // -> Add File to annotMedia, sourceMedia, or availableFiles According to its Type
       if (this.isChokReady && path.endsWith(".eaf")) {
-        this.loadLocalFolder(this.currentFolder, this.props.url);
+        // Uninstantiate Timelines and Reset Chok Readiness
+        this.props.setTimelinesInstantiated(false);
         this.isChokReady = false;
-      }
-      // Todo: If Chokidar.notready, go on, otherwise add annotation.
-      const fileDef = chocFileDescribe(path);
-      const fileDesc: FileDesc = { file: fileDef };
-      if (
-        fileDef.mimeType.startsWith("video") ||
-        fileDef.mimeType.startsWith("audio")
-      ) {
-        if (fileDef["isAnnotation"]) {
-          props.annotMediaAdded(fileDesc);
-        } else {
-          props.sourceMediaAdded(fileDesc);
-        }
+
+        this.loadLocalFolder(this.currentFolder);
       } else {
-        props.fileAdded(fileDesc);
+        const fileDef = chocFileDescribe(path);
+        const isAudVid =
+          fileDef.mimeType.startsWith("video") ||
+          fileDef.mimeType.startsWith("audio");
+        if (isAudVid) {
+          fileDef["isAnnotation"]
+            ? props.annotMediaAdded({ file: fileDef })
+            : props.sourceMediaAdded({ file: fileDef });
+        } else {
+          props.fileAdded({ file: fileDef });
+        }
       }
+
+      // Log the Added File
       console.log(`File ${path} has been added`);
     };
-    const choKAddDir = (path: string) => {
-      console.log(`Directory ${path} has been added`);
-    };
+
+    //
     const chokChange = (path: string) => {
+      // Show Timeline Has Changed
+      this.props.setTimelineChanged(true);
+
+      // If Chokidar is Ready and New File is ".eaf" => Reload Current Folder
+      // -> Add File to annotMedia, sourceMedia, or availableFiles According to its Type
       if (this.isChokReady && path.endsWith(".eaf")) {
-        this.loadLocalFolder(this.currentFolder, this.props.url);
+        // Uninstantiate Timelines and Reset Chok Readiness
+        this.props.setTimelinesInstantiated(false);
         this.isChokReady = false;
-      }
-      const fileDef = chocFileDescribe(path);
-      const fileDesc: FileDesc = { file: fileDef };
-      if (
-        fileDef.mimeType.startsWith("video") ||
-        fileDef.mimeType.startsWith("audio")
-      ) {
-        props.mediaChanged(fileDesc);
+
+        this.loadLocalFolder(this.currentFolder);
       } else {
-        props.fileChanged(fileDesc);
+        const fileDef = chocFileDescribe(path);
+        const isAudVid =
+          fileDef.mimeType.startsWith("video") ||
+          fileDef.mimeType.startsWith("audio");
+        if (isAudVid) {
+          fileDef["isAnnotation"]
+            ? props.annotMediaChanged({ file: fileDef })
+            : props.sourceMediaChanged({ file: fileDef });
+        } else {
+          props.fileChanged({ file: fileDef });
+        }
       }
+
+      // Log the Changed File
       console.log(`File ${path} has been changed`);
     };
+
+    // Processes File Deletion
     const chokUnlink = (path: string) => {
-      const fileURL = require("file-url");
-      const blobURL = fileURL(path);
-      props.fileDeleted(blobURL);
+      props.fileDeleted(require("file-url")(path));
       console.log(`File ${path} has been removed`);
     };
+
     const chokUnlinkDir = (path: string) => {
       console.log(`Directory ${path} has been removed`);
     };
+
     const chokError = (error: Error) => {
       console.log(`Watcher error: ${error}`);
     };
+
+    // Plays the First URL
     const chokReady = () => {
+      // Adds All Annotations to Milestones
       this.addNewMediaToMilestone();
-      if (this.props.sourceMedia.length !== 0) {
+
+      // Grabs and Sets First URL If it Exists
+      if (this.readyPlayURL !== "") {
+        props.setURL(this.readyPlayURL);
+        this.readyPlayURL = "";
+      } else if (this.props.sourceMedia.length !== 0) {
         props.setURL(sourceMedia(this.props.sourceMedia)[0].blobURL);
         console.log(`Initial scan complete. Ready for changes`);
       } else {
         console.log("Empty Directory");
       }
+
+      // Notifies that Chok is Ready and the Timelines are Instantiated
       this.isChokReady = true;
+      this.props.setTimelinesInstantiated(true);
     };
 
     // Declare the listeners of the watcher
     watcher
-      .on("add", (path: string) => chokFileadd(path))
+      .on("add", (path: string) => chokFileAdd(path))
       .on("addDir", (path: string) => choKAddDir(path))
       .on("change", (path: string) => chokChange(path))
       .on("error", (error: Error) => chokError(error))
@@ -226,15 +257,18 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   }
 
-  loadLocalFolder(inputElement: any, currentURL?: string) {
+  loadLocalFolder(inputElement: any) {
+    // Reset the Current Folder
     this.currentFolder = inputElement;
+
+    // If Undefined Selection => Log
+    // -> If First Path Not Same as Previous => Start
+    // -> If First Path Same as Previous and Chok => Start
     if (inputElement.files.length === 0) {
       console.log("Undefined Directory Selected");
-    } else if (
-      inputElement.files[0].path !== undefined &&
-      inputElement.files[0].path !== this.props.prevPath
-    ) {
+    } else if (inputElement.files[0].path !== this.props.prevPath) {
       console.log("Setting Folder to: " + inputElement.files[0].path);
+
       this.props.onNewFolder(inputElement.files[0].path);
       const path = inputElement.files[0].path.toString();
       if (path !== "" && path !== this.props.prevPath) {
@@ -242,17 +276,16 @@ class SelectFolderZone extends Component<FolderProps> {
         this.props.changePrevPath(path);
       }
     } else if (
-      inputElement.files[0].path !== undefined &&
-      inputElement.files[0].path === this.props.prevPath
+      inputElement.files[0].path === this.props.prevPath &&
+      !this.isChokReady
     ) {
-      this.props.onNewFolder(inputElement.files[0].path);
-      const path = inputElement.files[0].path.toString();
-      this.startWatcher(path, this.props);
-      if (currentURL !== null && currentURL !== undefined) {
-        this.props.setURL(currentURL);
-      }
+      this.readyPlayURL = this.props.url;
+      this.props.onReloadFolder(inputElement.files[0].path);
+      this.startWatcher(inputElement.files[0].path.toString(), this.props);
     }
   }
+
+  // Adds All Oral Annotations not Yet in Milestones into Milestones
   addNewMediaToMilestone() {
     this.props.annotMedia.forEach(mediaFile => {
       if (
@@ -260,46 +293,37 @@ class SelectFolderZone extends Component<FolderProps> {
         !mediaFile.name.includes("oralAnnotation") &&
         !mediaFile.inMilestones
       ) {
-        const pathParse = require("path");
-        const parsedPath = pathParse.parse(mediaFile.path);
+        // Define Fields for oralMilestone
+        const parsedPath = require("path").parse(mediaFile.path);
         const splitPath = parsedPath.name.split("_");
         const tempMatch = parsedPath.dir.match(
           /[^\\/\n\r]*(?=_Annotations)/
         )[0];
         const fileURL = require("file-url");
-        const refFile = fileURL(tempMatch);
-        const refStart = parseFloat(splitPath[0]);
-        const refStop = parseFloat(splitPath[2]);
-        const refType = splitPath[3];
-        const tier = refType + "_audio";
+        const tier = splitPath[3] + "_audio";
         if (this.props.categories.indexOf(tier) === -1) {
           this.props.addCategory(tier);
         }
 
-        const fileDef: types.LooseObject = {};
-        fileDef["isAnnotation"] = true;
-        fileDef["linguisticType"] = tier;
-        fileDef["channel"] = refType;
-        fileDef["mimeType"] = mediaFile.mimeType;
-        fileDef["name"] = mediaFile.name;
-        fileDef["blobURL"] = mediaFile.blobURL;
-        this.props.setAnnotMediaInMilestons(mediaFile.blobURL);
+        // Create oralMilestone
         const oralMilestone: types.Milestone = {
           annotationID: "",
-          annotationRef: refFile,
+          annotationRef: fileURL(tempMatch),
           data: [
             {
-              channel: fileDef["channel"],
-              data: fileDef["blobURL"],
-              linguisticType: fileDef["linguisticType"],
-              locale: fileDef["locale"],
-              mimeType: fileDef["mimeType"]
+              channel: splitPath[3],
+              data: mediaFile.blobURL,
+              linguisticType: tier,
+              locale: "",
+              mimeType: mediaFile.mimeType
             }
           ],
-          startTime: refStart,
-          stopTime: refStop
+          startTime: parseFloat(splitPath[0]),
+          stopTime: parseFloat(splitPath[2])
         };
-        mediaFile.inMilestones = true;
+
+        // Set mediaFile in Milestones and Add oralMilestone to OralAnnotations
+        this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
         const blobURL = fileURL(
           mediaFile.path.substring(0, mediaFile.path.indexOf("_Annotations"))
         );
@@ -309,7 +333,6 @@ class SelectFolderZone extends Component<FolderProps> {
         );
       }
     });
-    // Do here:
   }
 
   render() {
@@ -367,14 +390,16 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
       onNewFolder: actions.onNewFolder,
+      onReloadFolder: actions.onReloadFolder,
       pushAnnotation: actions.pushAnnotation,
       pushAnnotationTable: actions.pushAnnotationTable,
       pushTimeline: actions.pushTimeline,
-      resetAnnotationAction: actions.resetAnnotationAction,
       setURL: actions.setURL,
       sourceMediaAdded: actions.sourceMediaAdded,
       sourceMediaChanged: actions.sourceMediaChanged,
-      setAnnotMediaInMilestons: actions.setAnnotMediaInMilestones
+      setAnnotMediaInMilestones: actions.setAnnotMediaInMilestones,
+      setTimelinesInstantiated: actions.setTimelinesInstantiated,
+      setTimelineChanged: actions.setTimelineChanged
     },
     dispatch
   )

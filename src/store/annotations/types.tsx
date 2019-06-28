@@ -40,10 +40,11 @@ export interface AnnotationState {
   txtTranscSubtitle: boolean;
   txtTranslMain: boolean;
   txtTranslSubtitle: boolean;
+  timelineChanged: boolean;
+  timelinesInstantiated: boolean;
 }
 
 // Describing the different ACTION NAMES available
-export const ADD_ANNOTATIONSET = "ADD_ANNOTATIONSET";
 export const ADD_ORAL_ANNOTATION = "ADD_ORAL_ANNOTATION";
 export const ADD_CATEGORY = "ADD_CATEGORY";
 export const DISABLE_AUDCAREFUL_MAIN = "DISABLE_AUDCAREFUL_MAIN";
@@ -65,18 +66,15 @@ export const ENABLE_AUDTRANSL_SUB = "ENABLE_AUDTRANSL_SUB";
 export const PUSH_ANNOTATION = "REMOVE_ANNOTATION";
 export const PUSH_TIMELINE = "PUSH_TIMELINE";
 export const PUSH_ANNOTATION_TABLE = "PUSH_ANNOTATION_TABLE";
-export const PUSH_WHICH_TIMELINE = "PUSH_WHICH_TIMELINE";
-export const REMOVE_ANNOTATION = "REMOVE_ANNOTATION";
-export const REMOVE_ANNOTATIONSET = "REMOVE_ANNOTATIONSET";
 export const RESET_ANNOTATION_SESSION = "RESET_ANNOTATION_SESSION";
-export const UPDATE_ANNOTATION = "UPDATE_ANNOTATION";
-export const UPDATE_ANNOTATIONSET = "UPDATE_ANNOTATIONSET";
-export const WIPE_ANNOTATION_SESSION = "WIPE_ANNOTATION_SESSION";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
+export const ON_RELOAD_FOLDER = "ON_RELOAD_FOLDER";
 export const SET_URL = "SET_URL";
 export const FILE_DELETED = "FILE_DELETED";
 export const UPDATE_PREV_TIMELINE = "UPDATE_PREV_TIMELINE";
+export const SET_TIMELINES_INSTANTIATED = "SET_TIMELINES_INSTANTIATED";
+export const SET_TIMELINE_CHANGED = "SET_TIMELINE_CHANGED";
 
 interface HardResetApp {
   type: typeof HARD_RESET_APP;
@@ -88,14 +86,9 @@ interface OnNewFolder {
   payload: { inString: string; blobURL?: string };
 }
 
-interface ResetAnnotationAction {
-  type: typeof RESET_ANNOTATION_SESSION;
-  payload: AnnotationState;
-}
-
-interface WipeAnnotationAction {
-  type: typeof WIPE_ANNOTATION_SESSION;
-  payload: AnnotationState;
+interface OnReloadFolder {
+  type: typeof ON_RELOAD_FOLDER;
+  payload: { inString: string; blobURL?: string };
 }
 
 interface AddOralAnnotation {
@@ -110,10 +103,6 @@ interface PushAnnotationTable {
   type: typeof PUSH_ANNOTATION_TABLE;
   payload: AnnotationRow[];
 }
-interface PushWhichTimeline {
-  type: typeof PUSH_WHICH_TIMELINE;
-  payload: LooseObject;
-}
 interface PushTimeline {
   type: typeof PUSH_TIMELINE;
   payload: LooseObject;
@@ -121,26 +110,6 @@ interface PushTimeline {
 interface AddCategory {
   type: typeof ADD_CATEGORY;
   payload: string;
-}
-interface UpdateAnnotation {
-  type: typeof UPDATE_ANNOTATION;
-  payload: AnnotationState;
-}
-interface RemoveAnnotation {
-  type: typeof REMOVE_ANNOTATION;
-  payload: AnnotationState;
-}
-interface AddAnnotationset {
-  type: typeof ADD_ANNOTATIONSET;
-  payload: AnnotationState;
-}
-interface UpdateAnnotationset {
-  type: typeof UPDATE_ANNOTATIONSET;
-  payload: AnnotationState;
-}
-interface RemoveAnnotationset {
-  type: typeof REMOVE_ANNOTATIONSET;
-  payload: AnnotationState;
 }
 interface EnableAudcarefulMain {
   type: typeof ENABLE_AUDCAREFUL_MAIN;
@@ -203,9 +172,18 @@ interface UpdatePrevTimeline {
   payload: number;
 }
 
+interface SetTimelinesInstantiated {
+  type: typeof SET_TIMELINES_INSTANTIATED;
+  payload: boolean;
+}
+interface SetTimelineChanged {
+  type: typeof SET_TIMELINE_CHANGED;
+  payload: boolean;
+}
+
+// TODO: Convert En/Disables to Toggles with Optional Boolean
 export type AnnotationActionTypes =
   | AddOralAnnotation
-  | AddAnnotationset
   | AddCategory
   | DisableAudcarefulMain
   | DisableAudtranscMain
@@ -226,15 +204,11 @@ export type AnnotationActionTypes =
   | PushAnnotation
   | PushAnnotationTable
   | PushTimeline
-  | PushWhichTimeline
-  | RemoveAnnotation
-  | RemoveAnnotationset
-  | ResetAnnotationAction
-  | UpdateAnnotation
-  | UpdateAnnotationset
-  | WipeAnnotationAction
   | HardResetApp
   | OnNewFolder
+  | OnReloadFolder
   | SetURL
   | FileDeleted
-  | UpdatePrevTimeline;
+  | UpdatePrevTimeline
+  | SetTimelinesInstantiated
+  | SetTimelineChanged;
