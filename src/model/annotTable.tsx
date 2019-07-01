@@ -26,6 +26,10 @@ import { getTimelineIndex } from "./globalFunctions";
 // import folderSelection from "./folderSelection";
 // import formatTimeline from "./folderSelection";
 
+const Root = (props: any) => (
+  <Grid.Root {...props} style={{ height: "100%" }} />
+);
+
 interface StateProps {
   player: any;
   timelines: LooseObject[];
@@ -295,8 +299,8 @@ class AnnotationTable extends Component<ComponentProps> {
     };
 
     return (
-      <Paper>
-        <Grid rows={annotDetails} columns={annotCols}>
+      <Paper className="annotation-table">
+        <Grid rows={annotDetails} columns={annotCols} rootComponent={Root}>
           <FilteringState defaultFilters={[]} />
           <IntegratedFiltering />
           <SortingState

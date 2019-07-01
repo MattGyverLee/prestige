@@ -3,6 +3,7 @@ import "./App.css";
 import * as actions from "./store";
 
 import AnnotationTable from "./model/annotTable";
+import FileList from "./model/fileList";
 import PlayerZone from "./model/player";
 import React from "react";
 import SelectFolderZone from "./model/folderSelection";
@@ -103,15 +104,16 @@ class App extends React.Component<AppProps> {
             <button onClick={() => this.hardResetApp("")}> Reset </button>
           </div>
           <div className="DetailsZone">
-            <p>
-              {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
-            </p>
             <AnnotationTable />
+            <FileList />
           </div>
         </div>
         <p>{this.props.tree.loaded}</p>
         <div className="App-footer">
           <SelectFolderZone callProcessEAF={this.callProcessEAF} />
+          <p>
+            {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
+          </p>
         </div>
       </div>
     );
@@ -122,7 +124,7 @@ const mapStateToProps = (state: actions.StateProps): actions.StateProps => ({
   system: state.system,
   tree: state.tree,
   player: state.player,
-  annotations: state.annotations
+  annotations: state.annotations,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
