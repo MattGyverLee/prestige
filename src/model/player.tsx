@@ -13,6 +13,12 @@ import fullscreen from "../assets/icons/player/fullscreen.png";
 import pause from "../assets/icons/player/pause.png";
 import play from "../assets/icons/player/play.png";
 import repeat from "../assets/icons/player/repeat.png";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlay,
+  faPause,
+  faExpandArrowsAlt
+} from "@fortawesome/free-solid-svg-icons";
 
 interface StateProps {
   controls?: boolean;
@@ -143,11 +149,10 @@ class PlayerZone extends Component<PlayerProps> {
                 className="play-pause-button"
                 onClick={this.props.playPause}
               >
-                <img
-                  width="17px"
-                  src={this.props.playing ? pause : play}
-                  alt="Play/Pause Icon"
-                ></img>
+                <FontAwesomeIcon
+                  icon={this.props.playing ? faPause : faPlay}
+                  color="black"
+                ></FontAwesomeIcon>
               </button>
               <button
                 className="loop-button"
@@ -184,7 +189,10 @@ class PlayerZone extends Component<PlayerProps> {
                 className="fullscreen-button"
                 onClick={this.onClickFullscreen}
               >
-                <img width="18px" src={fullscreen} alt="Fullscreen Icon"></img>
+                <FontAwesomeIcon
+                  icon={faExpandArrowsAlt}
+                  color="black"
+                ></FontAwesomeIcon>
               </button>
             </div>
           </div>
@@ -313,3 +321,14 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(PlayerZone);
+
+/*
+                <img
+                  width="17px"
+                  src={this.props.playing ? pause : play}
+                  alt="Play/Pause Icon"
+                ></img>
+
+                <img width="18px" src={fullscreen} alt="Fullscreen Icon"></img>
+
+*/

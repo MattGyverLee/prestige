@@ -59,3 +59,18 @@ export function sourceMedia(sourceMedia: LooseObject[]): LooseObject[] {
     });
   return [...sourceVids, ...sourceAud];
 }
+
+export function sourceAudio(sourceMedia: LooseObject[]): LooseObject[] {
+  let sourceAud = sourceMedia
+    .filter(file => !file.isAnnotation && file["mimeType"].startsWith("audio"))
+    .sort(function(a: LooseObject, b: LooseObject) {
+      const nameA = a["name"].toLowerCase();
+      const nameB = b["name"].toLowerCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) return 1;
+      return 0;
+    });
+  return [...sourceAud];
+}

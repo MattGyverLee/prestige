@@ -102,6 +102,7 @@ class App extends React.Component<AppProps> {
         <div className="App-body">
           <div className="App-sidebar">
             <PlayerZone />
+            <DeeJay />
           </div>
           <div className="DetailsZone">
             <AnnotationTable />

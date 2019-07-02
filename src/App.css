@@ -238,3 +238,37 @@
   flex-grow: 1;
   height: 100%;
 }
+
+td {
+  overflow: none;
+}
+
+.wave-table-container {
+  padding: 10px;
+}
+
+.wave-table {
+  width: 100%;
+}
+
+.wave-table tr {
+  min-height: 50px;
+}
+
+.wave-table-play,
+.wave-table-overlay {
+  width: 25px;
+}
+
+.wave-table-volume {
+  width: 15px;
+}
+
+.waveform {
+  min-height: 50px;
+}
+
+.wave-table-volume input[type="range"] {
+  width: 50px;
+  transform: rotate(-90deg);
+}
