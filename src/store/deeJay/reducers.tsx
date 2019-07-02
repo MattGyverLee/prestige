@@ -22,8 +22,7 @@ export function deeJayReducer(
     case types.SET_WAVE_SURFER1: {
       return {
         ...state,
-        waveSurfer1: action.payload,
-        pos: 3
+        waveSurfer1: action.payload
       };
     }
     default: {

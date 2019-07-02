@@ -6,11 +6,13 @@ import React, { Component } from "react";
 
 import Duration from "./duration";
 import { LooseObject } from "../store/annotations/types";
-import Paper from "@material-ui/core/Paper";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { sourceMedia } from "./globalFunctions";
+import fullscreen from "../assets/icons/player/fullscreen.png";
+import pause from "../assets/icons/player/pause.png";
+import play from "../assets/icons/player/play.png";
+import repeat from "../assets/icons/player/repeat.png";
 
 interface StateProps {
   controls?: boolean;
@@ -54,6 +56,8 @@ interface PlayerProps extends StateProps, DispatchProps {}
 
 class PlayerZone extends Component<PlayerProps> {
   private player!: ReactPlayer;
+  private speeds: number[] = [0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5, 2, 3, 5];
+  private speedsIndex: number = 5;
   // private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
 
   pip = () => {
@@ -62,8 +66,17 @@ class PlayerZone extends Component<PlayerProps> {
   onVolumeChange = (e: any) => {
     this.props.onVolumeChange(parseFloat(e.target.value));
   };
-  setPlaybackRate = (e: any) => {
-    this.props.setPlaybackRate(parseFloat(e.target.value));
+  minusPlaybackRate = () => {
+    if (this.speedsIndex > 0) {
+      this.speedsIndex--;
+      this.props.setPlaybackRate(this.speeds[this.speedsIndex]);
+    }
+  };
+  plusPlaybackRate = () => {
+    if (this.speedsIndex < this.speeds.length - 1) {
+      this.speedsIndex++;
+      this.props.setPlaybackRate(this.speeds[this.speedsIndex]);
+    }
   };
   onPause = () => {
     console.log("onPause");
@@ -103,7 +116,7 @@ class PlayerZone extends Component<PlayerProps> {
         <div className="player-wrapper">
           <ReactPlayer
             className="react-player"
-            height="100%"
+            height="70%"
             loop={this.props.loop}
             muted={this.props.muted}
             onBuffer={() => console.log("onBuffer")}
@@ -206,45 +219,6 @@ class PlayerZone extends Component<PlayerProps> {
           <table>
             <tbody>
               <tr>
-                <th>Controls</th>
-                <td>
-                  <button onClick={this.props.stopPlaying}>Stop</button>
-                  <button onClick={this.props.playPause}>
-                    {this.props.playing ? "Pause" : "Play"}
-                  </button>
-                  <button onClick={this.onClickFullscreen}>Fullscreen</button>
-                </td>
-              </tr>
-              <tr>
-                <th>Speed</th>
-                <td>
-                  <button onClick={this.setPlaybackRate} value={1}>
-                    1x
-                  </button>
-                  <button onClick={this.setPlaybackRate} value={1.5}>
-                    1.5x
-                  </button>
-                  <button onClick={this.setPlaybackRate} value={2}>
-                    2x
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <th>Seek</th>
-                <td>
-                  <input
-                    max={1}
-                    min={0}
-                    onChange={this.onSeekChange}
-                    onMouseDown={this.onSeekMouseDown}
-                    onMouseUp={this.onSeekMouseUp}
-                    step="any"
-                    type="range"
-                    value={this.props.played}
-                  />
-                </td>
-              </tr>
-              <tr>
                 <th>Volume</th>
                 <td>
                   <input
@@ -271,43 +245,6 @@ class PlayerZone extends Component<PlayerProps> {
                 </td>
               </tr>
               <tr>
-                <th>
-                  <label htmlFor="loop">Loop</label>
-                </th>
-                <td>
-                  <input
-                    checked={this.props.loop}
-                    id="loop"
-                    onChange={this.props.toggleLoop}
-                    type="checkbox"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <th>Played</th>
-                <td>
-                  <progress max={1} value={this.props.played} />
-                </td>
-              </tr>
-              <tr>
-                <th>duration</th>
-                <td>
-                  <Duration
-                    className="Total Duration"
-                    seconds={this.props.duration}
-                  />
-                </td>
-              </tr>
-              <tr>
-                <th>elapsed</th>
-                <td>
-                  <Duration
-                    className="Duration-elapsed"
-                    seconds={this.props.duration * this.props.played}
-                  />
-                </td>
-              </tr>
-              <tr>
                 <th>remaining</th>
                 <td>
                   <Duration
@@ -327,22 +264,6 @@ class PlayerZone extends Component<PlayerProps> {
               </tr>
             </tbody>
           </table>
-        </div>
-        <div>
-          <Paper>
-            <ul className="list-group list-group-flush">
-              {" "}
-              {sourceMedia(this.props.sourceMedia).map(d => (
-                <li
-                  key={d.blobURL}
-                  className="list-group-item flex-container"
-                  onClick={() => this.loadNewFile(d.blobURL)}
-                >
-                  <div> {d.name} </div>
-                </li>
-              ))}{" "}
-            </ul>
-          </Paper>
         </div>
       </div>
     );

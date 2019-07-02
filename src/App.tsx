@@ -3,6 +3,7 @@ import "./App.css";
 import * as actions from "./store";
 
 import AnnotationTable from "./model/annotTable";
+import DeeJay from "./model/deeJay";
 import FileList from "./model/fileList";
 import PlayerZone from "./model/player";
 import React from "react";
@@ -101,7 +102,6 @@ class App extends React.Component<AppProps> {
         <div className="App-body">
           <div className="App-sidebar">
             <PlayerZone />
-            <button onClick={() => this.hardResetApp("")}> Reset </button>
           </div>
           <div className="DetailsZone">
             <AnnotationTable />
@@ -125,6 +125,7 @@ const mapStateToProps = (state: actions.StateProps): actions.StateProps => ({
   tree: state.tree,
   player: state.player,
   annotations: state.annotations,
+  deeJay: state.deeJay
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

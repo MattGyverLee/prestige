@@ -1,4 +1,4 @@
-export default true;
+import * as actions from "../store";
 
 import React, { Component } from "react";
 
