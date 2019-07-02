@@ -99,6 +99,7 @@
 
 .mediaControls {
   width: inherit;
+  display: none;
 }
 
 .mediaControls table {

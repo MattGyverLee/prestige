@@ -124,6 +124,58 @@ class PlayerZone extends Component<PlayerProps> {
             volume={this.props.volume}
             width="100%"
           />
+          <div className="control-row">
+            <div className="control-row-items">
+              <button
+                className="play-pause-button"
+                onClick={this.props.playPause}
+              >
+                <img
+                  width="17px"
+                  src={this.props.playing ? pause : play}
+                  alt="Play/Pause Icon"
+                ></img>
+              </button>
+              <button
+                className="loop-button"
+                id="loop"
+                onClick={this.props.toggleLoop}
+              >
+                <img width="20px" src={repeat} alt="Loop Icon"></img>
+              </button>
+              <button onClick={this.minusPlaybackRate}>-</button>
+              <div className="playback-rate">{this.props.playbackRate}x</div>
+              <button onClick={this.plusPlaybackRate}>+</button>
+              <input
+                className="seek-input"
+                max={1}
+                min={0}
+                onChange={this.onSeekChange}
+                onMouseDown={this.onSeekMouseDown}
+                onMouseUp={this.onSeekMouseUp}
+                step="any"
+                type="range"
+                value={this.props.played}
+              />
+              <div className="durations">
+                <Duration
+                  className="duration-elapsed"
+                  seconds={this.props.duration * this.props.played}
+                />
+                <Duration
+                  className="total-duration"
+                  seconds={this.props.duration}
+                />
+              </div>
+              <button
+                className="fullscreen-button"
+                onClick={this.onClickFullscreen}
+              >
+                <img width="18px" src={fullscreen} alt="Fullscreen Icon"></img>
+              </button>
+            </div>
+          </div>
+          <div className="current-transcription"></div>
         </div>
         <div className="audio-Layers">
           <div>
