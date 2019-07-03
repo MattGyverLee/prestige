@@ -4,6 +4,9 @@ module.exports = config => {
   config.plugins = [
     new webpack.ProvidePlugin({
       WaveSurfer: "wavesurfer.js"
+    }),
+    new webpack.DefinePlugin({
+      "process.env.FLUENTFFMPEG_COV": false
     })
   ];
   return config;

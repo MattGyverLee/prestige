@@ -5,6 +5,7 @@ import { faLayerGroup, faVolumeUp } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WaveSurfer from "wavesurfer.js";
+import { annotMediaAdded } from "../store";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { sourceAudio } from "./globalFunctions";
@@ -12,6 +13,7 @@ import { sourceAudio } from "./globalFunctions";
 interface StateProps {
   timeline: any;
   sourceMedia: any;
+  annotMedia: any;
   volumes: number[];
   waveSurfers: any;
   pos: number;
@@ -51,12 +53,76 @@ export class DeeJay extends Component<DeeJayProps> {
   testLoad = () => {
     if (this.props.waveSurfers[0] !== null) {
       this.props.waveSurfers[0].load(
-        sourceAudio(this.props.sourceMedia)[0].blobURL
+        sourceAudio(this.props.sourceMedia)[0].blobURL + "#t=65,70"
       );
       this.props.waveSurfers[0].on("waveform-ready", () =>
         this.onSurferReady(0)
       );
       this.props.setWSVolume(0, this.props.volumes[0]);
+      this.props.waveSurfers[0].on("pause", () => {
+        this.props.waveSurfers[0].seekTo(0.5);
+      });
+    }
+
+    this.loadCarefulAnnot();
+  };
+
+  loadCarefulAnnot = () => {
+    let fluentFfmpeg = require("fluent-ffmpeg");
+    let fs = require("fs-extra");
+    let filteredAnnot: any[] = this.props.annotMedia.filter((am: any) =>
+      am.name.includes("Careful")
+    );
+    let i = filteredAnnot.length;
+    let j, k;
+    let previous = -1;
+    let created = false;
+    for (k = 0; k < i; k++) {
+      let idx = 0;
+      let lowest = -1;
+
+      for (j = 0; j < i; j++) {
+        let curr = filteredAnnot[j];
+
+        if (
+          (lowest === -1 ||
+            lowest >
+              parseFloat(curr.name.substring(0, curr.name.indexOf("_")))) &&
+          parseFloat(curr.name.substring(0, curr.name.indexOf("_"))) >= previous
+        ) {
+          lowest = parseFloat(curr.name.substring(0, curr.name.indexOf("_")));
+          idx = j;
+        }
+      }
+      let curr = filteredAnnot[idx];
+      let dir = curr.path.substring(0, curr.path.lastIndexOf("\\") + 1);
+
+      if (created) {
+        let mergedVideo = fluentFfmpeg();
+        mergedVideo.setFfmpegPath(require("ffmpeg-static-electron").path);
+        mergedVideo.setFfprobePath(require("ffprobe-static-electron").path);
+        let videos = [curr.path, dir + "merged.wav"];
+        videos.forEach((v: string) => (mergedVideo = mergedVideo.addInput(v)));
+        mergedVideo
+          .mergeToFile(dir + "merged.wav", dir)
+          .on("start", function(command: any) {
+            console.log("ffmpeg process started:", command);
+          })
+          .on("error", function(err: any) {
+            console.log("An error occurred: " + err.message);
+          })
+          .on("end", function() {
+            console.log("Merging finished!");
+          });
+      } else {
+        fs.copy(curr.path, dir + "merged.wav", (err: any) => {
+          if (err) throw err;
+          console.log("File was copied to destination");
+        });
+        created = true;
+      }
+
+      previous = parseFloat(curr.name.split("_")[2]);
     }
   };
 
@@ -79,7 +145,7 @@ export class DeeJay extends Component<DeeJayProps> {
   render() {
     const waveTableRows = [0, 1, 2].map((idx: number) => {
       return (
-        <tr>
+        <tr key={idx.toString()}>
           <td className="wave-table-play">
             <FontAwesomeIcon icon={faVolumeUp} />
           </td>
@@ -106,7 +172,9 @@ export class DeeJay extends Component<DeeJayProps> {
       <div>
         <button onClick={this.testLoad}></button>
         <div className="wave-table-container">
-          <table className="wave-table">{waveTableRows}</table>
+          <table className="wave-table">
+            <tbody>{waveTableRows}</tbody>
+          </table>
         </div>
       </div>
     );
@@ -119,7 +187,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   timeline: state.annotations.timeline,
   waveSurfers: state.deeJay.waveSurfers,
   volumes: state.deeJay.volumes,
-  sourceMedia: state.tree.sourceMedia
+  sourceMedia: state.tree.sourceMedia,
+  annotMedia: state.tree.annotMedia
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
