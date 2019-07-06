@@ -77,8 +77,14 @@ export class DeeJay extends Component<DeeJayProps> {
         process.cwd() +
         "\\node_modules\\ffprobe-static-electron\\bin\\win\\x64\\ffprobe.exe";
     } else {
-      ffmpegPath = require("ffmpeg-static-electron").path;
-      ffprobePath = require("ffprobe-static-electron").path;
+      // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
+      // Do I want a relative (dirname) or explicit (process.cwd) path?
+      ffmpegPath =
+        process.cwd() + "/resources" + require("ffmpeg-static-electron").path;
+      // __dirname + "resources" + require("ffmpeg-static-electron").path;
+      ffprobePath =
+        process.cwd() + "/resources" + require("ffprobe-static-electron").path;
+      // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
     let fluentFfmpeg = require("fluent-ffmpeg");
     fluentFfmpeg.setFfmpegPath(ffmpegPath);

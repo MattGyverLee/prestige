@@ -9,9 +9,9 @@ import { LooseObject } from "../store/annotations/types";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import fullscreen from "../assets/icons/player/fullscreen.png";
-import pause from "../assets/icons/player/pause.png";
-import play from "../assets/icons/player/play.png";
+// import fullscreen from "../assets/icons/player/fullscreen.png";
+// import pause from "../assets/icons/player/pause.png";
+// import play from "../assets/icons/player/play.png";
 import repeat from "../assets/icons/player/repeat.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

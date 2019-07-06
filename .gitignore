@@ -335,4 +335,3 @@ ASALocalRun/
 dist/
 build/
 src/model/bits.txt
-*.lock
