@@ -5,7 +5,6 @@ import { faLayerGroup, faVolumeUp } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WaveSurfer from "wavesurfer.js";
-import { annotMediaAdded } from "../store";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { sourceAudio } from "./globalFunctions";
@@ -63,20 +62,42 @@ export class DeeJay extends Component<DeeJayProps> {
         this.props.waveSurfers[0].seekTo(0.5);
       });
     }
-
     this.loadCarefulAnnot();
   };
 
   loadCarefulAnnot = () => {
+    const isDev = require("electron-is-dev");
+    let ffmpegPath = "";
+    let ffprobePath = "";
+    if (isDev) {
+      ffmpegPath =
+        process.cwd() +
+        "\\node_modules\\ffmpeg-static-electron\\bin\\win\\x64\\ffmpeg.exe";
+      ffprobePath =
+        process.cwd() +
+        "\\node_modules\\ffprobe-static-electron\\bin\\win\\x64\\ffprobe.exe";
+    } else {
+      ffmpegPath = require("ffmpeg-static-electron").path;
+      ffprobePath = require("ffprobe-static-electron").path;
+    }
     let fluentFfmpeg = require("fluent-ffmpeg");
+    fluentFfmpeg.setFfmpegPath(ffmpegPath);
+    fluentFfmpeg.setFfprobePath(ffprobePath);
     let fs = require("fs-extra");
     let filteredAnnot: any[] = this.props.annotMedia.filter((am: any) =>
-      am.name.includes("Careful")
+      am.name.includes("_Careful")
     );
     let i = filteredAnnot.length;
     let j, k;
+    let path = require("path");
     let previous = -1;
-    let created = false;
+    let inputFiles: any[] = [];
+    let inputTimes: any[] = [];
+    let dir = "";
+    let lastTime = 0;
+    const currentDuration = (metadata: any): number => {
+      return metadata.streams[0].duration;
+    };
     for (k = 0; k < i; k++) {
       let idx = 0;
       let lowest = -1;
@@ -95,35 +116,59 @@ export class DeeJay extends Component<DeeJayProps> {
         }
       }
       let curr = filteredAnnot[idx];
-      let dir = curr.path.substring(0, curr.path.lastIndexOf("\\") + 1);
-
-      if (created) {
-        let mergedVideo = fluentFfmpeg();
-        mergedVideo.setFfmpegPath(require("ffmpeg-static-electron").path);
-        mergedVideo.setFfprobePath(require("ffprobe-static-electron").path);
-        let videos = [curr.path, dir + "merged.wav"];
-        videos.forEach((v: string) => (mergedVideo = mergedVideo.addInput(v)));
-        mergedVideo
-          .mergeToFile(dir + "merged.wav", dir)
-          .on("start", function(command: any) {
-            console.log("ffmpeg process started:", command);
-          })
-          .on("error", function(err: any) {
-            console.log("An error occurred: " + err.message);
-          })
-          .on("end", function() {
-            console.log("Merging finished!");
-          });
-      } else {
-        fs.copy(curr.path, dir + "merged.wav", (err: any) => {
-          if (err) throw err;
-          console.log("File was copied to destination");
-        });
-        created = true;
-      }
-
+      dir = curr.path.substring(0, curr.path.lastIndexOf(path.sep) + 1);
       previous = parseFloat(curr.name.split("_")[2]);
+      inputFiles.push(curr.path);
     }
+    let mergedAudio = fluentFfmpeg();
+    inputFiles.forEach((v: string) => (mergedAudio = mergedAudio.addInput(v)));
+    mergedAudio._inputs.forEach((v: any, idx: number) => {
+      mergedAudio.ffprobe(idx, function(err: any, metadata: any) {
+        const name = v.source.substring(
+          v.source.lastIndexOf(path.sep) + 1,
+          v.source.length
+        );
+
+        inputTimes.push({
+          file: v.source,
+          name,
+          duration: currentDuration(metadata).toFixed(3),
+          refStart: parseFloat(name.split("_")[0]).toFixed(3),
+          refStop: parseFloat(name.split("_")[2]).toFixed(3),
+          start: lastTime,
+          stop: lastTime + currentDuration(metadata)
+        });
+        lastTime = lastTime + currentDuration(metadata);
+        if (err) {
+          console.error("Oops");
+        }
+      });
+    });
+    fs.writeFile(
+      dir + "Careful_Merged.json",
+      JSON.stringify(inputTimes, null, 2),
+      function(err: any) {
+        if (err) {
+          console.error("Oops");
+        }
+      }
+    );
+    mergedAudio
+      .format("mp3")
+      .audioBitrate("128k")
+      .audioChannels(2)
+      .audioCodec("libmp3lame")
+      .mergeToFile(dir + "Careful_Merged.mp3", dir)
+      .outputOptions("-y")
+      .on("start", function(command: any) {
+        console.log("ffmpeg process started:", command);
+      })
+      .on("error", function(err: any) {
+        console.log("An error occurred: " + err.message);
+      })
+      .on("end", function() {
+        console.log("Merging finished!");
+      });
   };
 
   handleTogglePlay() {
