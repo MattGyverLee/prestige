@@ -65,10 +65,12 @@ export class DeeJay extends Component<DeeJayProps> {
     this.loadCarefulAnnot();
   };
 
+  // TODO: put this in FolderSelection with other local operations
   loadCarefulAnnot = () => {
     const isDev = require("electron-is-dev");
     let ffmpegPath = "";
     let ffprobePath = "";
+    // Determines Location for Ffmpeg and Ffprobe from environment variables.
     if (isDev) {
       ffmpegPath =
         process.cwd() +
@@ -78,7 +80,7 @@ export class DeeJay extends Component<DeeJayProps> {
         "\\node_modules\\ffprobe-static-electron\\bin\\win\\x64\\ffprobe.exe";
     } else {
       // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
-      // Do I want a relative (dirname) or explicit (process.cwd) path?
+      // Do I want a relative (__dirname) or absolute (process.cwd()) path?
       ffmpegPath =
         process.cwd() + "/resources" + require("ffmpeg-static-electron").path;
       // __dirname + "resources" + require("ffmpeg-static-electron").path;
@@ -104,10 +106,15 @@ export class DeeJay extends Component<DeeJayProps> {
     const currentDuration = (metadata: any): number => {
       return metadata.streams[0].duration;
     };
+    const roundIt = (value: number, decimals: number): number => {
+      return Number(
+        Math.round(Number(value + "e" + decimals)) + "e-" + decimals
+      );
+    };
     for (k = 0; k < i; k++) {
       let idx = 0;
       let lowest = -1;
-
+      // loops through Annotations to fin lext Chronological Annotation
       for (j = 0; j < i; j++) {
         let curr = filteredAnnot[j];
 
@@ -124,57 +131,63 @@ export class DeeJay extends Component<DeeJayProps> {
       let curr = filteredAnnot[idx];
       dir = curr.path.substring(0, curr.path.lastIndexOf(path.sep) + 1);
       previous = parseFloat(curr.name.split("_")[2]);
+      // Logs this Annotation in an array
       inputFiles.push(curr.path);
     }
+    // Builds MergedAudio object with list of inputs.
     let mergedAudio = fluentFfmpeg();
     inputFiles.forEach((v: string) => (mergedAudio = mergedAudio.addInput(v)));
-    mergedAudio._inputs.forEach((v: any, idx: number) => {
-      mergedAudio.ffprobe(idx, function(err: any, metadata: any) {
-        const name = v.source.substring(
-          v.source.lastIndexOf(path.sep) + 1,
-          v.source.length
-        );
-
-        inputTimes.push({
-          file: v.source,
-          name,
-          duration: currentDuration(metadata).toFixed(3),
-          refStart: parseFloat(name.split("_")[0]).toFixed(3),
-          refStop: parseFloat(name.split("_")[2]).toFixed(3),
-          start: lastTime,
-          stop: lastTime + currentDuration(metadata)
+    if (inputFiles.length > 0) {
+      mergedAudio._inputs.forEach((v: any, idx: number) => {
+        mergedAudio.ffprobe(idx, function(err: any, metadata: any) {
+          const name = v.source.substring(
+            v.source.lastIndexOf(path.sep) + 1,
+            v.source.length
+          );
+          // Keeps a table of contents
+          inputTimes.push({
+            file: v.source,
+            name,
+            duration: roundIt(currentDuration(metadata), 3),
+            refStart: roundIt(name.split("_")[0], 3),
+            refStop: roundIt(name.split("_")[2], 3),
+            start: lastTime,
+            stop: lastTime + roundIt(currentDuration(metadata), 3)
+          });
+          lastTime = lastTime + roundIt(currentDuration(metadata), 3);
+          if (err) {
+            console.error("Oops");
+          }
         });
-        lastTime = lastTime + currentDuration(metadata);
-        if (err) {
-          console.error("Oops");
-        }
       });
-    });
-    fs.writeFile(
-      dir + "Careful_Merged.json",
-      JSON.stringify(inputTimes, null, 2),
-      function(err: any) {
-        if (err) {
-          console.error("Oops");
+      // Dumps TOC for later use (temp solution, sometimes writes blank string when not debugging).
+      fs.writeFile(
+        dir + "Careful_Merged.json",
+        JSON.stringify(inputTimes, null, 2),
+        function(err: any) {
+          if (err) {
+            console.error("Oops");
+          }
         }
-      }
-    );
-    mergedAudio
-      .format("mp3")
-      .audioBitrate("128k")
-      .audioChannels(2)
-      .audioCodec("libmp3lame")
-      .mergeToFile(dir + "Careful_Merged.mp3", dir)
-      .outputOptions("-y")
-      .on("start", function(command: any) {
-        console.log("ffmpeg process started:", command);
-      })
-      .on("error", function(err: any) {
-        console.log("An error occurred: " + err.message);
-      })
-      .on("end", function() {
-        console.log("Merging finished!");
-      });
+      );
+      // Writes concatenated audio to compressed MP3
+      mergedAudio
+        .format("mp3")
+        .audioBitrate("128k")
+        .audioChannels(2)
+        .audioCodec("libmp3lame")
+        .mergeToFile(dir + "Careful_Merged.mp3", dir)
+        .outputOptions("-y")
+        .on("start", function(command: any) {
+          console.log("ffmpeg process started:", command);
+        })
+        .on("error", function(err: any) {
+          console.log("An error occurred: " + err.message);
+        })
+        .on("end", function() {
+          console.log("Merging finished!");
+        });
+    }
   };
 
   handleTogglePlay() {

@@ -334,7 +334,28 @@ class SelectFolderZone extends Component<FolderProps> {
       }
     });
   }
-
+  // Resets Electron Cache
+  // https://github.com/electron/electron/issues/4903#issuecomment-201835018
+  deleteChromeCache = () => {
+    const fs = require("fs-extra");
+    const path = require("path");
+    const remote = require("electron").remote;
+    const app = remote.app;
+    var chromeCacheDir = path.join(app.getPath("userData"), "Cache");
+    if (fs.existsSync(chromeCacheDir)) {
+      var files = fs.readdirSync(chromeCacheDir);
+      for (var i = 0; i < files.length; i++) {
+        var filename = path.join(chromeCacheDir, files[i]);
+        if (fs.existsSync(filename)) {
+          try {
+            fs.unlinkSync(filename);
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      }
+    }
+  };
   render() {
     if (this.props.env === "electron") {
       return (
