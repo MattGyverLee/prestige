@@ -19,6 +19,9 @@ export interface Milestone {
     linguisticType: string;
     locale: string;
     mimeType: string;
+    clipStart?: number;
+    clipStop?: number;
+    duration?: number;
   }[];
   startTime: number;
   stopTime: number;

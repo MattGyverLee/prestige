@@ -11,6 +11,7 @@ import { sourceAudio } from "./globalFunctions";
 
 interface StateProps {
   timeline: any;
+  currentTimeline: number;
   sourceMedia: any;
   annotMedia: any;
   volumes: number[];
@@ -49,19 +50,50 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   };
 
-  testLoad = () => {
-    if (this.props.waveSurfers[0] !== null) {
-      this.props.waveSurfers[0].load(
-        sourceAudio(this.props.sourceMedia, false)[0].blobURL + "#t=65,70"
-      );
-      this.props.waveSurfers[0].on("waveform-ready", () =>
-        this.onSurferReady(0)
-      );
-      this.props.setWSVolume(0, this.props.volumes[0]);
-      this.props.waveSurfers[0].on("pause", () => {
-        this.props.waveSurfers[0].seekTo(0.5);
-      });
+  /*
+  componentDidUpdate() {
+    const newIndex = getTimelineIndex(this.props.timelines, this.props.url);
+    if (
+      this.props.timelinesInstantiated &&
+      (this.props.currentTimeline !== this.props.prevTimeline ||
+        this.props.timelineChanged)
+    ) {
+      this.formatTimeline(this.props.timelines[newIndex]);
+      this.props.updatePrevTimeline(newIndex);
     }
+  }
+  */
+
+  testLoad = () => {
+    let currSync = this.props.timeline[this.props.currentTimeline].syncMedia;
+    [0, 1, 2].forEach((idx: number) => {
+      if (this.props.waveSurfers[idx] !== null) {
+        switch (idx) {
+          case 0:
+            let loadFile = "";
+            let i;
+            for (i = 0; i < currSync.length; i++) {
+              let current = currSync[i];
+              if (
+                current.endsWith(".mp3") ||
+                (current.endsWith(".wav") && !loadFile.endsWith(".mp3"))
+              ) {
+                loadFile = current;
+              }
+            }
+            this.props.waveSurfers[idx].load(loadFile);
+            break;
+          case 1:
+            break;
+          case 2:
+            break;
+        }
+        this.props.waveSurfers[idx].on("waveform-ready", () =>
+          this.onSurferReady(idx)
+        );
+        this.props.setWSVolume(idx, this.props.volumes[idx]);
+      }
+    });
   };
 
   handleTogglePlay() {
@@ -126,7 +158,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   waveSurfers: state.deeJay.waveSurfers,
   volumes: state.deeJay.volumes,
   sourceMedia: state.tree.sourceMedia,
-  annotMedia: state.tree.annotMedia
+  annotMedia: state.tree.annotMedia,
+  currentTimeline: state.annotations.currentTimeline
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

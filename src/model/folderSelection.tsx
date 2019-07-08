@@ -387,6 +387,7 @@ class SelectFolderZone extends Component<FolderProps> {
     let fluentFfmpeg = require("fluent-ffmpeg");
     fluentFfmpeg.setFfmpegPath(ffmpegPath);
     fluentFfmpeg.setFfprobePath(ffprobePath);
+    let ffprobe = require("ffprobe");
     let fs = require("fs-extra");
     let filteredAnnot: any[] = this.props.annotMedia.filter((am: any) =>
       am.name.includes(carefulOrTranslation ? "_Careful" : "_Translation")
@@ -449,37 +450,77 @@ class SelectFolderZone extends Component<FolderProps> {
       idx += 1;
     });
     cf = cf.substring(0, cf.lastIndexOf(";"));
+
+    let primaryIdx = 0;
     if (inputFiles.length > 0) {
       mergedAudio._inputs.forEach((v: any, idx: number) => {
-        mergedAudio.ffprobe(idx, function(err: any, metadata: any) {
+        mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
           const name = v.source.substring(v.source.lastIndexOf(path.sep) + 1);
           // Keeps a table of contents
           inputTimes.push({
             file: v.source,
             name,
             duration: roundIt(currentDuration(metadata), 3),
-            refStart: roundIt(name.split("_")[0], 3),
-            refStop: roundIt(name.split("_")[2], 3),
-            start: lastTime,
-            stop: lastTime + roundIt(currentDuration(metadata), 3)
+            refStart: name.split("_")[0],
+            refStop: name.split("_")[2]
           });
-          lastTime = lastTime + roundIt(currentDuration(metadata), 3);
-          if (idx === mergedAudio._inputs.length - 1) {
-            // Dumps TOC for later use (temp solution, sometimes writes blank string when not debugging).
-            fs.writeFile(
-              dir +
-                (carefulOrTranslation ? "Careful" : "Translation") +
-                "_Merged.json",
-              JSON.stringify(inputTimes, null, 2),
-              function(err: any) {
-                if (err) {
-                  console.error("Oops");
-                }
-              }
-            );
-          }
+
+          /*
+          this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
+          */
+
+          // TODO: Async May Run Multiple Times in Else Statement Below
+          primaryIdx += 1;
+
           if (err) {
             console.error("Oops");
+          } else {
+            if (primaryIdx === mergedAudio._inputs.length) {
+              inputTimes = inputTimes.sort((a: any, b: any) => {
+                return b.refStart - a.refStart;
+              });
+              let i;
+              let lastTime = 0;
+              let oralMilestone: types.Milestone;
+              for (i = 0; i < inputTimes.length; i++) {
+                oralMilestone = {
+                  annotationID: "",
+                  // TODO: Remove annotationRef
+                  annotationRef: "",
+                  data: [
+                    {
+                      channel: carefulOrTranslation
+                        ? "CarefulMerged"
+                        : "TranslationMerged",
+                      data: require("file-url")(
+                        dir +
+                          (carefulOrTranslation ? "Careful" : "Translation") +
+                          "_Merged.mp3"
+                      ),
+                      linguisticType: carefulOrTranslation
+                        ? "CarefulMerged"
+                        : "TranslationMerged",
+                      locale: "",
+                      mimeType: "audio-mp3",
+                      clipStart: lastTime,
+                      clipStop: lastTime + inputTimes[i].duration
+                    }
+                  ],
+                  startTime: parseFloat(inputTimes[i].refStart),
+                  stopTime: parseFloat(inputTimes[i].refStop)
+                };
+
+                const blobURL = require("file-url")(
+                  dir.substring(0, dir.indexOf("_Annotations"))
+                );
+                this.props.addOralAnnotation(
+                  oralMilestone,
+                  getTimelineIndex(this.props.timeline, blobURL)
+                );
+
+                lastTime += inputTimes[i].duration;
+              }
+            }
           }
         });
       });
