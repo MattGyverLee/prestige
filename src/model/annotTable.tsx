@@ -77,7 +77,7 @@ class AnnotationTable extends Component<ComponentProps> {
 
   formatTimeline = (timeline: LooseObject) => {
     if (timeline === undefined) {
-      console.log("Undefined timeline.");
+      // console.log("Undefined timeline.");
       this.props.pushAnnotationTable([
         {
           id: 0,

@@ -34,7 +34,11 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
   return -1;
 }
 
-export function sourceMedia(sourceMedia: LooseObject[]): LooseObject[] {
+// allOrViewer: True -> All, False -> Filtered
+export function sourceMedia(
+  sourceMedia: LooseObject[],
+  allOrViewer: boolean
+): LooseObject[] {
   let sourceVids = sourceMedia
     .filter(file => !file.isAnnotation && file["mimeType"].startsWith("video"))
     .sort(function(a: LooseObject, b: LooseObject) {
@@ -46,23 +50,44 @@ export function sourceMedia(sourceMedia: LooseObject[]): LooseObject[] {
       if (nameA > nameB) return 1;
       return 0;
     });
-  let sourceAud = sourceMedia
-    .filter(file => !file.isAnnotation && file["mimeType"].startsWith("audio"))
-    .sort(function(a: LooseObject, b: LooseObject) {
-      const nameA = a["name"].toLowerCase();
-      const nameB = b["name"].toLowerCase();
-      if (nameA < nameB) {
-        return -1;
+  const path = require("path");
+  let wavs: string[] = [];
+  let sourceAud = sourceAudio(sourceMedia, allOrViewer)
+    .filter((sa: any) => {
+      const parsedPath = path.parse(sa.path);
+      if (parsedPath.ext.toLowerCase() === ".wav") {
+        wavs.push(parsedPath.name);
       }
-      if (nameA > nameB) return 1;
-      return 0;
+      let i;
+      for (i = 0; i < sourceVids.length; i++) {
+        const parsedPath2 = path.parse(sourceVids[i].path);
+        if (parsedPath.name === parsedPath2.name + "_StandardAudio") {
+          return false;
+        }
+      }
+      return true;
+    })
+    .filter((sa: any) => {
+      const parsedPath = path.parse(sa.path);
+      return !(
+        wavs.indexOf(parsedPath.name) !== -1 &&
+        parsedPath.ext.toLowerCase() === ".mp3"
+      );
     });
   return [...sourceVids, ...sourceAud];
 }
 
-export function sourceAudio(sourceMedia: LooseObject[]): LooseObject[] {
+export function sourceAudio(
+  sourceMedia: LooseObject[],
+  allOrViewer: boolean
+): LooseObject[] {
   let sourceAud = sourceMedia
-    .filter(file => !file.isAnnotation && file["mimeType"].startsWith("audio"))
+    .filter(
+      file =>
+        !file.isAnnotation &&
+        file["mimeType"].startsWith("audio") &&
+        (!file["isMerged"] || allOrViewer)
+    )
     .sort(function(a: LooseObject, b: LooseObject) {
       const nameA = a["name"].toLowerCase();
       const nameB = b["name"].toLowerCase();

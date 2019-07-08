@@ -31,7 +31,7 @@ export class fileList extends Component<FileListProps> {
         <Paper>
           <ul className="list-group list-group-flush">
             {" "}
-            {sourceMedia(this.props.sourceMedia).map(d => (
+            {sourceMedia(this.props.sourceMedia, false).map(d => (
               <li
                 key={d.blobURL}
                 className="list-group-item flex-container"
