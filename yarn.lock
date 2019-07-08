@@ -5354,14 +5354,7 @@ flatten@^1.0.2:
   resolved "https://registry.yarnpkg.com/flatten/-/flatten-1.0.2.tgz#dae46a9d78fbe25292258cc1e780a41d95c03782"
   integrity sha1-2uRqnXj74lKSJYzB54CkHZXAN4I=
 
-fluent-ffmpeg-filters@^1.0.13:
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/fluent-ffmpeg-filters/-/fluent-ffmpeg-filters-1.0.13.tgz#e9c09f2d19bfefd0d9f11e5d3cb7f7090942f110"
-  integrity sha1-6cCfLRm/79DZ8R5dPLf3CQlC8RA=
-  dependencies:
-    fluent-ffmpeg "^2.1.0"
-
-fluent-ffmpeg@^2.1.0, fluent-ffmpeg@^2.1.2:
+fluent-ffmpeg@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/fluent-ffmpeg/-/fluent-ffmpeg-2.1.2.tgz#c952de2240f812ebda0aa8006d7776ee2acf7d74"
   integrity sha1-yVLeIkD4EuvaCqgAbXd27irPfXQ=
