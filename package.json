@@ -45,6 +45,7 @@
     "ffprobe": "^1.1.0",
     "file-url": "3.0.0",
     "fluent-ffmpeg": "^2.1.2",
+    "fluent-ffmpeg-filters": "^1.0.13",
     "fs-extra": "^8.0.1",
     "mime": "^2.4.4",
     "path": "^0.12.7",
@@ -154,14 +155,14 @@
     "copyright": "Copyright © 2019 ${author}",
     "extraFiles": [
       {
-        "from": "node_modules/ffprobe-static-electron/bin/${os}/${arch}",
+        "from": "bin/${os}/${arch}",
         "to": "resources/bin/${os}/${arch}",
         "filter": [
           "**/*"
         ]
       },
       {
-        "from": "node_modules/ffmpeg-static-electron/bin/${os}/${arch}",
+        "from": "bin/${os}/${arch}",
         "to": "resources/bin/${os}/${arch}",
         "filter": [
           "**/*"
