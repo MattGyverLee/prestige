@@ -83,38 +83,38 @@ export function setPlaybackRate(speed: number): types.PlayerActionTypes {
   return {
     type: types.SET_PLAYBACK_RATE,
     payload: speed
-  }
+  };
 }
 export function toggleMuted(): types.PlayerActionTypes {
   return {
     type: types.TOGGLE_MUTED
-  }
+  };
 }
 export function onSeekMouseDown(): types.PlayerActionTypes {
   return {
     type: types.ON_SEEK_MOUSE_DOWN
-  }
+  };
 }
 export function onSeekMouseUp(): types.PlayerActionTypes {
   return {
     type: types.ON_SEEK_MOUSE_UP
-  }
+  };
 }
 export function onSeekChange(time: number): types.PlayerActionTypes {
   return {
     type: types.ON_SEEK_CHANGE,
     payload: time
-  }
+  };
 }
 export function onVolumeChange(volume: number): types.PlayerActionTypes {
   return {
     type: types.ON_VOLUME_CHANGE,
     payload: volume
-  }
+  };
 }
-export function setPlayer(player: any): types.PlayerActionTypes {
+export function setSeek(seek: number): types.PlayerActionTypes {
   return {
-    type: types.SET_PLAYER,
-    payload: player
-  }
+    type: types.SET_SEEK,
+    payload: seek
+  };
 }

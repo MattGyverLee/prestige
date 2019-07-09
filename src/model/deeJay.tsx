@@ -15,7 +15,6 @@ interface StateProps {
   sourceMedia: any;
   annotMedia: any;
   volumes: number[];
-  waveSurfers: any;
   pos: number;
   playing: boolean;
 }
@@ -23,16 +22,17 @@ interface StateProps {
 interface DispatchProps {
   toggleWaveSurferPlay: typeof actions.toggleWaveSurferPlay;
   waveSurferPosChange: typeof actions.waveSurferPosChange;
-  setWaveSurfer: typeof actions.setWaveSurfer;
   setWSVolume: typeof actions.setWSVolume;
 }
 
 interface DeeJayProps extends StateProps, DispatchProps {}
 
 export class DeeJay extends Component<DeeJayProps> {
+  private waveSurfers: WaveSurfer[] = [];
+
   componentDidMount = () => {
     [0, 1, 2].forEach((idx: number) => {
-      this.props.setWaveSurfer(
+      this.waveSurfers.push(
         WaveSurfer.create({
           container: "#waveform" + idx.toString(),
           height: 50,
@@ -44,11 +44,18 @@ export class DeeJay extends Component<DeeJayProps> {
           responsive: true,
           waveColor: "#ccc",
           hideScrollbar: true
-        }),
-        idx
+        })
       );
     });
   };
+
+  componentDidUpdate() {
+    [0, 1, 2].forEach((idx: number) => {
+      if (this.waveSurfers[idx].getVolume() !== this.props.volumes[idx]) {
+        this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
+      }
+    });
+  }
 
   /*
   componentDidUpdate() {
@@ -65,9 +72,10 @@ export class DeeJay extends Component<DeeJayProps> {
   */
 
   testLoad = () => {
+    if (this.props.currentTimeline === -1) return;
     let currSync = this.props.timeline[this.props.currentTimeline].syncMedia;
     [0, 1, 2].forEach((idx: number) => {
-      if (this.props.waveSurfers[idx] !== null) {
+      if (this.waveSurfers[idx] !== null) {
         switch (idx) {
           case 0:
             let loadFile = "";
@@ -81,14 +89,14 @@ export class DeeJay extends Component<DeeJayProps> {
                 loadFile = current;
               }
             }
-            this.props.waveSurfers[idx].load(loadFile);
+            this.waveSurfers[idx].load(loadFile);
             break;
           case 1:
             break;
           case 2:
             break;
         }
-        this.props.waveSurfers[idx].on("waveform-ready", () =>
+        this.waveSurfers[idx].on("waveform-ready", () =>
           this.onSurferReady(idx)
         );
         this.props.setWSVolume(idx, this.props.volumes[idx]);
@@ -105,7 +113,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   onSurferReady = (idx: number) => {
-    this.props.waveSurfers[idx].play();
+    this.waveSurfers[idx].play();
   };
 
   setVolume = (e: any) => {
@@ -155,7 +163,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   pos: state.deeJay.pos,
   playing: state.deeJay.playing,
   timeline: state.annotations.timeline,
-  waveSurfers: state.deeJay.waveSurfers,
   volumes: state.deeJay.volumes,
   sourceMedia: state.tree.sourceMedia,
   annotMedia: state.tree.annotMedia,
@@ -167,7 +174,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       waveSurferPosChange: actions.waveSurferPosChange,
       toggleWaveSurferPlay: actions.toggleWaveSurferPlay,
-      setWaveSurfer: actions.setWaveSurfer,
       setWSVolume: actions.setWSVolume
     },
     dispatch

@@ -91,9 +91,9 @@ class SelectFolderZone extends Component<FolderProps> {
       const parsedPath = require("path").parse(path);
       const isMerged = parsedPath.base.includes("_Merged");
       const isAnnotation =
-        (parsedPath.dir.endsWith("_Annotations") ||
-          parsedPath.base.includes("oralAnnotations")) &&
-        !isMerged;
+        parsedPath.dir.endsWith("_Annotations") ||
+        parsedPath.base.includes("oralAnnotations") ||
+        isMerged;
 
       // Get Temporary Mime Type of File
       const mime = require("mime");
@@ -297,7 +297,8 @@ class SelectFolderZone extends Component<FolderProps> {
       if (
         mediaFile.isAnnotation &&
         !mediaFile.name.includes("oralAnnotation") &&
-        !mediaFile.inMilestones
+        !mediaFile.inMilestones &&
+        !mediaFile.isMerged
       ) {
         // Define Fields for oralMilestone
         const parsedPath = require("path").parse(mediaFile.path);
@@ -322,6 +323,15 @@ class SelectFolderZone extends Component<FolderProps> {
               linguisticType: tier,
               locale: "",
               mimeType: mediaFile.mimeType
+              /*
+              timelineIdx: getTimelineIndex(
+                this.props.timeline,
+                parsedPath.dir.substring(
+                  0,
+                  parsedPath.dir.indexOf("_Annotations")
+                )
+              )
+              */
             }
           ],
           startTime: parseFloat(splitPath[0]),
@@ -454,7 +464,12 @@ class SelectFolderZone extends Component<FolderProps> {
     let primaryIdx = 0;
     if (inputFiles.length > 0) {
       mergedAudio._inputs.forEach((v: any, idx: number) => {
+        primaryIdx += 1;
         mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
+          /*
+          this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
+          */
+          // TODO: Async May Run Multiple Times in Else Statement Below
           const name = v.source.substring(v.source.lastIndexOf(path.sep) + 1);
           // Keeps a table of contents
           inputTimes.push({
@@ -464,62 +479,56 @@ class SelectFolderZone extends Component<FolderProps> {
             refStart: name.split("_")[0],
             refStop: name.split("_")[2]
           });
+          if (primaryIdx === mergedAudio._inputs.length) {
+            inputTimes = inputTimes.sort((a: any, b: any) => {
+              return b.refStart - a.refStart;
+            });
+            let i;
+            let lastTime = 0;
+            let oralMilestone: types.Milestone;
+            for (i = 0; i < inputTimes.length; i++) {
+              oralMilestone = {
+                annotationID: "",
+                // TODO: Remove annotationRef
+                annotationRef: "",
+                data: [
+                  {
+                    channel: carefulOrTranslation
+                      ? "CarefulMerged"
+                      : "TranslationMerged",
+                    data: require("file-url")(
+                      dir +
+                        (carefulOrTranslation ? "Careful" : "Translation") +
+                        "_Merged.mp3"
+                    ),
+                    linguisticType: carefulOrTranslation
+                      ? "CarefulMerged"
+                      : "TranslationMerged",
+                    locale: "",
+                    mimeType: "audio-mp3",
+                    clipStart: lastTime,
+                    clipStop: lastTime + inputTimes[i].duration
+                    /*
+                      timelineIdx: getTimelineIndex(
+                        this.props.timeline,
+                        dir.substring(0, dir.indexOf("_Annotations"))
+                      )
+                      */
+                  }
+                ],
+                startTime: parseFloat(inputTimes[i].refStart),
+                stopTime: parseFloat(inputTimes[i].refStop)
+              };
 
-          /*
-          this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
-          */
+              const blobURL = require("file-url")(
+                dir.substring(0, dir.indexOf("_Annotations"))
+              );
+              this.props.addOralAnnotation(
+                oralMilestone,
+                getTimelineIndex(this.props.timeline, blobURL)
+              );
 
-          // TODO: Async May Run Multiple Times in Else Statement Below
-          primaryIdx += 1;
-
-          if (err) {
-            console.error("Oops");
-          } else {
-            if (primaryIdx === mergedAudio._inputs.length) {
-              inputTimes = inputTimes.sort((a: any, b: any) => {
-                return b.refStart - a.refStart;
-              });
-              let i;
-              let lastTime = 0;
-              let oralMilestone: types.Milestone;
-              for (i = 0; i < inputTimes.length; i++) {
-                oralMilestone = {
-                  annotationID: "",
-                  // TODO: Remove annotationRef
-                  annotationRef: "",
-                  data: [
-                    {
-                      channel: carefulOrTranslation
-                        ? "CarefulMerged"
-                        : "TranslationMerged",
-                      data: require("file-url")(
-                        dir +
-                          (carefulOrTranslation ? "Careful" : "Translation") +
-                          "_Merged.mp3"
-                      ),
-                      linguisticType: carefulOrTranslation
-                        ? "CarefulMerged"
-                        : "TranslationMerged",
-                      locale: "",
-                      mimeType: "audio-mp3",
-                      clipStart: lastTime,
-                      clipStop: lastTime + inputTimes[i].duration
-                    }
-                  ],
-                  startTime: parseFloat(inputTimes[i].refStart),
-                  stopTime: parseFloat(inputTimes[i].refStop)
-                };
-
-                const blobURL = require("file-url")(
-                  dir.substring(0, dir.indexOf("_Annotations"))
-                );
-                this.props.addOralAnnotation(
-                  oralMilestone,
-                  getTimelineIndex(this.props.timeline, blobURL)
-                );
-
-                lastTime += inputTimes[i].duration;
-              }
+              lastTime += inputTimes[i].duration;
             }
           }
         });

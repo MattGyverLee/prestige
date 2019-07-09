@@ -85,7 +85,7 @@ export function treeReducer(
       );
       return {
         ...state,
-        sourceMedia: [...tempState, action.payload.file]
+        annotMedia: [...tempState, action.payload.file]
       };
     }
     case types.FILE_DELETED: {

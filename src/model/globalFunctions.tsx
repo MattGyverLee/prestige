@@ -99,3 +99,33 @@ export function sourceAudio(
     });
   return [...sourceAud];
 }
+
+export function annotAudio(
+  annotMedia: LooseObject[],
+  splitOrMerged: boolean,
+  timelineIdx: number,
+  timelines: any[]
+  // true: merged only, false: split only
+): LooseObject[] {
+  let annotAud = annotMedia
+    .filter(
+      file =>
+        file.isAnnotation &&
+        file["mimeType"].startsWith("audio") &&
+        (splitOrMerged ? file["isMerged"] : !file["isMerged"]) &&
+        getTimelineIndex(
+          timelines,
+          file.data.data.substring(0, file.data.data.indexOf("_Annotations"))
+        ) === timelineIdx
+    )
+    .sort(function(a: LooseObject, b: LooseObject) {
+      const nameA = a["name"].toLowerCase();
+      const nameB = b["name"].toLowerCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) return 1;
+      return 0;
+    });
+  return [...annotAud];
+}

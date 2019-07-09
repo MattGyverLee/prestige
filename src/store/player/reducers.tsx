@@ -9,8 +9,8 @@ export const playerCleanStore: types.MediaPlayerState = {
   pip: false,
   playbackRate: 1.0,
   played: false,
-  player: null,
   playing: false,
+  seek: -1,
   seeking: false,
   url: "",
   volume: 0.8
@@ -29,11 +29,10 @@ export function playerReducer(
       if (action.payload.blobURL !== undefined) {
         return {
           ...playerCleanStore,
-          player: state.player,
           url: action.payload.blobURL
         };
       }
-      return { ...playerCleanStore, player: state.player };
+      return { ...playerCleanStore };
     }
     case types.UPDATE_PLAYER_SESSION: {
       // I might Deprecate This Action
@@ -57,12 +56,6 @@ export function playerReducer(
         seeking: false,
         volume: 0.8,
         url: action.payload
-      };
-    }
-    case types.SET_PLAYER: {
-      return {
-        ...state,
-        player: action.payload
       };
     }
     case types.PLAY: {
@@ -153,6 +146,12 @@ export function playerReducer(
       return {
         ...state,
         volume: action.payload
+      };
+    }
+    case types.SET_SEEK: {
+      return {
+        ...state,
+        seek: action.payload
       };
     }
     // this.setState({ url: null, playing: false })

@@ -22,6 +22,7 @@ export interface Milestone {
     clipStart?: number;
     clipStop?: number;
     duration?: number;
+    // timelineIdx: number;
   }[];
   startTime: number;
   stopTime: number;

@@ -31,7 +31,6 @@ const Root = (props: any) => (
 );
 
 interface StateProps {
-  player: any;
   timelines: LooseObject[];
   currentTimeline: number;
   prevTimeline: number;
@@ -41,6 +40,7 @@ interface StateProps {
   timelineChanged: boolean;
   timelinesInstantiated: boolean;
   url: string;
+  duration: number;
 }
 
 interface DispatchProps {
@@ -48,6 +48,7 @@ interface DispatchProps {
   setURL: typeof actions.setURL;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
   updatePrevTimeline: typeof actions.updatePrevTimeline;
+  setSeek: typeof actions.setSeek;
 }
 
 interface ComponentProps extends StateProps, DispatchProps {
@@ -140,10 +141,7 @@ class AnnotationTable extends Component<ComponentProps> {
   render() {
     // Table Values
     const TableRow = ({ row, ...restProps }: any) => (
-      <Table.Row
-        {...restProps}
-        onClick={() => seekToSec(this.props.player, row.startTime)}
-      />
+      <Table.Row {...restProps} onClick={() => seekToSec(row.startTime)} />
     );
     const FlowingCellC = ({ value, style, ...restProps }: any) => (
       <Table.Cell
@@ -291,10 +289,10 @@ class AnnotationTable extends Component<ComponentProps> {
     ];
 
     // End Table Values
-    const seekToSec = (player: ReactPlayer, time: number) => {
-      const length = this.props.player.getDuration();
+    const seekToSec = (time: number) => {
+      const length = this.props.duration;
       const newTime = time / length;
-      player.seekTo(newTime);
+      this.props.setSeek(newTime);
       this.setState({ playing: true });
     };
 
@@ -321,14 +319,14 @@ class AnnotationTable extends Component<ComponentProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  player: state.player.player,
-  timelines: state.annotations.timeline,
-  categories: state.annotations.categories,
   annotationTable: state.annotations.annotationTable,
-  sourceMedia: state.tree.sourceMedia,
+  categories: state.annotations.categories,
   currentTimeline: state.annotations.currentTimeline,
+  duration: state.player.duration,
   prevTimeline: state.annotations.prevTimeline,
+  sourceMedia: state.tree.sourceMedia,
   timelineChanged: state.annotations.timelineChanged,
+  timelines: state.annotations.timeline,
   timelinesInstantiated: state.annotations.timelinesInstantiated,
   url: state.player.url
 });
@@ -339,7 +337,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       play: actions.play,
       setURL: actions.setURL,
       pushAnnotationTable: actions.pushAnnotationTable,
-      updatePrevTimeline: actions.updatePrevTimeline
+      updatePrevTimeline: actions.updatePrevTimeline,
+      setSeek: actions.setSeek
     },
     dispatch
   )

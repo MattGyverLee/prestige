@@ -8,8 +8,8 @@ export interface MediaPlayerState {
   pip: boolean;
   playbackRate: number;
   played: any;
-  player: any;
   playing: boolean;
+  seek: number;
   seeking?: boolean;
   url: string;
   volume: number;
@@ -35,7 +35,7 @@ export const ON_SEEK_MOUSE_DOWN = "ON_SEEK_MOUSE_DOWN";
 export const ON_SEEK_MOUSE_UP = "ON_SEEK_MOUSE_UP";
 export const ON_SEEK_CHANGE = "ON_SEEK_CHANGE";
 export const ON_VOLUME_CHANGE = "ON_VOLUME_CHANGE";
-export const SET_PLAYER = "SET_PLAYER";
+export const SET_SEEK = "SET_SEEK";
 
 interface PlayHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -108,9 +108,9 @@ interface OnVolumeChange {
   type: typeof ON_VOLUME_CHANGE;
   payload: number;
 }
-interface SetPlayer {
-  type: typeof SET_PLAYER;
-  payload: any;
+interface SetSeek {
+  type: typeof SET_SEEK;
+  payload: number;
 }
 
 export type PlayerActionTypes =
@@ -133,4 +133,4 @@ export type PlayerActionTypes =
   | OnSeekMouseUp
   | OnSeekChange
   | OnVolumeChange
-  | SetPlayer;
+  | SetSeek;

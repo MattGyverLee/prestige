@@ -3,22 +3,23 @@ import "../App.css";
 import * as actions from "../store";
 
 import React, { Component } from "react";
+import {
+  faExpandArrowsAlt,
+  faPause,
+  faPlay
+} from "@fortawesome/free-solid-svg-icons";
 
 import Duration from "./duration";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LooseObject } from "../store/annotations/types";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import repeat from "../assets/icons/player/repeat.png";
+
 // import fullscreen from "../assets/icons/player/fullscreen.png";
 // import pause from "../assets/icons/player/pause.png";
 // import play from "../assets/icons/player/play.png";
-import repeat from "../assets/icons/player/repeat.png";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPlay,
-  faPause,
-  faExpandArrowsAlt
-} from "@fortawesome/free-solid-svg-icons";
 
 interface StateProps {
   controls?: boolean;
@@ -29,8 +30,8 @@ interface StateProps {
   pip: boolean;
   playbackRate: number;
   played: number;
-  player: any;
   playing: boolean;
+  seek: number;
   seeking?: boolean;
   state?: any;
   url: string;
@@ -51,20 +52,28 @@ interface DispatchProps {
   setURL: typeof actions.setURL;
   setDuration: typeof actions.setDuration;
   setPlaybackRate: typeof actions.setPlaybackRate;
+  setSeek: typeof actions.setSeek;
   toggleMuted: typeof actions.toggleMuted;
   onSeekMouseDown: typeof actions.onSeekMouseDown;
   onSeekMouseUp: typeof actions.onSeekMouseUp;
   onSeekChange: typeof actions.onSeekChange;
   onVolumeChange: typeof actions.onVolumeChange;
-  setPlayer: typeof actions.setPlayer;
 }
 interface PlayerProps extends StateProps, DispatchProps {}
 
 class PlayerZone extends Component<PlayerProps> {
   private player!: ReactPlayer;
+
   private speeds: number[] = [0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5, 2, 3, 5];
   private speedsIndex: number = 5;
   // private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
+
+  componentDidUpdate() {
+    if (this.props.seek !== -1) {
+      this.player.seekTo(this.props.seek);
+      this.props.setSeek(-1);
+    }
+  }
 
   pip = () => {
     // this.setState({ pip: !this.props.pip });
@@ -99,7 +108,6 @@ class PlayerZone extends Component<PlayerProps> {
   };
   onPlay = () => {
     this.props.onPlay();
-    this.props.setPlayer(this.player);
   };
   loadNewFile(blobURL: string) {
     this.props.play();
@@ -280,12 +288,12 @@ class PlayerZone extends Component<PlayerProps> {
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   playbackRate: state.player.playbackRate,
   played: state.player.played,
-  player: state.player.player,
   muted: state.player.muted,
   controls: state.player.controls,
   duration: state.player.duration,
   playing: state.player.playing,
   pip: state.player.pip,
+  seek: state.player.seek,
   url: state.player.url,
   loop: state.player.loop,
   volume: state.player.volume,
@@ -307,12 +315,12 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onProgress: actions.onProgress,
       setDuration: actions.setDuration,
       setPlaybackRate: actions.setPlaybackRate,
+      setSeek: actions.setSeek,
       toggleMuted: actions.toggleMuted,
       onSeekMouseDown: actions.onSeekMouseDown,
       onSeekMouseUp: actions.onSeekMouseUp,
       onSeekChange: actions.onSeekChange,
-      onVolumeChange: actions.onVolumeChange,
-      setPlayer: actions.setPlayer
+      onVolumeChange: actions.onVolumeChange
     },
     dispatch
   )
