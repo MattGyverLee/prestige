@@ -6,7 +6,6 @@ import { getTimelineIndex, sourceMedia } from "./globalFunctions";
 
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { isForXStatement } from "@babel/types";
 
 var watcherRef: any;
 interface StateProps {
@@ -17,7 +16,6 @@ interface StateProps {
   env: string;
   folderName: string;
   folderPath: string;
-  loaded: boolean;
   prevPath: string;
   sourceMedia: types.LooseObject[];
   timeline: types.LooseObject[];
@@ -45,6 +43,8 @@ interface DispatchProps {
   setAnnotMediaInMilestones: typeof actions.setAnnotMediaInMilestones;
   setTimelinesInstantiated: typeof actions.setTimelinesInstantiated;
   setTimelineChanged: typeof actions.setTimelineChanged;
+  setAnnotMediaWSAllowed: typeof actions.setAnnotMediaWSAllowed;
+  setSourceMediaWSAllowed: typeof actions.setSourceMediaWSAllowed;
 }
 
 interface FolderProps extends StateProps, DispatchProps {
@@ -76,7 +76,10 @@ class SelectFolderZone extends Component<FolderProps> {
     const watcher = require("chokidar").watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
-      ignoreInitial: false
+      ignoreInitial: false,
+      awaitWriteFinish: {
+        stabilityThreshold: 2000
+      }
     });
     watcherRef = watcher;
 
@@ -142,7 +145,8 @@ class SelectFolderZone extends Component<FolderProps> {
         inMilestones: false,
         mimeType: tempMime,
         name: parsedPath.base,
-        path: path
+        path: path,
+        wsAllowed: false
       };
     };
 
@@ -165,11 +169,16 @@ class SelectFolderZone extends Component<FolderProps> {
           fileDef.mimeType.startsWith("video") ||
           fileDef.mimeType.startsWith("audio");
         if (isAudVid) {
-          fileDef["isAnnotation"]
-            ? props.annotMediaAdded({ file: fileDef })
-            : props.sourceMediaAdded({ file: fileDef });
+          if (fileDef["isAnnotation"]) {
+            this.props.annotMediaAdded({ file: fileDef });
+          } else {
+            this.props.sourceMediaAdded({ file: fileDef });
+            if (fileDef.name.endsWith("_StandardAudio.wav")) {
+              this.convertToMP3(fileDef.path);
+            }
+          }
         } else {
-          props.fileAdded({ file: fileDef });
+          this.props.fileAdded({ file: fileDef });
         }
       }
 
@@ -196,9 +205,14 @@ class SelectFolderZone extends Component<FolderProps> {
           fileDef.mimeType.startsWith("video") ||
           fileDef.mimeType.startsWith("audio");
         if (isAudVid) {
-          fileDef["isAnnotation"]
-            ? props.annotMediaChanged({ file: fileDef })
-            : props.sourceMediaChanged({ file: fileDef });
+          if (fileDef["isAnnotation"]) {
+            this.props.annotMediaChanged({ file: fileDef });
+          } else {
+            this.props.sourceMediaChanged({ file: fileDef });
+            if (fileDef.name.endsWith("_StandardAudio.wav")) {
+              this.convertToMP3(fileDef.blobURL);
+            }
+          }
         } else {
           props.fileChanged({ file: fileDef });
         }
@@ -225,7 +239,7 @@ class SelectFolderZone extends Component<FolderProps> {
     // Plays the First URL
     const chokReady = () => {
       // Adds All Annotations to Milestones
-      this.addNewMediaToMilestone();
+      // this.addNewMediaToMilestone();
 
       // Grabs and Sets First URL If it Exists
       if (this.readyPlayURL !== "") {
@@ -323,15 +337,6 @@ class SelectFolderZone extends Component<FolderProps> {
               linguisticType: tier,
               locale: "",
               mimeType: mediaFile.mimeType
-              /*
-              timelineIdx: getTimelineIndex(
-                this.props.timeline,
-                parsedPath.dir.substring(
-                  0,
-                  parsedPath.dir.indexOf("_Annotations")
-                )
-              )
-              */
             }
           ],
           startTime: parseFloat(splitPath[0]),
@@ -397,8 +402,6 @@ class SelectFolderZone extends Component<FolderProps> {
     let fluentFfmpeg = require("fluent-ffmpeg");
     fluentFfmpeg.setFfmpegPath(ffmpegPath);
     fluentFfmpeg.setFfprobePath(ffprobePath);
-    let ffprobe = require("ffprobe");
-    let fs = require("fs-extra");
     let filteredAnnot: any[] = this.props.annotMedia.filter((am: any) =>
       am.name.includes(carefulOrTranslation ? "_Careful" : "_Translation")
     );
@@ -409,10 +412,6 @@ class SelectFolderZone extends Component<FolderProps> {
     let inputFiles: any[] = [];
     let inputTimes: any[] = [];
     let dir = "";
-    let lastTime = 0;
-    const currentDuration = (metadata: any): number => {
-      return metadata.streams[0].duration;
-    };
     const roundIt = (value: number, decimals: number): number => {
       return Number(
         Math.round(Number(value + "e" + decimals)) + "e-" + decimals
@@ -464,7 +463,6 @@ class SelectFolderZone extends Component<FolderProps> {
     let primaryIdx = 0;
     if (inputFiles.length > 0) {
       mergedAudio._inputs.forEach((v: any, idx: number) => {
-        primaryIdx += 1;
         mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
           /*
           this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
@@ -475,13 +473,14 @@ class SelectFolderZone extends Component<FolderProps> {
           inputTimes.push({
             file: v.source,
             name,
-            duration: roundIt(currentDuration(metadata), 3),
+            duration: roundIt(metadata.streams[0].duration, 3),
             refStart: name.split("_")[0],
             refStop: name.split("_")[2]
           });
+          primaryIdx += 1;
           if (primaryIdx === mergedAudio._inputs.length) {
             inputTimes = inputTimes.sort((a: any, b: any) => {
-              return b.refStart - a.refStart;
+              return a.refStart - b.refStart;
             });
             let i;
             let lastTime = 0;
@@ -506,14 +505,8 @@ class SelectFolderZone extends Component<FolderProps> {
                       : "TranslationMerged",
                     locale: "",
                     mimeType: "audio-mp3",
-                    clipStart: lastTime,
-                    clipStop: lastTime + inputTimes[i].duration
-                    /*
-                      timelineIdx: getTimelineIndex(
-                        this.props.timeline,
-                        dir.substring(0, dir.indexOf("_Annotations"))
-                      )
-                      */
+                    clipStart: roundIt(lastTime, 3),
+                    clipStop: roundIt(lastTime + inputTimes[i].duration, 3)
                   }
                 ],
                 startTime: parseFloat(inputTimes[i].refStart),
@@ -531,8 +524,12 @@ class SelectFolderZone extends Component<FolderProps> {
               lastTime += inputTimes[i].duration;
             }
           }
+          if (err) {
+            console.log("Error: " + err);
+          }
         });
       });
+
       // Writes concatenated audio to compressed MP3
       mergedAudio
         .format("mp3")
@@ -547,16 +544,67 @@ class SelectFolderZone extends Component<FolderProps> {
         .on("error", function(err: any) {
           console.log("An error occurred: " + err.message);
         })
-        .on("end", function() {
+        .on("end", () => {
           console.log("Merging finished!");
+          this.props.setAnnotMediaWSAllowed(
+            require("file-url")(
+              dir +
+                (carefulOrTranslation ? "Careful" : "Translation") +
+                "_Merged.mp3"
+            )
+          );
         })
         .save(
-          "" +
-            dir +
+          dir +
             (carefulOrTranslation ? "Careful" : "Translation") +
             "_Merged.mp3"
         );
     }
+  };
+
+  convertToMP3 = (path: string) => {
+    const isDev = require("electron-is-dev");
+    let ffmpegPath = "";
+    let ffprobePath = "";
+    // Determines Location for Ffmpeg and Ffprobe from environment variables.
+    if (isDev) {
+      ffmpegPath = process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe";
+      ffprobePath = process.cwd() + "\\bin\\win\\x64\\ffprobe.exe";
+    } else {
+      // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
+      // Do I want a relative (__dirname) or absolute (process.cwd()) path?
+      ffmpegPath =
+        process.cwd() + "/resources" + require("ffmpeg-static-electron").path;
+      // __dirname + "resources" + require("ffmpeg-static-electron").path;
+      ffprobePath =
+        process.cwd() + "/resources" + require("ffprobe-static-electron").path;
+      // __dirname + "resources" + require("ffprobe-static-electron").path;
+    }
+    let fluentFfmpeg = require("fluent-ffmpeg");
+    fluentFfmpeg.setFfmpegPath(ffmpegPath);
+    fluentFfmpeg.setFfprobePath(ffprobePath);
+    let toMP3 = fluentFfmpeg().addInput(path);
+    toMP3
+      .format("mp3")
+      .audioBitrate("128k")
+      .audioChannels(2)
+      .audioCodec("libmp3lame")
+      .audioFilters("loudnorm=I=-16:TP=-1.5:LRA=11")
+      .on("start", function(command: any) {
+        console.log("ffmpeg process started:", command);
+      })
+      .on("error", function(err: any) {
+        console.log("An error occurred: " + err.message);
+      })
+      .on("end", () => {
+        console.log("MP3 Conversion finished!");
+        this.props.setSourceMediaWSAllowed(
+          require("file-url")(
+            path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3"
+          )
+        );
+      })
+      .save(path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3");
   };
 
   render() {
@@ -594,7 +642,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   env: state.tree.env,
   folderName: state.tree.folderName,
   folderPath: state.tree.folderPath,
-  loaded: state.tree.loaded,
   prevPath: state.tree.prevPath,
   sourceMedia: state.tree.sourceMedia,
   timeline: state.annotations.timeline,
@@ -623,7 +670,9 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       sourceMediaChanged: actions.sourceMediaChanged,
       setAnnotMediaInMilestones: actions.setAnnotMediaInMilestones,
       setTimelinesInstantiated: actions.setTimelinesInstantiated,
-      setTimelineChanged: actions.setTimelineChanged
+      setTimelineChanged: actions.setTimelineChanged,
+      setAnnotMediaWSAllowed: actions.setAnnotMediaWSAllowed,
+      setSourceMediaWSAllowed: actions.setSourceMediaWSAllowed
     },
     dispatch
   )

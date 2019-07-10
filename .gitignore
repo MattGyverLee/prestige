@@ -335,3 +335,6 @@ ASALocalRun/
 dist/
 build/
 src/model/bits.txt
+!/bin/*
+!/bin/*/*
+!/bin/*/*/*

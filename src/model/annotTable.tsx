@@ -18,7 +18,6 @@ import {
 import React, { Component } from "react";
 
 import Paper from "@material-ui/core/Paper";
-import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { getTimelineIndex } from "./globalFunctions";
@@ -41,6 +40,7 @@ interface StateProps {
   timelinesInstantiated: boolean;
   url: string;
   duration: number;
+  durations: number[];
 }
 
 interface DispatchProps {
@@ -48,6 +48,8 @@ interface DispatchProps {
   setURL: typeof actions.setURL;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
   updatePrevTimeline: typeof actions.updatePrevTimeline;
+  waveSurferPlayClip: typeof actions.waveSurferPlayClip;
+  waveSurferPosChange: typeof actions.waveSurferPosChange;
   setSeek: typeof actions.setSeek;
 }
 
@@ -115,11 +117,21 @@ class AnnotationTable extends Component<ComponentProps> {
       for (d = 0; d < milestone["data"].length; d++) {
         if (milestone["data"][d]["mimeType"].startsWith("audio")) {
           // console.log("Audio");
-          if (milestone["data"][d]["channel"] === "Careful") {
-            row["audCareful"] = milestone["data"][d]["data"];
+          if (milestone["data"][d]["channel"] === "CarefulMerged") {
+            row["audCareful"] =
+              milestone["data"][d]["data"] +
+              "#t" +
+              milestone["data"][d]["clipStart"] +
+              "," +
+              milestone["data"][d]["clipStop"];
           }
-          if (milestone["data"][d]["channel"] === "Translation") {
-            row["audTransl"] = milestone["data"][d]["data"];
+          if (milestone["data"][d]["channel"] === "TranslationMerged") {
+            row["audTransl"] =
+              milestone["data"][d]["data"] +
+              "#t" +
+              milestone["data"][d]["clipStart"] +
+              "," +
+              milestone["data"][d]["clipStop"];
           }
         }
         if (milestone["data"][d]["mimeType"].startsWith("string")) {
@@ -141,7 +153,7 @@ class AnnotationTable extends Component<ComponentProps> {
   render() {
     // Table Values
     const TableRow = ({ row, ...restProps }: any) => (
-      <Table.Row {...restProps} onClick={() => seekToSec(row.startTime)} />
+      <Table.Row {...restProps} onClick={() => seekToSec(0, row.startTime)} />
     );
     const FlowingCellC = ({ value, style, ...restProps }: any) => (
       <Table.Cell
@@ -195,7 +207,9 @@ class AnnotationTable extends Component<ComponentProps> {
       </Table.Cell>
     ); */
     // eslint:disable-next-line
-    const HighlightedCell = ({ value, style, ...restProps }: any) => (
+
+    // eslint:disable-next-line
+    const HighlightedCellCareful = ({ value, style, ...restProps }: any) => (
       <Table.Cell
         {...restProps}
         style={{
@@ -204,7 +218,58 @@ class AnnotationTable extends Component<ComponentProps> {
         }}
       >
         <button
-          onClick={() => this.props.setURL(value.toString())}
+          onClick={() => {
+            const parsedURL = value.split("#");
+            if (parsedURL.length > 1)
+              if (parsedURL[1].split(",").length === 1) {
+                seekToSec(
+                  1,
+                  parseFloat(parsedURL[1].split(",")[0].substring(1))
+                );
+              } else {
+                this.props.waveSurferPlayClip(
+                  1,
+                  parseFloat(parsedURL[1].split(",")[0].substring(1)),
+                  parseFloat(parsedURL[1].split(",")[1])
+                );
+              }
+          }}
+          style={{
+            display: value < 1000 ? "none" : undefined
+            // color: value !="" ? 'lightgreen' : undefined,
+          }}
+        >
+          Play{" "}
+        </button>
+      </Table.Cell>
+    );
+
+    // eslint:disable-next-line
+    const HighlightedCellTransl = ({ value, style, ...restProps }: any) => (
+      <Table.Cell
+        {...restProps}
+        style={{
+          // backgroundColor: value < 1000 ? 'lightpink' : undefined,
+          ...style
+        }}
+      >
+        <button
+          onClick={() => {
+            const parsedURL = value.split("#");
+            if (parsedURL.length > 1)
+              if (parsedURL[1].split(",").length === 1) {
+                seekToSec(
+                  2,
+                  parseFloat(parsedURL[1].split(",")[0].substring(1))
+                );
+              } else {
+                this.props.waveSurferPlayClip(
+                  2,
+                  parseFloat(parsedURL[1].split(",")[0].substring(1)),
+                  parseFloat(parsedURL[1].split(",")[1])
+                );
+              }
+          }}
           style={{
             display: value < 1000 ? "none" : undefined
             // color: value !="" ? 'lightgreen' : undefined,
@@ -222,19 +287,23 @@ class AnnotationTable extends Component<ComponentProps> {
     var Cell = (cellProps: any) => {
       const { column } = cellProps;
       if (column.name === "txtTransl") {
+        // cellProps.waveSurfNum = 0;
         // eslint:disable-next-line
         return <FlowingCellL {...cellProps} />;
       }
       if (column.name === "txtTransc") {
+        // cellProps.waveSurfNum = 0;
         // eslint:disable-next-line
         return <FlowingCellC {...cellProps} />;
       }
       if (column.name === "audCareful") {
-        return <HighlightedCell {...cellProps} />;
+        // cellProps.waveSurfNum = 1;
+        return <HighlightedCellCareful {...cellProps} />;
       }
       if (column.name === "audTransl") {
+        // cellProps["waveSurfNum"] = 2;
         // eslint:disable-next-line
-        return <HighlightedCell {...cellProps} />;
+        return <HighlightedCellTransl {...cellProps} />;
       }
       return <Table.Cell {...cellProps} />;
     };
@@ -242,25 +311,30 @@ class AnnotationTable extends Component<ComponentProps> {
     const annotCols = [
       {
         name: "startTime",
-        title: "Start Time"
+        title: "Start Time",
+        waveSurferNum: -1
       },
       {
         name: "txtTransc",
         title: "Transcription",
-        wordWrapEnabled: true
+        wordWrapEnabled: true,
+        waveSurferNum: 0
       },
       {
         name: "audCareful",
-        title: "Careful Speech"
+        title: "Careful Speech",
+        waveSurferNum: 1
       },
       {
         name: "txtTransl",
         title: "Translation",
-        wordWrapEnabled: true
+        wordWrapEnabled: true,
+        waveSurferNum: 0
       },
       {
         name: "audTransl",
-        title: "Oral Translation"
+        title: "Oral Translation",
+        waveSurferNum: 2
       }
     ];
 
@@ -289,12 +363,20 @@ class AnnotationTable extends Component<ComponentProps> {
     ];
 
     // End Table Values
-    const seekToSec = (time: number) => {
+    const seekToSec = (waveSurfNum: number, time: number) => {
       const length = this.props.duration;
       const newTime = time / length;
-      this.props.setSeek(newTime);
+      this.props.setSeek(newTime, time, waveSurfNum);
       this.setState({ playing: true });
     };
+
+    /*     const playClip = (
+      waveSurfNum: number,
+      startTime: number,
+      stopTime?: number
+    ) => {
+      this.props.waveSurferPlayClip(waveSurfNum, startTime, stopTime);
+    }; */
 
     return (
       <Paper className="annotation-table">
@@ -323,6 +405,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   categories: state.annotations.categories,
   currentTimeline: state.annotations.currentTimeline,
   duration: state.player.duration,
+  durations: state.deeJay.durations,
   prevTimeline: state.annotations.prevTimeline,
   sourceMedia: state.tree.sourceMedia,
   timelineChanged: state.annotations.timelineChanged,
@@ -338,6 +421,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setURL: actions.setURL,
       pushAnnotationTable: actions.pushAnnotationTable,
       updatePrevTimeline: actions.updatePrevTimeline,
+      waveSurferPlayClip: actions.waveSurferPlayClip,
+      waveSurferPosChange: actions.waveSurferPosChange,
       setSeek: actions.setSeek
     },
     dispatch

@@ -51,12 +51,12 @@ export function sourceMedia(
       return 0;
     });
   const path = require("path");
-  let wavs: string[] = [];
+  let mp3s: string[] = [];
   let sourceAud = sourceAudio(sourceMedia, allOrViewer)
     .filter((sa: any) => {
       const parsedPath = path.parse(sa.path);
-      if (parsedPath.ext.toLowerCase() === ".wav") {
-        wavs.push(parsedPath.name);
+      if (parsedPath.ext.toLowerCase() === ".mp3") {
+        mp3s.push(parsedPath.name);
       }
       let i;
       for (i = 0; i < sourceVids.length; i++) {
@@ -65,13 +65,13 @@ export function sourceMedia(
           return false;
         }
       }
-      return true;
+      return !parsedPath.base.endsWith("_StandardAudio_Normalized.mp3");
     })
     .filter((sa: any) => {
       const parsedPath = path.parse(sa.path);
       return !(
-        wavs.indexOf(parsedPath.name) !== -1 &&
-        parsedPath.ext.toLowerCase() === ".mp3"
+        mp3s.indexOf(parsedPath.name) !== -1 &&
+        parsedPath.ext.toLowerCase() === ".wav"
       );
     });
   return [...sourceVids, ...sourceAud];
@@ -115,7 +115,7 @@ export function annotAudio(
         (splitOrMerged ? file["isMerged"] : !file["isMerged"]) &&
         getTimelineIndex(
           timelines,
-          file.data.data.substring(0, file.data.data.indexOf("_Annotations"))
+          file.blobURL.substring(0, file.blobURL.indexOf("_Annotations"))
         ) === timelineIdx
     )
     .sort(function(a: LooseObject, b: LooseObject) {

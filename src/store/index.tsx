@@ -8,12 +8,13 @@ import { systemReducer } from "./system/reducers";
 import thunkMiddleware from "redux-thunk";
 import { treeReducer } from "./tree/reducers";
 
+// These are intentionally ordered
 export const allReducers = combineReducers({
   system: systemReducer,
   tree: treeReducer,
   player: playerReducer,
-  annotations: annotationReducer,
-  deeJay: deeJayReducer
+  deeJay: deeJayReducer,
+  annotations: annotationReducer
 });
 
 export type StateProps = ReturnType<typeof allReducers>;

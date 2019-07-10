@@ -71,18 +71,26 @@ export function treeReducer(
       };
     }
     case types.SOURCE_MEDIA_CHANGED: {
-      const tempState = state.sourceMedia.filter(
-        file => file.name !== action.payload.file.name
-      );
+      const tempState = state.sourceMedia.filter(file => {
+        if (file.name === action.payload.file.name) {
+          action.payload.file.wsAllowed = file.wsAllowed;
+          return false;
+        }
+        return true;
+      });
       return {
         ...state,
         sourceMedia: [...tempState, action.payload.file]
       };
     }
     case types.ANNOT_MEDIA_CHANGED: {
-      const tempState = state.annotMedia.filter(
-        file => file.name !== action.payload.file.name
-      );
+      const tempState = state.annotMedia.filter(file => {
+        if (file.name === action.payload.file.name) {
+          action.payload.file.wsAllowed = file.wsAllowed;
+          return false;
+        }
+        return true;
+      });
       return {
         ...state,
         annotMedia: [...tempState, action.payload.file]
@@ -132,6 +140,22 @@ export function treeReducer(
       return {
         ...state,
         sourceMedia: tempSource
+      };
+    }
+    case types.SET_ANNOT_MEDIA_WS_ALLOWED: {
+      return {
+        ...state,
+        annotMedia: state.annotMedia.map(m => {
+          return m.blobURL === action.payload ? { ...m, wsAllowed: true } : m;
+        })
+      };
+    }
+    case types.SET_SOURCE_MEDIA_WS_ALLOWED: {
+      return {
+        ...state,
+        sourceMedia: state.sourceMedia.map(m => {
+          return m.blobURL === action.payload ? { ...m, wsAllowed: true } : m;
+        })
       };
     }
     default:

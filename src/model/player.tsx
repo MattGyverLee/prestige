@@ -71,7 +71,7 @@ class PlayerZone extends Component<PlayerProps> {
   componentDidUpdate() {
     if (this.props.seek !== -1) {
       this.player.seekTo(this.props.seek);
-      this.props.setSeek(-1);
+      this.props.setSeek(-1, -1);
     }
   }
 
@@ -104,7 +104,11 @@ class PlayerZone extends Component<PlayerProps> {
   };
   onSeekMouseUp = (e: any) => {
     this.props.onSeekMouseUp();
-    this.player.seekTo(parseFloat(e.target.value));
+    this.props.setSeek(
+      parseFloat(e.target.value),
+      parseFloat(e.target.value) * this.props.duration,
+      0
+    );
   };
   onPlay = () => {
     this.props.onPlay();

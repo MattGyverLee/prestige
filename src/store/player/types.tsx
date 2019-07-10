@@ -110,7 +110,7 @@ interface OnVolumeChange {
 }
 interface SetSeek {
   type: typeof SET_SEEK;
-  payload: number;
+  payload: { prctTime: number; time: number; waveSurferNum?: number };
 }
 
 export type PlayerActionTypes =

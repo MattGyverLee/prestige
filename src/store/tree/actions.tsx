@@ -109,3 +109,17 @@ export function setSourceMediaAnnotRef(
     payload: pair
   };
 }
+export function setAnnotMediaWSAllowed(blobURL: string): types.TreeActionTypes {
+  return {
+    type: types.SET_ANNOT_MEDIA_WS_ALLOWED,
+    payload: blobURL
+  };
+}
+export function setSourceMediaWSAllowed(
+  blobURL: string
+): types.TreeActionTypes {
+  return {
+    type: types.SET_SOURCE_MEDIA_WS_ALLOWED,
+    payload: blobURL
+  };
+}

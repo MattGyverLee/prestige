@@ -40,6 +40,8 @@ export const ON_RELOAD_FOLDER = "ON_RELOAD_FOLDER";
 export const CHANGE_PREV_PATH = "CHANGE_PREV_PATH";
 export const SET_ANNOT_MEDIA_IN_MILESTONES = "SET_ANNOT_MEDIA_IN_MILESTONES";
 export const SET_SOURCE_MEDIA_ANNOT_REF = "SET_SOURCE_MEDIA_ANNOT_REF";
+export const SET_ANNOT_MEDIA_WS_ALLOWED = "SET_ANNOT_MEDIA_WS_ALLOWED";
+export const SET_SOURCE_MEDIA_WS_ALLOWED = "SET_SOURCE_MEDIA_WS_ALLOWED";
 
 interface TreeHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -106,6 +108,16 @@ interface SetSourceMediaAnnotRef {
   payload: PairPathURL;
 }
 
+interface SetAnnotMediaWSAllowed {
+  type: typeof SET_ANNOT_MEDIA_WS_ALLOWED;
+  payload: string;
+}
+
+interface SetSourceMediaWSAllowed {
+  type: typeof SET_SOURCE_MEDIA_WS_ALLOWED;
+  payload: string;
+}
+
 export type TreeActionTypes =
   | FileAdded
   | FileChanged
@@ -121,4 +133,6 @@ export type TreeActionTypes =
   | UpdateTree
   | ChangePrevPath
   | SetAnnotMediaInMilestones
-  | SetSourceMediaAnnotRef;
+  | SetSourceMediaAnnotRef
+  | SetAnnotMediaWSAllowed
+  | SetSourceMediaWSAllowed;
