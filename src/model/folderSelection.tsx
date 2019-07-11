@@ -68,9 +68,7 @@ class SelectFolderZone extends Component<FolderProps> {
   // Starts the Chokidar File Watcher
   startWatcher = (path: string, props: any) => {
     // Closes Existing Watcher
-    if (watcherRef !== undefined) {
-      watcherRef.close();
-    }
+    if (watcherRef !== undefined) watcherRef.close();
 
     // Creates a Watcher to Watch Input Path
     const watcher = require("chokidar").watch(path, {
@@ -99,9 +97,7 @@ class SelectFolderZone extends Component<FolderProps> {
       // Get Temporary Mime Type of File
       const mime = require("mime");
       let tempMime = "file/" + parsedPath.ext;
-      if (mime.getType(path) !== null) {
-        tempMime = mime.getType(path);
-      }
+      if (mime.getType(path) !== null) tempMime = mime.getType(path);
 
       // If ".mts" File => Convert
       // -> If ".eaf" File => Process
@@ -119,7 +115,7 @@ class SelectFolderZone extends Component<FolderProps> {
                 file: File
               ) {
                 if (!error) console.log("New video file: " + file);
-                // todo: update/replace Blob on conversion
+                // TODO: update/replace Blob on conversion
               });
           },
           // Reports on Video Conversion Errors
@@ -312,16 +308,10 @@ class SelectFolderZone extends Component<FolderProps> {
         !mediaFile.isMerged
       ) {
         // Define Fields for oralMilestone
-        const parsedPath = require("path").parse(mediaFile.path);
-        const splitPath = parsedPath.name.split("_");
-        const tempMatch = parsedPath.dir.match(
-          /[^\\/\n\r]*(?=_Annotations)/
-        )[0];
-        const fileURL = require("file-url");
+        const splitPath = require("path")
+          .parse(mediaFile.path)
+          .name.split("_");
         const tier = splitPath[3] + "_audio";
-        if (this.props.categories.indexOf(tier) === -1) {
-          this.props.addCategory(tier);
-        }
 
         // Create oralMilestone
         const oralMilestone: types.Milestone = {
@@ -339,14 +329,23 @@ class SelectFolderZone extends Component<FolderProps> {
           stopTime: parseFloat(splitPath[2])
         };
 
+        // Add Tier to Categories if not Already There
+        if (this.props.categories.indexOf(tier) === -1)
+          this.props.addCategory(tier);
+
         // Set mediaFile in Milestones and Add oralMilestone to OralAnnotations
         this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
-        const blobURL = fileURL(
-          mediaFile.path.substring(0, mediaFile.path.indexOf("_Annotations"))
-        );
         this.props.addOralAnnotation(
           oralMilestone,
-          getTimelineIndex(this.props.timeline, blobURL)
+          getTimelineIndex(
+            this.props.timeline,
+            require("file-url")(
+              mediaFile.path.substring(
+                0,
+                mediaFile.path.indexOf("_Annotations")
+              )
+            )
+          )
         );
       }
     });
@@ -357,8 +356,7 @@ class SelectFolderZone extends Component<FolderProps> {
   deleteChromeCache = () => {
     const fs = require("fs-extra");
     const path = require("path");
-    const remote = require("electron").remote;
-    const app = remote.app;
+    const app = require("electron").remote.app;
     var chromeCacheDir = path.join(app.getPath("userData"), "Cache");
     if (fs.existsSync(chromeCacheDir)) {
       var files = fs.readdirSync(chromeCacheDir);
@@ -379,44 +377,39 @@ class SelectFolderZone extends Component<FolderProps> {
   // carefulOrTranslation: True -> careful, False -> Translation
   loadAnnot = (carefulOrTranslation: boolean) => {
     // Rounding Function to be Used Later
-    const roundIt = (value: number, decimals: number): number => {
-      return Number(
-        Math.round(Number(value + "e" + decimals)) + "e-" + decimals
-      );
-    };
+    const roundIt = (value: number, decimals: number): number =>
+      Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
+
+    // Const Requires and Variables for Later Use
+    const ctString = carefulOrTranslation ? "Careful" : "Translation";
+    const fileURL = require("file-url");
+    const ffmpegStaticElectron = require("ffmpeg-static-electron");
 
     // Set Up Fluent FFMpeg and its Associated Paths
-    const isDev = require("electron-is-dev");
     let fluentFfmpeg = require("fluent-ffmpeg");
-    let ffmpegPath = "";
-    let ffprobePath = "";
-
-    // Determines Location for Ffmpeg and Ffprobe from environment variables.
-    if (isDev) {
-      ffmpegPath = process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe";
-      ffprobePath = process.cwd() + "\\bin\\win\\x64\\ffprobe.exe";
+    if (require("electron-is-dev")) {
+      fluentFfmpeg.setFfmpegPath(process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe");
+      fluentFfmpeg.setFfprobePath(
+        process.cwd() + "\\bin\\win\\x64\\ffprobe.exe"
+      );
     } else {
       // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
       // Do I want a relative (__dirname) or absolute (process.cwd()) path?
-      ffmpegPath =
-        process.cwd() + "/resources" + require("ffmpeg-static-electron").path;
+      fluentFfmpeg.setFfmpegPath(
+        process.cwd() + "/resources" + ffmpegStaticElectron.path
+      );
       // __dirname + "resources" + require("ffmpeg-static-electron").path;
-      ffprobePath =
-        process.cwd() + "/resources" + require("ffprobe-static-electron").path;
+      fluentFfmpeg.setFfprobePath(
+        process.cwd() + "/resources" + ffmpegStaticElectron.path
+      );
       // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
-
-    // Sets Determiend Paths for Fluent FFMpeg
-    fluentFfmpeg.setFfmpegPath(ffmpegPath);
-    fluentFfmpeg.setFfprobePath(ffprobePath);
 
     // Sort FilteredAnnot Based on Start Time into InputFiles
     let dir = "";
     let path = require("path");
     let inputFiles: any[] = this.props.annotMedia
-      .filter((am: any) =>
-        am.name.includes(carefulOrTranslation ? "_Careful" : "_Translation")
-      )
+      .filter((am: any) => am.name.includes("_" + ctString))
       .sort((a1: any, a2: any) => {
         return (
           parseFloat(a1.name.substring(0, a1.name.indexOf("_"))) -
@@ -438,14 +431,12 @@ class SelectFolderZone extends Component<FolderProps> {
         "]loudnorm=I=-16:TP=-1.5:LRA=11[" +
         (idx ? "b" : "out") +
         "];";
-      if (idx) {
-        cf += "[out][b]concat=v=0:a=1[out];";
-      }
-      idx += 1;
+      if (idx) cf += "[out][b]concat=v=0:a=1[out];";
+      idx++;
     });
     cf = cf.substring(0, cf.lastIndexOf(";"));
 
-    //
+    // Creates and Add Oral Milestones to Timeline
     let primaryIdx = 0;
     let inputTimes: any[] = [];
     mergedAudio._inputs.forEach((v: any, idx: number) => {
@@ -461,30 +452,24 @@ class SelectFolderZone extends Component<FolderProps> {
           refStop: name.split("_")[2]
         });
 
-        primaryIdx += 1;
+        // Create Milestones if Last FFProbe Has Been Called
+        primaryIdx++;
         if (primaryIdx === mergedAudio._inputs.length) {
-          inputTimes = inputTimes.sort((a: any, b: any) => {
-            return a.refStart - b.refStart;
-          });
-          let i;
+          // Sort InputTimes Based on Start Time
+          inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
+
+          // Add All Oral Annotations of the Files
           let lastTime = 0;
           let oralMilestone: types.Milestone;
-          for (i = 0; i < inputTimes.length; i++) {
+          for (let i = 0, l = inputTimes.length; i < l; i++) {
+            // Create Merged Audio Milestone
             oralMilestone = {
               annotationID: "",
               data: [
                 {
-                  channel: carefulOrTranslation
-                    ? "CarefulMerged"
-                    : "TranslationMerged",
-                  data: require("file-url")(
-                    dir +
-                      (carefulOrTranslation ? "Careful" : "Translation") +
-                      "_Merged.mp3"
-                  ),
-                  linguisticType: carefulOrTranslation
-                    ? "CarefulMerged"
-                    : "TranslationMerged",
+                  channel: ctString + "Merged",
+                  data: fileURL(dir + ctString + "_Merged.mp3"),
+                  linguisticType: ctString + "Merged",
                   locale: "",
                   mimeType: "audio-mp3",
                   clipStart: roundIt(lastTime, 3),
@@ -495,14 +480,16 @@ class SelectFolderZone extends Component<FolderProps> {
               stopTime: parseFloat(inputTimes[i].refStop)
             };
 
-            const blobURL = require("file-url")(
-              dir.substring(0, dir.indexOf("_Annotations"))
-            );
+            // Add Milestone to Timeline
             this.props.addOralAnnotation(
               oralMilestone,
-              getTimelineIndex(this.props.timeline, blobURL)
+              getTimelineIndex(
+                this.props.timeline,
+                fileURL(dir.substring(0, dir.indexOf("_Annotations")))
+              )
             );
 
+            // Increment Last Time for Next Clip Start/Stop Times
             lastTime += inputTimes[i].duration;
           }
         }
@@ -540,51 +527,45 @@ class SelectFolderZone extends Component<FolderProps> {
             " annotations merged!"
         );
         this.props.setAnnotMediaWSAllowed(
-          require("file-url")(
-            dir +
-              (carefulOrTranslation ? "Careful" : "Translation") +
-              "_Merged.mp3"
-          )
+          fileURL(dir + ctString + "_Merged.mp3")
         );
       })
-      .save(
-        dir + (carefulOrTranslation ? "Careful" : "Translation") + "_Merged.mp3"
-      );
+      .save(dir + ctString + "_Merged.mp3");
   };
 
   convertToMP3 = (path: string) => {
     // Set Up Fluent FFMpeg and its Associated Paths
-    const isDev = require("electron-is-dev");
+    const ffmpegStaticElectron = require("ffmpeg-static-electron");
     let fluentFfmpeg = require("fluent-ffmpeg");
-    let ffmpegPath = "";
-    let ffprobePath = "";
 
     // Determines Location for Ffmpeg and Ffprobe from environment variables.
-    if (isDev) {
-      ffmpegPath = process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe";
-      ffprobePath = process.cwd() + "\\bin\\win\\x64\\ffprobe.exe";
+    if (require("electron-is-dev")) {
+      fluentFfmpeg.setFfmpegPath(process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe");
+      fluentFfmpeg.setFfprobePath(
+        process.cwd() + "\\bin\\win\\x64\\ffprobe.exe"
+      );
     } else {
       // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
       // Do I want a relative (__dirname) or absolute (process.cwd()) path?
-      ffmpegPath =
-        process.cwd() + "/resources" + require("ffmpeg-static-electron").path;
+      fluentFfmpeg.setFfmpegPath(
+        process.cwd() + "/resources" + ffmpegStaticElectron.path
+      );
       // __dirname + "resources" + require("ffmpeg-static-electron").path;
-      ffprobePath =
-        process.cwd() + "/resources" + require("ffprobe-static-electron").path;
+      fluentFfmpeg.setFfprobePath(
+        process.cwd() + "/resources" + ffmpegStaticElectron.path
+      );
       // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
 
-    // Sets Determiend Paths for Fluent FFMpeg
-    fluentFfmpeg.setFfmpegPath(ffmpegPath);
-    fluentFfmpeg.setFfprobePath(ffprobePath);
-
-    let toMP3 = fluentFfmpeg().addInput(path);
-    toMP3
+    // Convert and Save File
+    fluentFfmpeg()
+      .addInput(path)
       .format("mp3")
       .audioBitrate("128k")
       .audioChannels(2)
       .audioCodec("libmp3lame")
       .audioFilters("loudnorm=I=-16:TP=-1.5:LRA=11")
+      .outputOptions("-y")
       .on("start", (command: any) => {
         console.log("ffmpeg process started:", command);
         this.props.dispatchSnackbar("Converting Source Audio.");

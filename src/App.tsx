@@ -18,6 +18,15 @@ import processEAF from "./model/processEAF";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
+interface StateProps {
+  snackbarIsActive: boolean;
+  snackbarText: string[];
+  url: string;
+  loaded: boolean;
+  userName: string;
+  annotations: any;
+}
+
 interface DispatchProps {
   updateSession: typeof actions.updateSession;
   dispatchSnackbar: typeof actions.dispatchSnackbar;
@@ -50,9 +59,10 @@ interface DispatchProps {
   pushAnnotation: typeof actions.pushAnnotation;
   pushTimeline: typeof actions.pushTimeline;
   hardResetApp: typeof actions.hardResetApp;
+  snackbarToggleActive: typeof actions.snackbarToggleActive;
 }
 
-interface AppProps extends actions.StateProps, DispatchProps {
+interface AppProps extends StateProps, DispatchProps {
   // local state props go here
 }
 
@@ -63,7 +73,8 @@ class App extends React.Component<AppProps> {
       session: "my_session",
       userName: "Matthew",
       clicks: 0,
-      snackbarText: []
+      snackbarText: [],
+      snackbarIsActive: false
     });
 
     this.props.onNewFolder("");
@@ -72,19 +83,17 @@ class App extends React.Component<AppProps> {
   snackbarRef: any = React.createRef();
 
   componentDidUpdate() {
-    if (this.props.system.snackbarText.length > 0) {
-      if (!this.snackbarRef.current.state.isActive) {
-        this.snackbarRef.current.openSnackBar(
-          this.props.system.snackbarText[0]
-        );
-        this.props.completeSnackbar(this.props.system.snackbarText[0]);
+    if (this.props.snackbarText.length > 0) {
+      if (!this.props.snackbarIsActive) {
+        this.snackbarRef.current.openSnackBar(this.props.snackbarText[0]);
+        this.props.completeSnackbar(this.props.snackbarText[0]);
       }
     }
   }
 
   _showSnackbarHandler = (e: any) => {
     e.preventDefault();
-    this.snackbarRef.current.openSnackBar(this.props.system.snackbarText);
+    this.snackbarRef.current.openSnackBar(this.props.snackbarText);
   };
   // Player Features
 
@@ -115,7 +124,7 @@ class App extends React.Component<AppProps> {
         <header className="App-header">
           <p>
             <img src={logo} className="App-logo" alt="logo" /> Hi{" "}
-            {this.props.system.userName}. Welcome to <code>Prestige</code>.
+            {this.props.userName}. Welcome to <code>Prestige</code>.
           </p>
         </header>
         <div className="App-body">
@@ -128,16 +137,18 @@ class App extends React.Component<AppProps> {
             <FileList />
           </div>
         </div>
-        <p>{this.props.tree.loaded}</p>
+        <p>{this.props.loaded}</p>
         <div className="App-footer">
           <SelectFolderZone callProcessEAF={this.callProcessEAF} />
           <div className="SnackBar">
-            <button
-              onClick={() => this.props.dispatchSnackbar(this.props.player.url)}
-            >
+            <button onClick={() => this.props.dispatchSnackbar(this.props.url)}>
               Click To Open Snackbar
             </button>
-            <Snackbar ref={this.snackbarRef} />
+            <Snackbar
+              ref={this.snackbarRef}
+              isActive={this.props.snackbarIsActive}
+              snackbarToggleActive={this.props.snackbarToggleActive}
+            />
           </div>
           <p>
             {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
@@ -148,12 +159,13 @@ class App extends React.Component<AppProps> {
   }
 }
 
-const mapStateToProps = (state: actions.StateProps): actions.StateProps => ({
-  system: state.system,
-  tree: state.tree,
-  player: state.player,
-  annotations: state.annotations,
-  deeJay: state.deeJay
+const mapStateToProps = (state: actions.StateProps): StateProps => ({
+  snackbarIsActive: state.system.snackbarIsActive,
+  snackbarText: state.system.snackbarText,
+  url: state.player.url,
+  loaded: state.tree.loaded,
+  userName: state.system.userName,
+  annotations: state.annotations
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -186,7 +198,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       updateSession: actions.updateSession,
       updateTree: actions.updateTree,
       hardResetApp: actions.hardResetApp,
-      onNewFolder: actions.onNewFolder
+      onNewFolder: actions.onNewFolder,
+      snackbarToggleActive: actions.snackbarToggleActive
     },
     dispatch
   )

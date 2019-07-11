@@ -41,3 +41,9 @@ export function updateSession(
     payload: newSession
   };
 }
+export function snackbarToggleActive(onOff: boolean): types.SystemActionTypes {
+  return {
+    type: types.SNACKBAR_TOGGLE_ACTIVE,
+    payload: onOff
+  };
+}

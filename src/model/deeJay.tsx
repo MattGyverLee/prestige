@@ -6,7 +6,6 @@ import { faLayerGroup, faVolumeUp } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LooseObject } from "../store/annotations/types";
-import RegionsPlugin from "wavesurfer.js";
 import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -21,6 +20,7 @@ interface StateProps {
   pos: number[];
   sourceMedia: any;
   timeline: any;
+  timelineChanged: boolean;
   url: string;
   volumes: number[];
 }
@@ -40,13 +40,12 @@ export class DeeJay extends Component<DeeJayProps> {
   private waveSurfers: WaveSurfer[] = [];
   private loadQueue: string[] = [];
   private currentPlaying: string[] = [];
-  private searched: boolean[] = [];
+  private currBlob: string = "";
 
   componentDidMount = () => {
     [0, 1, 2].forEach((idx: number) => {
       this.loadQueue.push("");
       this.currentPlaying.push("");
-      this.searched.push(false);
       this.waveSurfers.push(
         WaveSurfer.create({
           container: "#waveform" + idx.toString(),
@@ -65,9 +64,30 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   componentDidUpdate() {
+    let currSync: string[] = [];
+    if (this.props.currentTimeline !== -1) {
+      currSync = this.props.timeline[this.props.currentTimeline].syncMedia;
+    }
     [0, 1, 2].forEach((idx: number) => {
-      if (this.props.currentTimeline === -1) {
+      console.log(
+        idx.toString() +
+          ": " +
+          this.loadQueue[idx] +
+          ", " +
+          this.currentPlaying[idx]
+      );
+      // Reset if Timeline Changed
+      if (currSync.filter((s: any) => s === this.currBlob).length !== 1) {
+        // Reset DeeJay State
         this.props.resetDeeJay();
+
+        // Fetch New CurrentTimeline SyncMedia Blob if Available
+        if (this.props.currentTimeline !== -1)
+          this.currBlob = currSync.filter((s: any) =>
+            s.endsWith("_StandardAudio.wav")
+          )[0];
+
+        // Reset Local Variables and WS if LoadQueue or CurrentPlaying Not Empty
         if (this.loadQueue[idx] !== "" || this.currentPlaying[idx] !== "") {
           this.loadQueue[idx] = "";
           this.waveSurfers[idx].un("ready", () =>
@@ -76,40 +96,56 @@ export class DeeJay extends Component<DeeJayProps> {
           this.waveSurfers[idx].load("");
           this.currentPlaying[idx] = "";
         }
-        this.searched[idx] = false;
       } else {
+        // If Something is Playing in the Current WS, Allow Certain Actions
+        // -> If LoadQueue Has Something in the Current WS, Check if it Can Load
+        // -> Else, Re-Search
         if (this.currentPlaying[idx] !== "") {
+          console.log(idx.toString() + ": Ready");
+          // If the Wave Surfer is Ready, Allow Certain Actions
           if (this.waveSurfers[idx].isReady) {
-            if (this.waveSurfers[idx].getVolume() !== this.props.volumes[idx]) {
+            // Set Volume if Different from State
+            if (this.waveSurfers[idx].getVolume() !== this.props.volumes[idx])
               this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
-            }
+
+            // Set Position if Directed by State and Reset State Pos to -1
             if (this.props.pos[idx] !== -1) {
               this.waveSurfers[idx].play(this.props.pos[idx]);
               this.props.waveSurferPosChange(idx, -1);
             }
+
+            // Set Clip if Directed by State and Reset State Clip Start/Stop to -1
             if (this.props.clipStarts[idx] !== -1) {
-              if (this.props.clipStops[idx] === -1) {
+              // If No Stop, Play from Start
+              // -> Else, Play Only Clip
+              if (this.props.clipStops[idx] === -1)
                 this.waveSurfers[idx].play(this.props.clipStarts[idx]);
-              } else {
+              else
                 this.waveSurfers[idx].play(
                   this.props.clipStarts[idx],
                   this.props.clipStops[idx]
                 );
-              }
+
+              // Reset Clip Start/Stop
               this.props.waveSurferPlayClip(idx, -1, -1);
             }
-          }
-          if (
-            idx === 0 &&
-            this.waveSurfers[idx].isPlaying() !== this.props.playing[0]
-          ) {
-            this.waveSurfers[idx].playPause();
+
+            // Play/Pause Source Audio if Different from State
+            if (
+              idx === 0 &&
+              this.waveSurfers[idx].isPlaying() !== this.props.playing[0]
+            )
+              this.waveSurfers[idx].playPause();
           }
         } else if (this.loadQueue[idx] !== "") {
+          // If the LoadQueue File Can Be Loaded, Load It
           if (this.fileAllowed(this.loadQueue[idx])) {
-            this.waveSurfers[idx].load(this.loadQueue[idx]);
+            // Load the File, and Change CurrentPlaying and LoadQueue Accordingly
             this.currentPlaying[idx] = this.loadQueue[idx];
+            this.waveSurfers[idx].load(this.loadQueue[idx]);
             this.loadQueue[idx] = "";
+
+            // Set Event Watchers for Ready and Seeking
             this.waveSurfers[idx].on("waveform-ready", () => {
               console.log("Ready: " + idx.toString());
               this.onSurferReady(idx);
@@ -121,17 +157,12 @@ export class DeeJay extends Component<DeeJayProps> {
               )
             );
           }
-        } else if (
-          this.loadQueue[idx] === "" &&
-          this.currentPlaying[idx] === "" &&
-          !this.searched[idx]
-        ) {
-          this.searched[idx] = true;
-          let currSync = this.props.timeline[this.props.currentTimeline]
-            .syncMedia;
+        } else {
+          // Search for File According to WS Number
           let loadFile = "";
           let audio: LooseObject[] = [];
           switch (idx) {
+            // If Source Audio WS, Find Normalized Standard Audio from SourceAudio
             case 0:
               audio = sourceAudio(this.props.sourceMedia, true).filter(
                 (sa: LooseObject) => {
@@ -147,6 +178,8 @@ export class DeeJay extends Component<DeeJayProps> {
                 }
               );
               break;
+
+            // If Another WS, Find Associated Merged Audio from AnnotAudio
             default:
               audio = annotAudio(
                 this.props.annotMedia,
@@ -160,10 +193,18 @@ export class DeeJay extends Component<DeeJayProps> {
               });
               break;
           }
+
+          // If The File Exists, Pass the Blob to LoadFile, Otherwise Empty String
           loadFile = audio.length === 1 ? audio[0].blobURL : "";
+
+          // If the File is Allowed, Load It
+          // -> Else, Add to LoadQueue
           if (this.fileAllowed(loadFile)) {
+            // Load the File, and Change CurrentPlaying Accordingly
             this.waveSurfers[idx].load(loadFile);
             this.currentPlaying[idx] = loadFile;
+
+            // Set Event Watchers for Ready and Seeking
             this.waveSurfers[idx].on("waveform-ready", () => {
               console.log("Ready: " + idx.toString());
               this.onSurferReady(idx);
@@ -172,6 +213,7 @@ export class DeeJay extends Component<DeeJayProps> {
               this.props.setSeek(seek, -1)
             );
           } else {
+            // Add File to LoadQueue
             this.loadQueue[idx] = loadFile;
           }
         }
@@ -192,12 +234,7 @@ export class DeeJay extends Component<DeeJayProps> {
     return srcBool || srcAnnot;
   };
 
-  sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   onSurferReady = (idx: number) => {
-    this.waveSurfers[idx];
     this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
     this.props.setWSDuration(idx, this.waveSurfers[idx].getDuration());
     this.waveSurfers[idx].play();
@@ -256,7 +293,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   sourceMedia: state.tree.sourceMedia,
   annotMedia: state.tree.annotMedia,
   currentTimeline: state.annotations.currentTimeline,
-  url: state.player.url
+  url: state.player.url,
+  timelineChanged: state.annotations.timelineChanged
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

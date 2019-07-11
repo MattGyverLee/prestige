@@ -3,81 +3,68 @@ import Timelines from "./timeline";
 export default function processEAF(path: string, props: any) {
   // Define Content
   let content: any = "";
-  const file = require("fs-extra").readFileSync(path);
-  require("xml2js").parseString(file, function(err: Error, result: any) {
-    if (err) {
-      console.log(err.stack);
+  require("xml2js").parseString(
+    require("fs-extra").readFileSync(path),
+    function(err: Error, result: any) {
+      if (err) {
+        console.log(err.stack);
+      }
+      content = result;
     }
-    content = result;
-  });
+  );
 
   // Miscellaneous Local Variables
   const fileData = content.ANNOTATION_DOCUMENT;
   const timeSlotPointer = fileData.TIME_ORDER[0].TIME_SLOT;
-  let h, i, j, k;
   const miles: any[] = [];
 
-  // Define Instance Variables for tempTimeline
+  // Define SyncMedia for tempTimeline
   const parsedPath = require("path").parse(path);
   const fileURL = require("file-url");
-  const eafFile: string = fileURL(path);
   const syncMedia: string[] = [];
-  for (h = 0; h < fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h++) {
-    const refMedia: string = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
-    const blobURL: string = fileURL(parsedPath.dir + "/" + refMedia);
-    syncMedia.push(blobURL);
-  }
+  for (let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h < l; h++)
+    syncMedia.push(
+      fileURL(
+        parsedPath.dir +
+          "/" +
+          fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL
+      )
+    );
 
   // Instantiate tempTimeline
   let tempTimeline = new Timelines({
-    refName: parsedPath.name,
     syncMedia: syncMedia,
-    eafFile: eafFile
+    eafFile: fileURL(path)
   });
 
   // Inline Function Definition for findTime and findAnnotTime
   const findTime = (myRef: string) => {
-    let time = -1;
-    for (i = 0; i < timeSlotPointer.length; i++) {
-      if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef) {
-        time = timeSlotPointer[i].$.TIME_VALUE;
-        return time;
-      }
-    }
-    return time;
+    for (let i = 0, l = timeSlotPointer.length; i < l; i++)
+      if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef)
+        return timeSlotPointer[i].$.TIME_VALUE;
+    return -1;
   };
   const findAnnotTime = (myRef4: any, startStop: string) => {
-    let time = -1;
-    for (i = 0; i < miles.length; i++) {
-      if (miles[i]["annotationID"] === myRef4) {
-        time = miles[i][startStop];
-        return time;
-      }
-    }
-    return time;
+    for (let i = 0, l = miles.length; i < l; i++)
+      if (miles[i]["annotationID"] === myRef4) return miles[i][startStop];
+    return -1;
   };
 
   // Process All of File's Annotations
-  for (j = 0; j < fileData.TIER.length; j++) {
+  for (let j = 0, l = fileData.TIER.length; j < l; j++) {
     // Verify Current lingType is a Category and Add if Otherwise
     const lingType = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
-    if (props.annotations.categories.indexOf(lingType) === -1) {
+    if (props.annotations.categories.indexOf(lingType) === -1)
       props.addCategory(lingType);
-    }
 
     // Process Annotations
-    for (k = 0; k < fileData.TIER[j].ANNOTATION.length; k++) {
-      // Process Alignable Annotations
+    for (let k = 0, l2 = fileData.TIER[j].ANNOTATION.length; k < l2; k++) {
+      // Process Alignable Annotations or Ref Annotations
       if ("ALIGNABLE_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
-        // Find Start/Stop Times for Annotation by Counting Id
+        // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
         const alAnnPointer =
           fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
-        const thisStartTime: number = findTime(alAnnPointer.$.TIME_SLOT_REF1);
-        const thisStopTime: number = findTime(alAnnPointer.$.TIME_SLOT_REF2);
-
-        // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
         const milestone = {
-          alignable: false,
           annotationID: alAnnPointer.$.ANNOTATION_ID,
           data: [
             {
@@ -88,34 +75,20 @@ export default function processEAF(path: string, props: any) {
               mimeType: "string"
             }
           ],
-          startTime: thisStartTime / 1000,
+          startTime: findTime(alAnnPointer.$.TIME_SLOT_REF1) / 1000,
           startId: alAnnPointer.$.TIME_SLOT_REF1,
-          stopTime: thisStopTime / 1000,
+          stopTime: findTime(alAnnPointer.$.TIME_SLOT_REF2) / 1000,
           stopId: alAnnPointer.$.TIME_SLOT_REF2,
           timeline: parsedPath.base
         };
         miles.push(milestone);
         tempTimeline.addMilestone(milestone);
-      }
-
-      // Process REF Annotations
-      if ("REF_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
+      } else if ("REF_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
         const refAnnPointer = fileData.TIER[j].ANNOTATION[k].REF_ANNOTATION[0];
         // Only Process Annotation if it Has Actual Text
         if (refAnnPointer.ANNOTATION_VALUE[0] !== "") {
-          // Find Start/Stop Times for Annotations
-          const annotStartTime = findAnnotTime(
-            refAnnPointer.$.ANNOTATION_REF,
-            "startTime"
-          );
-          const annotStopTime = findAnnotTime(
-            refAnnPointer.$.ANNOTATION_REF,
-            "stopTime"
-          );
-
           // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
           const milestone2 = {
-            alignable: false,
             annotationID: refAnnPointer.$.ANNOTATION_ID,
             data: [
               {
@@ -127,26 +100,22 @@ export default function processEAF(path: string, props: any) {
               }
             ],
             startId: refAnnPointer.$.TIME_SLOT_REF1,
-            startTime: annotStartTime,
+            startTime: findAnnotTime(
+              refAnnPointer.$.ANNOTATION_REF,
+              "startTime"
+            ),
             stopId: refAnnPointer.$.TIME_SLOT_REF2,
-            stopTime: annotStopTime,
-            timeLine: parsedPath.base
+            stopTime: findAnnotTime(refAnnPointer.$.ANNOTATION_REF, "stopTime"),
+            timeline: parsedPath.base
           };
-          miles.push(milestone2);
           tempTimeline.addMilestone(milestone2);
         }
       }
     }
   }
 
-  // Assign tempTimeline an Annotation Index and Push to Timeline
+  // Push TempTimeline to Timeline
   // FIXME: ASYNC Unsafe
-  // TODO: Don't Need AnnotationID or RefMedia in Timeline
-  let annotationIndex = 0;
-  if (props.annotations.timeline !== undefined) {
-    annotationIndex = props.annotations.timeline.length;
-  }
-  tempTimeline.timeline["annotationID"] = annotationIndex;
   props.pushTimeline(tempTimeline);
   console.log("EAF Processed");
 }

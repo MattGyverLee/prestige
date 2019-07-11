@@ -1,49 +1,34 @@
 import { LooseObject } from "../store/annotations/types";
 
 const timeline: LooseObject = {};
-let nextId = 0;
 
 export class Timelines {
   public readonly timeline: LooseObject = timeline;
   constructor(sources: LooseObject) {
     timeline["instantiated"] = true;
-    timeline["refName"] = sources["refname"];
     timeline["syncMedia"] = sources["syncMedia"];
     timeline["eafFile"] = sources["eafFile"];
     timeline["milestones"] = [];
   }
-  // add functions here
+
+  // Adds Passed Milestone to the Timeline
   public addMilestone(newMilestone: LooseObject) {
-    let m: number;
+    // Push to Existing Milestone Data if Times Match
+    // Otherwise, Push Whole Milestone to Timeline
     let dup = false;
-    const pushMilestones = (
-      newstones: LooseObject,
-      outArray: LooseObject[]
-    ) => {
-      newstones.forEach((annot: LooseObject) => {
-        outArray.push(annot);
-      });
-    };
-    for (m = 0; m < timeline["milestones"].length; m++) {
+    for (let m = 0, l = timeline["milestones"].length; m < l; m++) {
+      let currMil = timeline["milestones"][m];
       if (
-        timeline["milestones"][m]["startTime"] === newMilestone["startTime"] &&
-        timeline["milestones"][m]["stopTime"] === newMilestone["stopTime"]
+        currMil["startTime"] === newMilestone["startTime"] &&
+        currMil["stopTime"] === newMilestone["stopTime"]
       ) {
         dup = true;
-        /*
-        if ("annotationID" in newMilestone) {
-          timeline["milestones"][m]["annotationID"] =
-            newMilestone["annotationID"];
-        }
-        */
-        pushMilestones(newMilestone["data"], timeline["milestones"][m]["data"]);
+        newMilestone["data"].forEach((annot: LooseObject) =>
+          currMil["data"].push(annot)
+        );
       }
     }
-    if (!dup) {
-      newMilestone["id"] = nextId;
-      timeline["milestones"].push(newMilestone);
-      nextId += 1;
-    }
+    if (!dup) timeline["milestones"].push(newMilestone);
   }
 
   public countMilestones(): number {
@@ -51,26 +36,19 @@ export class Timelines {
     return timeline["milestones"].length();
   }
   public addEAFToIndex(index: number, filelist: string[]) {
-    let f;
-    for (f = 0; f < filelist.length; f++) {
-      if (timeline[index]["filename"].indexOf(filelist[f]) === -1) {
+    for (let f = 0, l = filelist.length; f < l; f++)
+      if (timeline[index]["filename"].indexOf(filelist[f]) === -1)
         timeline["eaf"].push(filelist[f]);
-      }
-    }
   }
   public addMediaToIndex(index: number, filelist: string[]) {
-    let f;
-    for (f = 0; f < filelist.length; f++) {
-      if (timeline[index]["filename"].indexOf(filelist[f]) === -1) {
+    for (let f = 0, l = filelist.length; f < l; f++)
+      if (timeline[index]["filename"].indexOf(filelist[f]) === -1)
         timeline["syncedMedia"].push(filelist[f]);
-      }
-    }
   }
   public getIndexOfMedia(filelist: string[]): number {
     let found = false;
     let foundIndex = -1;
-    let f;
-    for (f = 0; f < filelist.length; f++) {
+    for (let f = 0, l = filelist.length; f < l; f++) {
       let m;
       for (m = 0; m < timeline.length; m++) {
         if (timeline[m]["filename"].indexOf(filelist[m]) > -1) {

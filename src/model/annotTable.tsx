@@ -22,9 +22,6 @@ import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { getTimelineIndex } from "./globalFunctions";
 
-// import folderSelection from "./folderSelection";
-// import formatTimeline from "./folderSelection";
-
 const Root = (props: any) => (
   <Grid.Root {...props} style={{ height: "100%" }} />
 );
@@ -53,10 +50,7 @@ interface DispatchProps {
   setSeek: typeof actions.setSeek;
 }
 
-interface ComponentProps extends StateProps, DispatchProps {
-  // These come from the local functions
-  // refresh: () => void;
-}
+interface ComponentProps extends StateProps, DispatchProps {}
 
 class AnnotationTable extends Component<ComponentProps> {
   constructor(props: any) {
@@ -78,9 +72,10 @@ class AnnotationTable extends Component<ComponentProps> {
     }
   }
 
+  // Loads Annotation Table Based on Timeline
   formatTimeline = (timeline: LooseObject) => {
+    // Create Blank Timeline if Undefined
     if (timeline === undefined) {
-      // console.log("Undefined timeline.");
       this.props.pushAnnotationTable([
         {
           id: 0,
@@ -94,17 +89,13 @@ class AnnotationTable extends Component<ComponentProps> {
       ]);
       return;
     }
-    // console.log("Starting");
-    // eslint:disable-next-line
-    let focus = timeline["milestones"];
-    // eslint:disable-next-line
+
+    // Fill Annotation Table with Annotation Rows by Milestone
     let table: AnnotationRow[] = [];
-    let index = 1;
-    focus.forEach((milestone: LooseObject) => {
-      // console.log(milestone.data);
-      // eslint:disable-next-line
+    timeline["milestones"].forEach((milestone: LooseObject, idx: number) => {
+      // Create Each Row
       let row: AnnotationRow = {
-        id: index,
+        id: idx + 1,
         startTime: milestone["startTime"],
         stopTime: milestone["stopTime"],
         audCareful: "",
@@ -112,41 +103,30 @@ class AnnotationTable extends Component<ComponentProps> {
         txtTransc: "",
         txtTransl: ""
       };
-      index++;
-      let d;
-      for (d = 0; d < milestone["data"].length; d++) {
-        if (milestone["data"][d]["mimeType"].startsWith("audio")) {
-          // console.log("Audio");
-          if (milestone["data"][d]["channel"] === "CarefulMerged") {
+
+      // Fill Row with Data
+      for (let d = 0, l = milestone["data"].length; d < l; d++) {
+        let curr = milestone["data"][d];
+        if (curr["mimeType"].startsWith("audio")) {
+          if (curr["channel"] === "CarefulMerged")
             row["audCareful"] =
-              milestone["data"][d]["data"] +
-              "#t" +
-              milestone["data"][d]["clipStart"] +
-              "," +
-              milestone["data"][d]["clipStop"];
-          }
-          if (milestone["data"][d]["channel"] === "TranslationMerged") {
+              curr["data"] + "#t" + curr["clipStart"] + "," + curr["clipStop"];
+          else if (curr["channel"] === "TranslationMerged")
             row["audTransl"] =
-              milestone["data"][d]["data"] +
-              "#t" +
-              milestone["data"][d]["clipStart"] +
-              "," +
-              milestone["data"][d]["clipStop"];
-          }
-        }
-        if (milestone["data"][d]["mimeType"].startsWith("string")) {
-          // console.log("Text");
-          if (milestone["data"][d]["channel"] === "Transcription") {
-            row["txtTransc"] = milestone["data"][d]["data"];
-          }
-          if (milestone["data"][d]["channel"] === "Translation") {
-            row["txtTransl"] = milestone["data"][d]["data"];
-          }
+              curr["data"] + "#t" + curr["clipStart"] + "," + curr["clipStop"];
+        } else if (curr["mimeType"].startsWith("string")) {
+          if (curr["channel"] === "Transcription")
+            row["txtTransc"] = curr["data"];
+          else if (curr["channel"] === "Translation")
+            row["txtTransl"] = curr["data"];
         }
       }
 
+      // Push Row to Table
       table.push(row);
     });
+
+    // Set AnnotationTable to Newly Created Table
     this.props.pushAnnotationTable(table);
   };
 
@@ -155,61 +135,32 @@ class AnnotationTable extends Component<ComponentProps> {
     const TableRow = ({ row, ...restProps }: any) => (
       <Table.Row {...restProps} onClick={() => seekToSec(0, row.startTime)} />
     );
-    const FlowingCellC = ({ value, style, ...restProps }: any) => (
-      <Table.Cell
-        {...restProps}
-        style={{
-          whiteSpace: "normal",
-          wordWrap: "break-word",
-          ...style
-        }}
-      >
-        <span
-          style={{
-            color: value !== "" ? "darkgreen" : undefined
-            // "font-size": "1.5em"
-          }}
-        >
-          {value}
-        </span>
-      </Table.Cell>
-    );
-    // Translation
-    const FlowingCellL = ({ value, style, ...restProps }: any) => (
-      <Table.Cell
-        {...restProps}
-        style={{
-          whiteSpace: "normal",
-          wordWrap: "break-word",
-          ...style
-        }}
-      >
-        <span
-          style={{
-            color: value !== "" ? "black" : undefined
-            // "font-style": "italic",
-            // "font-size": "1.5em"
-          }}
-        >
-          {value}
-        </span>
-      </Table.Cell>
-    );
-    /* const DisabledCellL = ({ value, style, ...restProps }: any) => (
-      <Table.Cell
-        {...restProps}
-        style={{
-          backgroundColor: value < 1000 ? "lightpink" : undefined,
-          ...style
-        }}
-      >
-        <span>{value}</span>
-      </Table.Cell>
-    ); */
-    // eslint:disable-next-line
 
-    // eslint:disable-next-line
-    const HighlightedCellCareful = ({ value, style, ...restProps }: any) => (
+    // Text Cells
+    // oneOrTwo: One => Transcription, One => Translation
+    const FlowingCell = ({ oneTwo, value, style, ...restProps }: any) => (
+      <Table.Cell
+        {...restProps}
+        style={{
+          whiteSpace: "normal",
+          wordWrap: "break-word",
+          ...style
+        }}
+      >
+        <span
+          style={{
+            color:
+              value !== "" ? (oneTwo === 1 ? "darkgreen" : "black") : undefined
+          }}
+        >
+          {value}
+        </span>
+      </Table.Cell>
+    );
+
+    // Play Button Cells
+    // oneOrTwo: One => Careful, Two => Translation
+    const HighlightedCell = ({ oneTwo, value, style, ...restProps }: any) => (
       <Table.Cell
         {...restProps}
         style={{
@@ -220,19 +171,17 @@ class AnnotationTable extends Component<ComponentProps> {
         <button
           onClick={() => {
             const parsedURL = value.split("#");
-            if (parsedURL.length > 1)
-              if (parsedURL[1].split(",").length === 1) {
-                seekToSec(
-                  1,
-                  parseFloat(parsedURL[1].split(",")[0].substring(1))
-                );
-              } else {
+            if (parsedURL.length > 1) {
+              let splitParsed = parsedURL[1].split(",");
+              if (splitParsed.length === 1)
+                seekToSec(oneTwo, parseFloat(splitParsed[0].substring(1)));
+              else
                 this.props.waveSurferPlayClip(
-                  1,
-                  parseFloat(parsedURL[1].split(",")[0].substring(1)),
-                  parseFloat(parsedURL[1].split(",")[1])
+                  oneTwo,
+                  parseFloat(splitParsed[0].substring(1)),
+                  parseFloat(splitParsed[1])
                 );
-              }
+            }
           }}
           style={{
             display: value < 1000 ? "none" : undefined
@@ -244,102 +193,53 @@ class AnnotationTable extends Component<ComponentProps> {
       </Table.Cell>
     );
 
-    // eslint:disable-next-line
-    const HighlightedCellTransl = ({ value, style, ...restProps }: any) => (
-      <Table.Cell
-        {...restProps}
-        style={{
-          // backgroundColor: value < 1000 ? 'lightpink' : undefined,
-          ...style
-        }}
-      >
-        <button
-          onClick={() => {
-            const parsedURL = value.split("#");
-            if (parsedURL.length > 1)
-              if (parsedURL[1].split(",").length === 1) {
-                seekToSec(
-                  2,
-                  parseFloat(parsedURL[1].split(",")[0].substring(1))
-                );
-              } else {
-                this.props.waveSurferPlayClip(
-                  2,
-                  parseFloat(parsedURL[1].split(",")[0].substring(1)),
-                  parseFloat(parsedURL[1].split(",")[1])
-                );
-              }
-          }}
-          style={{
-            display: value < 1000 ? "none" : undefined
-            // color: value !="" ? 'lightgreen' : undefined,
-          }}
-        >
-          Play{" "}
-        </button>
-      </Table.Cell>
-    );
-    // const currentAnnotationID = this.state.annotationShowing;
-    // eslint:disable-next-line
-    let annotDetails = this.props.annotationTable;
-
-    // eslint:disable-next-line
+    // Cells Based on Column Data
     var Cell = (cellProps: any) => {
       const { column } = cellProps;
-      if (column.name === "txtTransl") {
-        // cellProps.waveSurfNum = 0;
-        // eslint:disable-next-line
-        return <FlowingCellL {...cellProps} />;
-      }
-      if (column.name === "txtTransc") {
-        // cellProps.waveSurfNum = 0;
-        // eslint:disable-next-line
-        return <FlowingCellC {...cellProps} />;
-      }
-      if (column.name === "audCareful") {
-        // cellProps.waveSurfNum = 1;
-        return <HighlightedCellCareful {...cellProps} />;
-      }
-      if (column.name === "audTransl") {
-        // cellProps["waveSurfNum"] = 2;
-        // eslint:disable-next-line
-        return <HighlightedCellTransl {...cellProps} />;
-      }
+      if (column.name === "txtTransl")
+        return <FlowingCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
+      else if (column.name === "txtTransc")
+        return <FlowingCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
+      else if (column.name === "audCareful")
+        return <HighlightedCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
+      else if (column.name === "audTransl")
+        return <HighlightedCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
       return <Table.Cell {...cellProps} />;
     };
 
+    // Annotation Column Names, Titles, and Nums
     const annotCols = [
       {
         name: "startTime",
         title: "Start Time",
-        waveSurferNum: -1
+        oneTwo: -1
       },
       {
         name: "txtTransc",
         title: "Transcription",
         wordWrapEnabled: true,
-        waveSurferNum: 0
+        oneTwo: 1
       },
       {
         name: "audCareful",
         title: "Careful Speech",
-        waveSurferNum: 1
+        oneTwo: 1
       },
       {
         name: "txtTransl",
         title: "Translation",
         wordWrapEnabled: true,
-        waveSurferNum: 0
+        oneTwo: 2
       },
       {
         name: "audTransl",
         title: "Oral Translation",
-        waveSurferNum: 2
+        oneTwo: 2
       }
     ];
 
+    // Column Names and Widths
     const defaultColumnWidths = [
-      // { columnName: 'id', width: 50 },
       {
         columnName: "startTime",
         width: 100
@@ -364,23 +264,17 @@ class AnnotationTable extends Component<ComponentProps> {
 
     // End Table Values
     const seekToSec = (waveSurfNum: number, time: number) => {
-      const length = this.props.duration;
-      const newTime = time / length;
-      this.props.setSeek(newTime, time, waveSurfNum);
+      this.props.setSeek(time / this.props.duration, time, waveSurfNum);
       this.setState({ playing: true });
     };
 
-    /*     const playClip = (
-      waveSurfNum: number,
-      startTime: number,
-      stopTime?: number
-    ) => {
-      this.props.waveSurferPlayClip(waveSurfNum, startTime, stopTime);
-    }; */
-
     return (
       <Paper className="annotation-table">
-        <Grid rows={annotDetails} columns={annotCols} rootComponent={Root}>
+        <Grid
+          rows={this.props.annotationTable}
+          columns={annotCols}
+          rootComponent={Root}
+        >
           <FilteringState defaultFilters={[]} />
           <IntegratedFiltering />
           <SortingState

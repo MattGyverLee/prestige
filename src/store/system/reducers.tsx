@@ -7,7 +7,8 @@ export const systemCleanStore: types.SystemState = {
   loggedIn: false,
   session: "",
   userName: "",
-  snackbarText: []
+  snackbarText: [],
+  snackbarIsActive: false
 };
 
 export function systemReducer(
@@ -38,6 +39,12 @@ export function systemReducer(
       return {
         ...state,
         snackbarText: state.snackbarText.filter(t => t !== action.payload)
+      };
+    }
+    case types.SNACKBAR_TOGGLE_ACTIVE: {
+      return {
+        ...state,
+        snackbarIsActive: action.payload
       };
     }
     default:
