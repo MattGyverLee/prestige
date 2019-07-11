@@ -43,6 +43,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private currBlob: string = "";
 
   componentDidMount = () => {
+    let regionsPlugin = require("../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
     [0, 1, 2].forEach((idx: number) => {
       this.loadQueue.push("");
       this.currentPlaying.push("");
@@ -57,8 +58,13 @@ export class DeeJay extends Component<DeeJayProps> {
           cursorColor: "#4a74a5",
           responsive: true,
           waveColor: "#ccc",
-          hideScrollbar: true
+          hideScrollbar: true,
+          plugins: [regionsPlugin.create()]
         })
+      );
+      this.waveSurfers[idx].on("region-out", () => this.regionOut(idx));
+      this.waveSurfers[idx].on("region-click", (region: any) =>
+        this.regionClick(idx, region)
       );
     });
   };
@@ -118,13 +124,22 @@ export class DeeJay extends Component<DeeJayProps> {
             if (this.props.clipStarts[idx] !== -1) {
               // If No Stop, Play from Start
               // -> Else, Play Only Clip
-              if (this.props.clipStops[idx] === -1)
+              if (this.props.clipStops[idx] === -1) {
                 this.waveSurfers[idx].play(this.props.clipStarts[idx]);
-              else
-                this.waveSurfers[idx].play(
-                  this.props.clipStarts[idx],
-                  this.props.clipStops[idx]
-                );
+              } else {
+                if (this.waveSurfers[idx].regions.list.temp !== undefined) {
+                  this.waveSurfers[idx].regions.list.temp.remove();
+                }
+                this.waveSurfers[idx].addRegion({
+                  id: "temp",
+                  color: "rgba(153,170,255,0.3)",
+                  start: this.props.clipStarts[idx],
+                  end: this.props.clipStops[idx],
+                  drag: false,
+                  resize: false
+                });
+                this.waveSurfers[idx].regions.list.temp.play();
+              }
 
               // Reset Clip Start/Stop
               this.props.waveSurferPlayClip(idx, -1, -1);
@@ -220,7 +235,16 @@ export class DeeJay extends Component<DeeJayProps> {
       }
     });
   }
-
+  regionOut = (idx: any) => {
+    if (this.waveSurfers[idx].regions.list.temp !== undefined) {
+      this.waveSurfers[idx].regions.list.temp.remove();
+      this.forceUpdate();
+    }
+  };
+  regionClick = (idx: number, region: any) => {
+    this.waveSurfers[idx].seekTo(region.start);
+    this.forceUpdate();
+  };
   fileAllowed = (blobURL: string) => {
     if (blobURL === "") return false;
     let tempSrc = this.props.sourceMedia.filter(

@@ -133,7 +133,12 @@ class AnnotationTable extends Component<ComponentProps> {
   render() {
     // Table Values
     const TableRow = ({ row, ...restProps }: any) => (
-      <Table.Row {...restProps} onClick={() => seekToSec(0, row.startTime)} />
+      <Table.Row
+        {...restProps}
+        onClick={() =>
+          this.props.waveSurferPlayClip(0, row.startTime, row.stopTime)
+        }
+      />
     );
 
     // Text Cells
