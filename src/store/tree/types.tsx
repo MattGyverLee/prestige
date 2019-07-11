@@ -39,7 +39,6 @@ export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const ON_RELOAD_FOLDER = "ON_RELOAD_FOLDER";
 export const CHANGE_PREV_PATH = "CHANGE_PREV_PATH";
 export const SET_ANNOT_MEDIA_IN_MILESTONES = "SET_ANNOT_MEDIA_IN_MILESTONES";
-export const SET_SOURCE_MEDIA_ANNOT_REF = "SET_SOURCE_MEDIA_ANNOT_REF";
 export const SET_ANNOT_MEDIA_WS_ALLOWED = "SET_ANNOT_MEDIA_WS_ALLOWED";
 export const SET_SOURCE_MEDIA_WS_ALLOWED = "SET_SOURCE_MEDIA_WS_ALLOWED";
 
@@ -103,10 +102,6 @@ interface SetAnnotMediaInMilestones {
   type: typeof SET_ANNOT_MEDIA_IN_MILESTONES;
   payload: string;
 }
-interface SetSourceMediaAnnotRef {
-  type: typeof SET_SOURCE_MEDIA_ANNOT_REF;
-  payload: PairPathURL;
-}
 
 interface SetAnnotMediaWSAllowed {
   type: typeof SET_ANNOT_MEDIA_WS_ALLOWED;
@@ -133,6 +128,5 @@ export type TreeActionTypes =
   | UpdateTree
   | ChangePrevPath
   | SetAnnotMediaInMilestones
-  | SetSourceMediaAnnotRef
   | SetAnnotMediaWSAllowed
   | SetSourceMediaWSAllowed;

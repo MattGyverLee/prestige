@@ -12,7 +12,6 @@ export interface AnnotationRow {
 }
 export interface Milestone {
   annotationID: string;
-  annotationRef: string;
   data: {
     channel: string;
     data: any;

@@ -25,8 +25,6 @@ export default function processEAF(path: string, props: any) {
   for (h = 0; h < fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h++) {
     const refMedia: string = fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL;
     const blobURL: string = fileURL(parsedPath.dir + "/" + refMedia);
-    const blobPath: string = fileURL(path);
-    props.setSourceMediaAnnotRef({ blobURL, blobPath });
     syncMedia.push(blobURL);
   }
 
@@ -77,17 +75,10 @@ export default function processEAF(path: string, props: any) {
         const thisStartTime: number = findTime(alAnnPointer.$.TIME_SLOT_REF1);
         const thisStopTime: number = findTime(alAnnPointer.$.TIME_SLOT_REF2);
 
-        // Grab Annotation Reference if the Line Has One
-        let annotationRef = "";
-        if (alAnnPointer.$.ANNOTATION_REF !== undefined) {
-          annotationRef = alAnnPointer.$.ANNOTATION_REF;
-        }
-
         // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
         const milestone = {
           alignable: false,
           annotationID: alAnnPointer.$.ANNOTATION_ID,
-          annotationRef: { annotationRef },
           data: [
             {
               channel: fileData.TIER[j].$.TIER_ID,

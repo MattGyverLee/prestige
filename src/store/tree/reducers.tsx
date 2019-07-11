@@ -100,13 +100,7 @@ export function treeReducer(
       return {
         ...state,
         sourceMedia: [
-          ...state.sourceMedia
-            .filter(file => file.blobURL !== action.payload)
-            .map(file =>
-              file.annotationRef === action.payload
-                ? { ...file, annotationRef: "" }
-                : file
-            )
+          ...state.sourceMedia.filter(file => file.blobURL !== action.payload)
         ],
         annotMedia: [
           ...state.annotMedia.filter(file => file.blobURL !== action.payload)
@@ -125,21 +119,6 @@ export function treeReducer(
       return {
         ...state,
         annotMedia: tempAnnot
-      };
-    }
-    case types.SET_SOURCE_MEDIA_ANNOT_REF: {
-      const tempSource = state.sourceMedia.map(m => {
-        return m.blobURL === action.payload.blobURL
-          ? {
-              ...m,
-              hasAnnotation: true,
-              annotationRef: action.payload.blobPath
-            }
-          : m;
-      });
-      return {
-        ...state,
-        sourceMedia: tempSource
       };
     }
     case types.SET_ANNOT_MEDIA_WS_ALLOWED: {

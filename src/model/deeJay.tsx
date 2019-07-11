@@ -6,6 +6,7 @@ import { faLayerGroup, faVolumeUp } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LooseObject } from "../store/annotations/types";
+import RegionsPlugin from "wavesurfer.js";
 import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -196,9 +197,10 @@ export class DeeJay extends Component<DeeJayProps> {
   }
 
   onSurferReady = (idx: number) => {
-    this.waveSurfers[idx].play();
+    this.waveSurfers[idx];
+    this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
     this.props.setWSDuration(idx, this.waveSurfers[idx].getDuration());
-    this.props.setWSVolume(idx, this.props.volumes[idx]);
+    this.waveSurfers[idx].play();
   };
 
   setVolume = (e: any) => {

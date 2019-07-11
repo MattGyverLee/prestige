@@ -8,6 +8,7 @@ import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
 var watcherRef: any;
+
 interface StateProps {
   annotMedia: types.LooseObject[];
   annotations: object;
@@ -23,7 +24,6 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  // updateActiveFolder: typeof actions.updateActiveFolder;
   addCategory: typeof actions.addCategory;
   addOralAnnotation: typeof actions.addOralAnnotation;
   annotMediaAdded: typeof actions.annotMediaAdded;
@@ -51,7 +51,6 @@ interface DispatchProps {
 interface FolderProps extends StateProps, DispatchProps {
   callProcessEAF: (inPath: string) => void;
 }
-// onUpdatePath: () => void;
 
 class SelectFolderZone extends Component<FolderProps> {
   constructor(props: any) {
@@ -77,13 +76,11 @@ class SelectFolderZone extends Component<FolderProps> {
     const watcher = require("chokidar").watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
-      ignoreInitial: false,
-      awaitWriteFinish: {
-        stabilityThreshold: 2000
-      }
+      ignoreInitial: false
     });
     watcherRef = watcher;
 
+    // Adds a Directory Detected by Chokidar
     const choKAddDir = (path: string) => {
       console.log(`Directory ${path} has been added`);
     };
@@ -137,7 +134,6 @@ class SelectFolderZone extends Component<FolderProps> {
 
       // Returns the File Definition
       return {
-        annotationRef: "",
         blobURL: blobURL,
         extension: parsedPath.ext,
         hasAnnotation: false,
@@ -151,7 +147,7 @@ class SelectFolderZone extends Component<FolderProps> {
       };
     };
 
-    //
+    // Adds a File Detected by Chokidar
     const chokFileAdd = (path: string) => {
       // Show Timeline Has Changed
       this.props.setTimelineChanged(true);
@@ -187,7 +183,7 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log(`File ${path} has been added`);
     };
 
-    //
+    // Processes a File Change Detected by Chokidar
     const chokChange = (path: string) => {
       // Show Timeline Has Changed
       this.props.setTimelineChanged(true);
@@ -229,19 +225,18 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log(`File ${path} has been removed`);
     };
 
+    // Processes Directory Deletion
     const chokUnlinkDir = (path: string) => {
       console.log(`Directory ${path} has been removed`);
     };
 
+    // Processes Chokidar Errors
     const chokError = (error: Error) => {
       console.log(`Watcher error: ${error}`);
     };
 
     // Plays the First URL
     const chokReady = () => {
-      // Adds All Annotations to Milestones
-      // this.addNewMediaToMilestone();
-
       // Grabs and Sets First URL If it Exists
       if (this.readyPlayURL !== "") {
         props.setURL(this.readyPlayURL);
@@ -278,6 +273,7 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   }
 
+  // Loads a Local Folder from its Path
   loadLocalFolder(inputElement: any) {
     // Reset the Current Folder
     this.currentFolder = inputElement;
@@ -330,7 +326,6 @@ class SelectFolderZone extends Component<FolderProps> {
         // Create oralMilestone
         const oralMilestone: types.Milestone = {
           annotationID: "",
-          annotationRef: fileURL(tempMatch),
           data: [
             {
               channel: splitPath[3],
@@ -380,12 +375,22 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   };
 
-  // TODO: put this in FolderSelection with other local operations
+  // Merges Annotation Sound Files (Careful/Translation)
   // carefulOrTranslation: True -> careful, False -> Translation
   loadAnnot = (carefulOrTranslation: boolean) => {
+    // Rounding Function to be Used Later
+    const roundIt = (value: number, decimals: number): number => {
+      return Number(
+        Math.round(Number(value + "e" + decimals)) + "e-" + decimals
+      );
+    };
+
+    // Set Up Fluent FFMpeg and its Associated Paths
     const isDev = require("electron-is-dev");
+    let fluentFfmpeg = require("fluent-ffmpeg");
     let ffmpegPath = "";
     let ffprobePath = "";
+
     // Determines Location for Ffmpeg and Ffprobe from environment variables.
     if (isDev) {
       ffmpegPath = process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe";
@@ -400,59 +405,38 @@ class SelectFolderZone extends Component<FolderProps> {
         process.cwd() + "/resources" + require("ffprobe-static-electron").path;
       // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
-    let fluentFfmpeg = require("fluent-ffmpeg");
+
+    // Sets Determiend Paths for Fluent FFMpeg
     fluentFfmpeg.setFfmpegPath(ffmpegPath);
     fluentFfmpeg.setFfprobePath(ffprobePath);
-    let filteredAnnot: any[] = this.props.annotMedia.filter((am: any) =>
-      am.name.includes(carefulOrTranslation ? "_Careful" : "_Translation")
-    );
-    let i = filteredAnnot.length;
-    let j, k;
-    let path = require("path");
-    let previous = -1;
-    let inputFiles: any[] = [];
-    let inputTimes: any[] = [];
-    let dir = "";
-    const roundIt = (value: number, decimals: number): number => {
-      return Number(
-        Math.round(Number(value + "e" + decimals)) + "e-" + decimals
-      );
-    };
-    for (k = 0; k < i; k++) {
-      let idx = 0;
-      let lowest = -1;
-      // loops through Annotations to fin lext Chronological Annotation
-      for (j = 0; j < i; j++) {
-        let curr = filteredAnnot[j];
 
-        if (
-          (lowest === -1 ||
-            lowest >
-              parseFloat(curr.name.substring(0, curr.name.indexOf("_")))) &&
-          parseFloat(curr.name.substring(0, curr.name.indexOf("_"))) >= previous
-        ) {
-          lowest = parseFloat(curr.name.substring(0, curr.name.indexOf("_")));
-          idx = j;
-        }
-      }
-      let curr = filteredAnnot[idx];
-      dir = curr.path.substring(0, curr.path.lastIndexOf(path.sep) + 1);
-      previous = parseFloat(curr.name.split("_")[2]);
-      // Logs this Annotation in an array
-      inputFiles.push(curr.path);
-    }
-    // Builds MergedAudio object with list of inputs.
+    // Sort FilteredAnnot Based on Start Time into InputFiles
+    let dir = "";
+    let path = require("path");
+    let inputFiles: any[] = this.props.annotMedia
+      .filter((am: any) =>
+        am.name.includes(carefulOrTranslation ? "_Careful" : "_Translation")
+      )
+      .sort((a1: any, a2: any) => {
+        return (
+          parseFloat(a1.name.substring(0, a1.name.indexOf("_"))) -
+          parseFloat(a2.name.substring(0, a2.name.indexOf("_")))
+        );
+      })
+      .map((a: any) => a.path);
+    dir = inputFiles[0].substring(0, inputFiles[0].lastIndexOf(path.sep) + 1);
+
+    // Builds MergedAudio Object with Inputs and the Concatenation Command.
     let mergedAudio = fluentFfmpeg();
     let cf = "";
     let idx = 0;
     inputFiles.forEach((v: string) => {
       mergedAudio = mergedAudio.addInput(v);
-      let letter = idx ? "b" : "out";
       cf +=
         "[" +
         idx.toString() +
         "]loudnorm=I=-16:TP=-1.5:LRA=11[" +
-        letter +
+        (idx ? "b" : "out") +
         "];";
       if (idx) {
         cf += "[out][b]concat=v=0:a=1[out];";
@@ -461,121 +445,120 @@ class SelectFolderZone extends Component<FolderProps> {
     });
     cf = cf.substring(0, cf.lastIndexOf(";"));
 
+    //
     let primaryIdx = 0;
-    if (inputFiles.length > 0) {
-      mergedAudio._inputs.forEach((v: any, idx: number) => {
-        mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
-          /*
-          this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
-          */
-          // TODO: Async May Run Multiple Times in Else Statement Below
-          const name = v.source.substring(v.source.lastIndexOf(path.sep) + 1);
-          // Keeps a table of contents
-          inputTimes.push({
-            file: v.source,
-            name,
-            duration: roundIt(metadata.streams[0].duration, 3),
-            refStart: name.split("_")[0],
-            refStop: name.split("_")[2]
-          });
-          primaryIdx += 1;
-          if (primaryIdx === mergedAudio._inputs.length) {
-            inputTimes = inputTimes.sort((a: any, b: any) => {
-              return a.refStart - b.refStart;
-            });
-            let i;
-            let lastTime = 0;
-            let oralMilestone: types.Milestone;
-            for (i = 0; i < inputTimes.length; i++) {
-              oralMilestone = {
-                annotationID: "",
-                // TODO: Remove annotationRef
-                annotationRef: "",
-                data: [
-                  {
-                    channel: carefulOrTranslation
-                      ? "CarefulMerged"
-                      : "TranslationMerged",
-                    data: require("file-url")(
-                      dir +
-                        (carefulOrTranslation ? "Careful" : "Translation") +
-                        "_Merged.mp3"
-                    ),
-                    linguisticType: carefulOrTranslation
-                      ? "CarefulMerged"
-                      : "TranslationMerged",
-                    locale: "",
-                    mimeType: "audio-mp3",
-                    clipStart: roundIt(lastTime, 3),
-                    clipStop: roundIt(lastTime + inputTimes[i].duration, 3)
-                  }
-                ],
-                startTime: parseFloat(inputTimes[i].refStart),
-                stopTime: parseFloat(inputTimes[i].refStop)
-              };
-
-              const blobURL = require("file-url")(
-                dir.substring(0, dir.indexOf("_Annotations"))
-              );
-              this.props.addOralAnnotation(
-                oralMilestone,
-                getTimelineIndex(this.props.timeline, blobURL)
-              );
-
-              lastTime += inputTimes[i].duration;
-            }
-          }
-          if (err) {
-            console.log("Error: " + err);
-          }
+    let inputTimes: any[] = [];
+    mergedAudio._inputs.forEach((v: any, idx: number) => {
+      mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
+        // TODO: Async May Run Multiple Times in Else Statement Below
+        // Store a Table of Contents in InputTimes for the Milestones
+        const name = v.source.substring(v.source.lastIndexOf(path.sep) + 1);
+        inputTimes.push({
+          file: v.source,
+          name,
+          duration: roundIt(metadata.streams[0].duration, 3),
+          refStart: name.split("_")[0],
+          refStop: name.split("_")[2]
         });
-      });
 
-      // Writes concatenated audio to compressed MP3
-      mergedAudio
-        .format("mp3")
-        .audioBitrate("128k")
-        .audioChannels(1)
-        .audioCodec("libmp3lame")
-        .outputOptions(["-map [out]", "-y"])
-        .complexFilter(cf)
-        .on("start", (command: any) => {
-          console.log("ffmpeg process started:", command);
-          this.props.dispatchSnackbar(
-            "Merging " +
-              (carefulOrTranslation ? "Careful Speech" : "Translation") +
-              " files."
-          );
-        })
-        .on("error", function(err: any) {
-          console.log("An error occurred: " + err.message);
-        })
-        .on("end", () => {
-          console.log("Merging finished!");
-          this.props.dispatchSnackbar(
+        primaryIdx += 1;
+        if (primaryIdx === mergedAudio._inputs.length) {
+          inputTimes = inputTimes.sort((a: any, b: any) => {
+            return a.refStart - b.refStart;
+          });
+          let i;
+          let lastTime = 0;
+          let oralMilestone: types.Milestone;
+          for (i = 0; i < inputTimes.length; i++) {
+            oralMilestone = {
+              annotationID: "",
+              data: [
+                {
+                  channel: carefulOrTranslation
+                    ? "CarefulMerged"
+                    : "TranslationMerged",
+                  data: require("file-url")(
+                    dir +
+                      (carefulOrTranslation ? "Careful" : "Translation") +
+                      "_Merged.mp3"
+                  ),
+                  linguisticType: carefulOrTranslation
+                    ? "CarefulMerged"
+                    : "TranslationMerged",
+                  locale: "",
+                  mimeType: "audio-mp3",
+                  clipStart: roundIt(lastTime, 3),
+                  clipStop: roundIt(lastTime + inputTimes[i].duration, 3)
+                }
+              ],
+              startTime: parseFloat(inputTimes[i].refStart),
+              stopTime: parseFloat(inputTimes[i].refStop)
+            };
+
+            const blobURL = require("file-url")(
+              dir.substring(0, dir.indexOf("_Annotations"))
+            );
+            this.props.addOralAnnotation(
+              oralMilestone,
+              getTimelineIndex(this.props.timeline, blobURL)
+            );
+
+            lastTime += inputTimes[i].duration;
+          }
+        }
+
+        // ffProbe Error Handling
+        if (err) {
+          console.log("Error: " + err);
+        }
+      });
+    });
+
+    // Writes Concatenated Audio to Compressed MP3
+    mergedAudio
+      .format("mp3")
+      .audioBitrate("128k")
+      .audioChannels(1)
+      .audioCodec("libmp3lame")
+      .outputOptions(["-map [out]", "-y"])
+      .complexFilter(cf)
+      .on("start", (command: any) => {
+        console.log("ffmpeg process started:", command);
+        this.props.dispatchSnackbar(
+          "Merging " +
             (carefulOrTranslation ? "Careful Speech" : "Translation") +
-              " annotations merged!"
-          );
-          this.props.setAnnotMediaWSAllowed(
-            require("file-url")(
-              dir +
-                (carefulOrTranslation ? "Careful" : "Translation") +
-                "_Merged.mp3"
-            )
-          );
-        })
-        .save(
-          dir +
-            (carefulOrTranslation ? "Careful" : "Translation") +
-            "_Merged.mp3"
+            " files."
         );
-    }
+      })
+      .on("error", function(err: any) {
+        console.log("An error occurred: " + err.message);
+      })
+      .on("end", () => {
+        console.log("Merging finished!");
+        this.props.dispatchSnackbar(
+          (carefulOrTranslation ? "Careful Speech" : "Translation") +
+            " annotations merged!"
+        );
+        this.props.setAnnotMediaWSAllowed(
+          require("file-url")(
+            dir +
+              (carefulOrTranslation ? "Careful" : "Translation") +
+              "_Merged.mp3"
+          )
+        );
+      })
+      .save(
+        dir + (carefulOrTranslation ? "Careful" : "Translation") + "_Merged.mp3"
+      );
   };
 
   convertToMP3 = (path: string) => {
+    // Set Up Fluent FFMpeg and its Associated Paths
     const isDev = require("electron-is-dev");
+    let fluentFfmpeg = require("fluent-ffmpeg");
     let ffmpegPath = "";
     let ffprobePath = "";
+
     // Determines Location for Ffmpeg and Ffprobe from environment variables.
     if (isDev) {
       ffmpegPath = process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe";
@@ -590,9 +573,11 @@ class SelectFolderZone extends Component<FolderProps> {
         process.cwd() + "/resources" + require("ffprobe-static-electron").path;
       // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
-    let fluentFfmpeg = require("fluent-ffmpeg");
+
+    // Sets Determiend Paths for Fluent FFMpeg
     fluentFfmpeg.setFfmpegPath(ffmpegPath);
     fluentFfmpeg.setFfprobePath(ffprobePath);
+
     let toMP3 = fluentFfmpeg().addInput(path);
     toMP3
       .format("mp3")

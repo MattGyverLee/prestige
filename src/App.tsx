@@ -34,7 +34,6 @@ interface DispatchProps {
   processEAF: typeof processEAF;
   // updateActiveFolder: typeof actions.updateActiveFolder;
   updateTree: typeof actions.updateTree;
-  setSourceMediaAnnotRef: typeof actions.setSourceMediaAnnotRef;
   onNewFolder: typeof actions.onNewFolder;
 
   onEnded: typeof actions.onEnded;
@@ -187,7 +186,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       updateSession: actions.updateSession,
       updateTree: actions.updateTree,
       hardResetApp: actions.hardResetApp,
-      setSourceMediaAnnotRef: actions.setSourceMediaAnnotRef,
       onNewFolder: actions.onNewFolder
     },
     dispatch

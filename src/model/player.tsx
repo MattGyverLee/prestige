@@ -59,6 +59,7 @@ interface DispatchProps {
   onSeekChange: typeof actions.onSeekChange;
   onVolumeChange: typeof actions.onVolumeChange;
 }
+
 interface PlayerProps extends StateProps, DispatchProps {}
 
 class PlayerZone extends Component<PlayerProps> {
@@ -66,7 +67,6 @@ class PlayerZone extends Component<PlayerProps> {
 
   private speeds: number[] = [0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5, 2, 3, 5];
   private speedsIndex: number = 5;
-  // private audioPlayer!:WaveSurferInstance & WaveSurferRegions;
 
   componentDidUpdate() {
     if (this.props.seek !== -1) {
@@ -78,30 +78,37 @@ class PlayerZone extends Component<PlayerProps> {
   pip = () => {
     // this.setState({ pip: !this.props.pip });
   };
+
   onVolumeChange = (e: any) => {
     this.props.onVolumeChange(parseFloat(e.target.value));
   };
+
   minusPlaybackRate = () => {
     if (this.speedsIndex > 0) {
       this.speedsIndex--;
       this.props.setPlaybackRate(this.speeds[this.speedsIndex]);
     }
   };
+
   plusPlaybackRate = () => {
     if (this.speedsIndex < this.speeds.length - 1) {
       this.speedsIndex++;
       this.props.setPlaybackRate(this.speeds[this.speedsIndex]);
     }
   };
+
   onPause = () => {
     console.log("onPause");
   };
+
   onSeekMouseDown = (e: any) => {
     this.props.onSeekMouseDown();
   };
+
   onSeekChange = (e: any) => {
     this.props.onSeekChange(parseFloat(e.target.value));
   };
+
   onSeekMouseUp = (e: any) => {
     this.props.onSeekMouseUp();
     this.props.setSeek(
@@ -110,20 +117,25 @@ class PlayerZone extends Component<PlayerProps> {
       0
     );
   };
+
   onPlay = () => {
     this.props.onPlay();
   };
+
   loadNewFile(blobURL: string) {
     this.props.play();
     this.props.setURL(blobURL);
   }
+
   onDuration = (duration: number) => {
     console.log("onDuration", duration);
     this.props.setDuration(duration);
   };
+
   onClickFullscreen = () => {
     // screenfull.request(findDOMNode(this.player))
   };
+
   ref = (player: any) => {
     this.player = player;
   };
@@ -289,6 +301,7 @@ class PlayerZone extends Component<PlayerProps> {
     );
   }
 }
+
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   playbackRate: state.player.playbackRate,
   played: state.player.played,

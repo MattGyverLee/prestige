@@ -101,14 +101,6 @@ export function setAnnotMediaInMilestones(
     payload: blobURL
   };
 }
-export function setSourceMediaAnnotRef(
-  pair: types.PairPathURL
-): types.TreeActionTypes {
-  return {
-    type: types.SET_SOURCE_MEDIA_ANNOT_REF,
-    payload: pair
-  };
-}
 export function setAnnotMediaWSAllowed(blobURL: string): types.TreeActionTypes {
   return {
     type: types.SET_ANNOT_MEDIA_WS_ALLOWED,
