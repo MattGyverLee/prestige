@@ -29,6 +29,7 @@ interface DispatchProps {
   annotMediaAdded: typeof actions.annotMediaAdded;
   annotMediaChanged: typeof actions.annotMediaChanged;
   changePrevPath: typeof actions.changePrevPath;
+  dispatchSnackbar: typeof actions.dispatchSnackbar;
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
@@ -538,14 +539,23 @@ class SelectFolderZone extends Component<FolderProps> {
         .audioCodec("libmp3lame")
         .outputOptions(["-map [out]", "-y"])
         .complexFilter(cf)
-        .on("start", function(command: any) {
+        .on("start", (command: any) => {
           console.log("ffmpeg process started:", command);
+          this.props.dispatchSnackbar(
+            "Merging " +
+              (carefulOrTranslation ? "Careful Speech" : "Translation") +
+              " files."
+          );
         })
         .on("error", function(err: any) {
           console.log("An error occurred: " + err.message);
         })
         .on("end", () => {
           console.log("Merging finished!");
+          this.props.dispatchSnackbar(
+            (carefulOrTranslation ? "Careful Speech" : "Translation") +
+              " annotations merged!"
+          );
           this.props.setAnnotMediaWSAllowed(
             require("file-url")(
               dir +
@@ -590,14 +600,17 @@ class SelectFolderZone extends Component<FolderProps> {
       .audioChannels(2)
       .audioCodec("libmp3lame")
       .audioFilters("loudnorm=I=-16:TP=-1.5:LRA=11")
-      .on("start", function(command: any) {
+      .on("start", (command: any) => {
         console.log("ffmpeg process started:", command);
+        this.props.dispatchSnackbar("Converting Source Audio.");
       })
-      .on("error", function(err: any) {
+      .on("error", (err: any) => {
         console.log("An error occurred: " + err.message);
+        this.props.dispatchSnackbar("An error occurred: " + err.message);
       })
       .on("end", () => {
         console.log("MP3 Conversion finished!");
+        this.props.dispatchSnackbar("Source Audio Converted.");
         this.props.setSourceMediaWSAllowed(
           require("file-url")(
             path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3"
@@ -657,6 +670,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       annotMediaAdded: actions.annotMediaAdded,
       annotMediaChanged: actions.annotMediaChanged,
       changePrevPath: actions.changePrevPath,
+      dispatchSnackbar: actions.dispatchSnackbar,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,

@@ -8,18 +8,20 @@ import FileList from "./model/fileList";
 import PlayerZone from "./model/player";
 import React from "react";
 import SelectFolderZone from "./model/folderSelection";
+import { Snackbar } from "./model/snackbars";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
 import processEAF from "./model/processEAF";
-import { updateSession } from "./store/system/actions";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 interface DispatchProps {
-  updateSession: typeof updateSession;
+  updateSession: typeof actions.updateSession;
+  dispatchSnackbar: typeof actions.dispatchSnackbar;
+  completeSnackbar: typeof actions.completeSnackbar;
 
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
@@ -61,12 +63,30 @@ class App extends React.Component<AppProps> {
       loggedIn: true,
       session: "my_session",
       userName: "Matthew",
-      clicks: 0
+      clicks: 0,
+      snackbarText: []
     });
 
     this.props.onNewFolder("");
   }
 
+  snackbarRef: any = React.createRef();
+
+  componentDidUpdate() {
+    if (this.props.system.snackbarText.length > 0) {
+      if (!this.snackbarRef.current.state.isActive) {
+        this.snackbarRef.current.openSnackBar(
+          this.props.system.snackbarText[0]
+        );
+        this.props.completeSnackbar(this.props.system.snackbarText[0]);
+      }
+    }
+  }
+
+  _showSnackbarHandler = (e: any) => {
+    e.preventDefault();
+    this.snackbarRef.current.openSnackBar(this.props.system.snackbarText);
+  };
   // Player Features
 
   hardResetApp = (inString: string) => {
@@ -112,6 +132,14 @@ class App extends React.Component<AppProps> {
         <p>{this.props.tree.loaded}</p>
         <div className="App-footer">
           <SelectFolderZone callProcessEAF={this.callProcessEAF} />
+          <div className="SnackBar">
+            <button
+              onClick={() => this.props.dispatchSnackbar(this.props.player.url)}
+            >
+              Click To Open Snackbar
+            </button>
+            <Snackbar ref={this.snackbarRef} />
+          </div>
           <p>
             {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
           </p>
@@ -134,7 +162,9 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       addOralAnnotation: actions.addOralAnnotation,
       addCategory: actions.addCategory,
+      completeSnackbar: actions.completeSnackbar,
       pushAnnotation: actions.pushAnnotation,
+      dispatchSnackbar: actions.dispatchSnackbar,
       enableAudtranscMain: actions.enableAudtranscMain,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
@@ -154,7 +184,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       toggleLoop: actions.toggleLoop,
       // updateActiveFolder: actions.updateActiveFolder,
       updatePlayerAction: actions.updatePlayerAction,
-      updateSession,
+      updateSession: actions.updateSession,
       updateTree: actions.updateTree,
       hardResetApp: actions.hardResetApp,
       setSourceMediaAnnotRef: actions.setSourceMediaAnnotRef,

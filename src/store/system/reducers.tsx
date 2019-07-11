@@ -6,7 +6,8 @@ export const systemCleanStore: types.SystemState = {
   clicks: 0,
   loggedIn: false,
   session: "",
-  userName: ""
+  userName: "",
+  snackbarText: []
 };
 
 export function systemReducer(
@@ -25,6 +26,18 @@ export function systemReducer(
       return {
         ...state,
         ...action.payload
+      };
+    }
+    case types.DISPATCH_SNACKBAR: {
+      return {
+        ...state,
+        snackbarText: [...state.snackbarText, action.payload]
+      };
+    }
+    case types.COMPLETE_SNACKBAR: {
+      return {
+        ...state,
+        snackbarText: state.snackbarText.filter(t => t !== action.payload)
       };
     }
     default:
