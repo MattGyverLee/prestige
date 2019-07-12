@@ -1,5 +1,5 @@
 img.green {
-  position: relative;
+  position: absolute;
   top: -54px;
   margin-right: 0px;
 }
@@ -8,6 +8,7 @@ img.black {
   top: 0;
   left: 0;
 }
+
 .overlay {
   position: absolute;
   text-align: center;
@@ -24,6 +25,7 @@ img.black {
   margin-left: -5px;
 }
 .ThreeDimButton {
+  position: relative;
   padding: 3px 3px;
   text-align: center;
   height: 50px;
@@ -41,6 +43,8 @@ img.black {
 
 .ThreeDimButton:hover {
   background-color: #333;
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
 .ThreeDimButton:active {

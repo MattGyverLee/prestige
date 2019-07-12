@@ -117,7 +117,9 @@ export class DeeJay extends Component<DeeJayProps> {
           if (this.waveSurfers[idx].isReady) {
             // Set Volume if Different from State
             if (this.waveSurfers[idx].getVolume() !== this.props.volumes[idx])
-              this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
+              this.waveSurfers[idx].setVolume(
+                this.props.volumes[idx] * this.props.volumes[idx]
+              );
 
             // Set Clip if Directed by State and Reset State Clip Start/Stop to -1
             if (
@@ -252,7 +254,10 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   setVolume = (e: any) => {
-    this.props.setWSVolume(parseInt(e.target.id), e.target.value);
+    this.props.setWSVolume(
+      parseInt(e.target.id),
+      roundIt(e.target.value * e.target.value, 2)
+    );
   };
 
   solo = (wsNum: number) => {
@@ -413,15 +418,15 @@ export class DeeJay extends Component<DeeJayProps> {
           name = "Translation Audio set to ";
           break;
       }
-      if (this.props.volumes[idx] >= 0.5) {
+      if (this.props.volumes[idx] > 0.25) {
         this.props.dispatchSnackbar(name + "25% (Background)");
         this.props.setWSVolume(idx, 0.25);
-      } else if (this.props.volumes[idx] >= 0.2) {
-        this.props.dispatchSnackbar(name + "0% (Muted)");
-        this.props.setWSVolume(idx, 0);
-      } else if (this.props.volumes[idx] < 0.2) {
+      } else if (this.props.volumes[idx] == 0) {
         this.props.dispatchSnackbar(name + "100% (Main)");
         this.props.setWSVolume(idx, 1);
+      } else if (this.props.volumes[idx] <= 0.25) {
+        this.props.dispatchSnackbar(name + "0% (Muted)");
+        this.props.setWSVolume(idx, 0);
       }
     }
   };
@@ -452,11 +457,13 @@ export class DeeJay extends Component<DeeJayProps> {
                       height={50}
                       alt=""
                       style={{
-                        opacity:
+                        opacity: roundIt(
                           this.waveSurfers[idx] !== undefined &&
-                          this.waveSurfers[idx].isReady
+                            this.waveSurfers[idx].isReady
                             ? this.props.volumes[idx]
-                            : 0
+                            : 0,
+                          2
+                        )
                       }}
                       src={require("../assets/buttons/enabled50.png")}
                     />
@@ -464,6 +471,13 @@ export class DeeJay extends Component<DeeJayProps> {
                 </div>
               </div>
             </div>
+            {roundIt(
+              this.waveSurfers[idx] !== undefined &&
+                this.waveSurfers[idx].isReady
+                ? this.props.volumes[idx]
+                : 0,
+              2
+            )}
           </td>
           <td className="wave-table-volume">
             <input
@@ -471,9 +485,14 @@ export class DeeJay extends Component<DeeJayProps> {
               type="range"
               min={0}
               max={1}
-              step={0.1}
+              step={0.01}
+              value={roundIt(
+                this.props.volumes[idx] !== 0
+                  ? Math.sqrt(this.props.volumes[idx])
+                  : 0,
+                2
+              )}
               onChange={this.setVolume}
-              value={this.props.volumes[idx]}
             />
           </td>
           <td className="waveform" id={"waveform" + idx.toString()}></td>
