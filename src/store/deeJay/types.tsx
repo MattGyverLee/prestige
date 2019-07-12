@@ -5,6 +5,7 @@ export interface DeeJayState {
   clipStops: number[];
   volumes: number[];
   playing: boolean[];
+  refresh: boolean;
 }
 
 export const WAVE_SURFER_PLAY_CLIP = "WAVE_SURFER_PLAY_CLIP";
@@ -14,6 +15,12 @@ export const SET_WS_VOLUME = "SET_WS_VOLUME";
 export const SET_SEEK = "SET_SEEK";
 export const PLAY_PAUSE = "PLAY_PAUSE";
 export const RESET_DEE_JAY = "RESET_DEE_JAY";
+export const SET_DJ_REFRESH = "SET_DJ_REFRESH";
+
+interface SetDJRefresh {
+  type: typeof SET_DJ_REFRESH;
+  payload: { value: boolean };
+}
 
 interface SetWSDuration {
   type: typeof SET_WS_DURATION;
@@ -51,5 +58,6 @@ export type DeeJayActionTypes =
   | SetWSDuration
   | SetWSVolume
   | SetSeek
+  | SetDJRefresh
   | PlayPause
   | ResetDeeJay;

@@ -48,7 +48,7 @@ export function playerReducer(
         duration: 0,
         loaded: 0,
         loop: false,
-        muted: false,
+        muted: true,
         pip: false,
         playbackRate: 1.0,
         played: false,

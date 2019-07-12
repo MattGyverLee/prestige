@@ -6,7 +6,8 @@ export const deeJayCleanStore: types.DeeJayState = {
   pos: [0, 0, 0],
   clipStarts: [-1, -1, -1],
   clipStops: [-1, -1, -1],
-  playing: [false, false, false]
+  playing: [false, false, false],
+  refresh: false
 };
 
 export function deeJayReducer(
@@ -18,6 +19,12 @@ export function deeJayReducer(
       state = deeJayCleanStore;
       return {
         ...state
+      };
+    }
+    case types.SET_DJ_REFRESH: {
+      return {
+        ...state,
+        refresh: action.payload.value
       };
     }
     case types.SET_WS_DURATION: {

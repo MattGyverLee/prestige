@@ -1,5 +1,52 @@
+img.green {
+  position: relative;
+  top: -54px;
+  margin-right: 0px;
+}
+img.black {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+.overlay {
+  position: absolute;
+  text-align: center;
+}
+
 .App {
   text-align: center;
+}
+.buttonWrapper {
+  width: 50px;
+  padding-bottom: 2px;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: -5px;
+}
+.ThreeDimButton {
+  padding: 3px 3px;
+  text-align: center;
+  height: 50px;
+  width: 50px;
+  cursor: pointer;
+  outline: none;
+  color: #fff;
+  background-color: #555;
+  border: ridge;
+  display: inline-block;
+  border-width: 5px;
+  border-color: #222;
+  box-shadow: 0px 4px #000;
+}
+
+.ThreeDimButton:hover {
+  background-color: #333;
+}
+
+.ThreeDimButton:active {
+  background-color: #444;
+  box-shadow: 0px 1px #000;
+  transform: translateY(3px);
 }
 
 @keyframes rock {
@@ -64,7 +111,7 @@
   resize: horizontal;
   overflow: auto;
   align-content: stretch;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .player-wrapper {
@@ -253,11 +300,15 @@ td {
 
 .wave-table tr {
   min-height: 50px;
+  padding-bottom: 5px;
 }
 
 .wave-table-play,
 .wave-table-overlay {
   width: 25px;
+}
+.wave-table-enable {
+  width: 63px;
 }
 
 .wave-table-volume {
@@ -266,6 +317,7 @@ td {
 
 .waveform {
   min-height: 50px;
+  height: 75px;
 }
 
 .wave-table-volume input[type="range"] {

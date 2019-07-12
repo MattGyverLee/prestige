@@ -2,7 +2,11 @@ import * as actions from "../store";
 
 import React, { Component } from "react";
 import { annotAudio, sourceAudio } from "./globalFunctions";
-import { faLayerGroup, faVolumeUp } from "@fortawesome/free-solid-svg-icons";
+import {
+  faLayerGroup,
+  faVolumeMute,
+  faVolumeUp
+} from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { LooseObject } from "../store/annotations/types";
@@ -23,13 +27,16 @@ interface StateProps {
   timelineChanged: boolean;
   url: string;
   volumes: number[];
+  refresh: boolean;
 }
 
 interface DispatchProps {
+  dispatchSnackbar: typeof actions.dispatchSnackbar;
   waveSurferPlayClip: typeof actions.waveSurferPlayClip;
   waveSurferPosChange: typeof actions.waveSurferPosChange;
   setWSVolume: typeof actions.setWSVolume;
   setWSDuration: typeof actions.setWSDuration;
+  setDJRefresh: typeof actions.setDJRefresh;
   setSeek: typeof actions.setSeek;
   resetDeeJay: typeof actions.resetDeeJay;
 }
@@ -70,6 +77,10 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   componentDidUpdate() {
+    if (this.props.refresh) {
+      this.props.setDJRefresh(false);
+    }
+
     let currSync: string[] = [];
     if (this.props.currentTimeline !== -1) {
       currSync = this.props.timeline[this.props.currentTimeline].syncMedia;
@@ -122,6 +133,13 @@ export class DeeJay extends Component<DeeJayProps> {
 
             // Set Clip if Directed by State and Reset State Clip Start/Stop to -1
             if (this.props.clipStarts[idx] !== -1) {
+              [0, 1, 2].forEach((idx2: number) => {
+                if (idx2 === idx) {
+                  this.props.setWSVolume(idx2, 1);
+                } else {
+                  this.props.setWSVolume(idx2, 0);
+                }
+              });
               // If No Stop, Play from Start
               // -> Else, Play Only Clip
               if (this.props.clipStops[idx] === -1) {
@@ -266,17 +284,101 @@ export class DeeJay extends Component<DeeJayProps> {
 
   setVolume = (e: any) => {
     this.props.setWSVolume(parseInt(e.target.id), e.target.value);
+    this.props.setDJRefresh(true);
+  };
+
+  dispatchDJ = () => {
+    this.props.dispatchSnackbar("🎵 DJ Activated 🎵");
+  };
+
+  toggleVol = (idx: number) => {
+    if (this.waveSurfers[idx].getVolume() !== undefined) {
+      let name = "";
+      switch (idx) {
+        case 0:
+          name = "Original Audio set to ";
+          break;
+        case 1:
+          name = "Careful Audio set to ";
+          break;
+        case 2:
+          name = "Translation Audio set to ";
+          break;
+      }
+      if (this.waveSurfers[idx].getVolume() >= 0.5) {
+        this.props.dispatchSnackbar(name + "25% (Background)");
+        this.props.setWSVolume(idx, 0.25);
+      } else if (this.waveSurfers[idx].getVolume() >= 0.2) {
+        this.props.dispatchSnackbar(name + "0% (Muted)");
+        this.props.setWSVolume(idx, 0);
+      } else if (this.waveSurfers[idx].getVolume() < 0.2) {
+        this.props.dispatchSnackbar(name + "100% (Main)");
+        this.props.setWSVolume(idx, 1);
+      }
+    }
+    this.props.setDJRefresh(true);
+  };
+
+  renderPlay = (idx: number) => {
+    if (
+      this.waveSurfers[idx] === undefined ||
+      this.waveSurfers[idx].getVolume() > 0
+    ) {
+      return <FontAwesomeIcon icon={faVolumeUp} />;
+    } else {
+      return <FontAwesomeIcon icon={faVolumeMute} />;
+    }
   };
 
   render() {
     const waveTableRows = [0, 1, 2].map((idx: number) => {
       return (
         <tr key={idx.toString()}>
+          <td className="wave-table-enable">
+            <div className="buttonWrapper">
+              <div
+                className="ThreeDimButton"
+                onClick={() => this.toggleVol(idx)}
+                onMouseDown={() => false}
+                onMouseUp={() => this.forceUpdate()}
+              >
+                <img
+                  className="black"
+                  width={50}
+                  height={50}
+                  alt=""
+                  src={require("../assets/buttons/disabled50.png")}
+                />
+                <div className="overlay">
+                  <div className="overlay">
+                    <img
+                      className="green"
+                      width={50}
+                      height={50}
+                      alt=""
+                      style={{
+                        opacity:
+                          this.waveSurfers[idx] !== undefined &&
+                          this.waveSurfers[idx].isReady
+                            ? this.waveSurfers[idx].getVolume()
+                            : 0
+                      }}
+                      src={require("../assets/buttons/enabled50.png")}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
           <td className="wave-table-play">
-            <FontAwesomeIcon icon={faVolumeUp} />
+            <button onClick={() => this.props.setWSVolume(idx, 0)}>
+              {this.renderPlay(idx)}
+            </button>
           </td>
           <td className="wave-table-overlay">
-            <FontAwesomeIcon icon={faLayerGroup} />
+            <button onClick={() => this.props.setWSVolume(idx, 0.5)}>
+              <FontAwesomeIcon icon={faLayerGroup} />
+            </button>
           </td>
           <td className="wave-table-volume">
             <input
@@ -284,8 +386,9 @@ export class DeeJay extends Component<DeeJayProps> {
               type="range"
               min={0}
               max={1}
-              step={0.2}
+              step={0.1}
               onChange={this.setVolume}
+              onMouseUp={this.setVolume}
               value={this.props.volumes[idx]}
             />
           </td>
@@ -296,6 +399,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
     return (
       <div>
+        <button onClick={() => this.dispatchDJ()}>Start DJ</button>
         <div className="wave-table-container">
           <table className="wave-table">
             <tbody>{waveTableRows}</tbody>
@@ -318,14 +422,17 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotMedia: state.tree.annotMedia,
   currentTimeline: state.annotations.currentTimeline,
   url: state.player.url,
-  timelineChanged: state.annotations.timelineChanged
+  timelineChanged: state.annotations.timelineChanged,
+  refresh: state.deeJay.refresh
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
+      dispatchSnackbar: actions.dispatchSnackbar,
       waveSurferPlayClip: actions.waveSurferPlayClip,
       waveSurferPosChange: actions.waveSurferPosChange,
+      setDJRefresh: actions.setDJRefresh,
       setWSVolume: actions.setWSVolume,
       setWSDuration: actions.setWSDuration,
       setSeek: actions.setSeek,
@@ -340,6 +447,9 @@ export default connect(
 )(DeeJay);
 
 /*        
+
+
+
 <div className="mediaControls">
           <table>
             <tbody>

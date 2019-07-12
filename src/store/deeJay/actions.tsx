@@ -6,6 +6,13 @@ export function resetDeeJay(): types.DeeJayActionTypes {
   };
 }
 
+export function setDJRefresh(value: boolean): types.DeeJayActionTypes {
+  return {
+    type: types.SET_DJ_REFRESH,
+    payload: { value }
+  };
+}
+
 export function setWSDuration(
   idx: number,
   duration: number
