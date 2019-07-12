@@ -68,8 +68,10 @@ export class DeeJay extends Component<DeeJayProps> {
       );
       this.waveSurfers[idx].on("region-removed", () => {
         console.log("Removed");
-        // this.forceUpdate();
       });
+      this.waveSurfers[idx].on("seek", (seek: number) =>
+        this.props.setSeek(seek, seek * this.waveSurfers[idx].getDuration())
+      );
     });
   };
 
@@ -93,9 +95,6 @@ export class DeeJay extends Component<DeeJayProps> {
         // Reset Local Variables and WS if LoadQueue or CurrentPlaying Not Empty
         if (this.loadQueue[idx] !== "" || this.currentPlaying[idx] !== "") {
           this.loadQueue[idx] = "";
-          this.waveSurfers[idx].un("ready", () =>
-            console.log("Reset WS: " + idx.toString())
-          );
           this.waveSurfers[idx].load("");
           this.currentPlaying[idx] = "";
         }
@@ -111,7 +110,10 @@ export class DeeJay extends Component<DeeJayProps> {
               this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
 
             // Set Clip if Directed by State and Reset State Clip Start/Stop to -1
-            if (this.props.dispatch.dispatchType !== "") {
+            if (
+              this.props.dispatch.dispatchType !== "" &&
+              this.props.dispatch.wsNum === idx
+            ) {
               const dispatch = { ...this.props.dispatch };
               this.props.setDispatch({ dispatchType: "" });
               this.dispatchDJ(dispatch);
@@ -135,15 +137,11 @@ export class DeeJay extends Component<DeeJayProps> {
             this.loadQueue[idx] = "";
 
             // Set Event Watchers for Ready and Seeking
-            this.waveSurfers[idx].on("waveform-ready", () => {
+            let waveformReady = () => {
               this.onSurferReady(idx);
-            });
-            this.waveSurfers[idx].on("seek", (seek: number) =>
-              this.props.setSeek(
-                seek,
-                seek * this.waveSurfers[idx].getDuration()
-              )
-            );
+              this.waveSurfers[idx].un("waveform-ready", waveformReady);
+            };
+            this.waveSurfers[idx].on("waveform-ready", waveformReady);
           }
         } else {
           // Search for File According to WS Number
@@ -193,12 +191,11 @@ export class DeeJay extends Component<DeeJayProps> {
             this.currentPlaying[idx] = loadFile;
 
             // Set Event Watchers for Ready and Seeking
-            this.waveSurfers[idx].on("waveform-ready", () => {
+            let waveformReady = () => {
               this.onSurferReady(idx);
-            });
-            this.waveSurfers[idx].on("seek", (seek: number) =>
-              this.props.setSeek(seek, -1)
-            );
+              this.waveSurfers[idx].un("waveform-ready", waveformReady);
+            };
+            this.waveSurfers[idx].on("waveform-ready", waveformReady);
           } else {
             // Add File to LoadQueue
             this.loadQueue[idx] = loadFile;
@@ -207,16 +204,22 @@ export class DeeJay extends Component<DeeJayProps> {
       }
     });
   }
+
+  // Creates Region
   regionOut = (idx: any) => {
+    // Remove the Specified WS's Region, if it Exists, and Redraw
     if (this.waveSurfers[idx].regions.list.temp !== undefined) {
       this.waveSurfers[idx].regions.list.temp.remove();
-      // this.forceUpdate();
     }
   };
+
+  // Processes Mouse Input on Region
   regionClick = (idx: number, region: any) => {
+    // Seek to Specified Region Time and Redraw
     this.waveSurfers[idx].seekTo(region.start);
-    // this.forceUpdate();
   };
+
+  //
   fileAllowed = (blobURL: string) => {
     if (blobURL === "") return false;
     let tempSrc = this.props.sourceMedia.filter(
@@ -248,6 +251,12 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   dispatchDJ = (dispatch: DeeJayDispatch) => {
+    const regionCreated = (region: any) => {
+      console.log("Created");
+      if (region.id === "temp")
+        this.waveSurfers[wsNum].play(region.start, region.end);
+      this.waveSurfers[wsNum].un("region-created", regionCreated);
+    };
     const wsNum =
       this.props.dispatch.wsNum !== undefined ? this.props.dispatch.wsNum : -1;
 
@@ -260,13 +269,7 @@ export class DeeJay extends Component<DeeJayProps> {
       case "Clip":
         this.props.dispatchSnackbar("Playing Clip");
         this.solo(wsNum);
-        this.waveSurfers[wsNum].on("region-created", region => {
-          console.log("Created");
-          if (region.id === "temp")
-            this.waveSurfers[wsNum].play(region.start, region.end);
-          // this.forceUpdate();
-          this.waveSurfers[wsNum].un("region-created", () => {});
-        });
+        this.waveSurfers[wsNum].on("region-created", regionCreated);
         this.waveSurfers[wsNum].addRegion({
           id: "temp",
           color: "rgba(153,170,255,0.3)",
@@ -288,12 +291,6 @@ export class DeeJay extends Component<DeeJayProps> {
       case "ClipPlus":
         this.props.dispatchSnackbar("Playing Clip");
         this.solo(wsNum);
-        this.waveSurfers[wsNum].on("region-created", region => {
-          console.log("Created");
-          if (region.id === "temp") this.waveSurfers[wsNum].play(region.start);
-          // this.forceUpdate();
-          this.waveSurfers[wsNum].un("region-created", () => {});
-        });
         this.waveSurfers[wsNum].addRegion({
           id: "temp",
           color: "rgba(153,170,255,0.3)",
