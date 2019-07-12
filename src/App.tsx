@@ -28,8 +28,6 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  setDJRefresh: typeof actions.setDJRefresh;
-
   updateSession: typeof actions.updateSession;
   dispatchSnackbar: typeof actions.dispatchSnackbar;
   completeSnackbar: typeof actions.completeSnackbar;
@@ -130,10 +128,7 @@ class App extends React.Component<AppProps> {
           </p>
         </header>
         <div className="App-body">
-          <div
-            className="App-sidebar"
-            onMouseUp={() => this.props.setDJRefresh(true)}
-          >
+          <div className="App-sidebar">
             <PlayerZone />
             <DeeJay />
           </div>
@@ -204,8 +199,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       updateTree: actions.updateTree,
       hardResetApp: actions.hardResetApp,
       onNewFolder: actions.onNewFolder,
-      snackbarToggleActive: actions.snackbarToggleActive,
-      setDJRefresh: actions.setDJRefresh
+      snackbarToggleActive: actions.snackbarToggleActive
     },
     dispatch
   )

@@ -2,13 +2,8 @@ import * as actions from "../store";
 
 import React, { Component } from "react";
 import { annotAudio, sourceAudio } from "./globalFunctions";
-import {
-  faLayerGroup,
-  faVolumeMute,
-  faVolumeUp
-} from "@fortawesome/free-solid-svg-icons";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { DeeJayDispatch } from "../store/deeJay/types";
 import { LooseObject } from "../store/annotations/types";
 import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
@@ -16,29 +11,24 @@ import { connect } from "react-redux";
 
 interface StateProps {
   annotMedia: any;
-  clipStarts: number[];
-  clipStops: number[];
   currentTimeline: number;
   durations: number[];
+  dispatch: DeeJayDispatch;
   playing: boolean[];
-  pos: number[];
   sourceMedia: any;
   timeline: any;
   timelineChanged: boolean;
   url: string;
   volumes: number[];
-  refresh: boolean;
 }
 
 interface DispatchProps {
   dispatchSnackbar: typeof actions.dispatchSnackbar;
-  waveSurferPlayClip: typeof actions.waveSurferPlayClip;
-  waveSurferPosChange: typeof actions.waveSurferPosChange;
   setWSVolume: typeof actions.setWSVolume;
   setWSDuration: typeof actions.setWSDuration;
-  setDJRefresh: typeof actions.setDJRefresh;
   setSeek: typeof actions.setSeek;
   resetDeeJay: typeof actions.resetDeeJay;
+  setDispatch: typeof actions.setDispatch;
 }
 
 interface DeeJayProps extends StateProps, DispatchProps {}
@@ -69,30 +59,26 @@ export class DeeJay extends Component<DeeJayProps> {
           plugins: [regionsPlugin.create()]
         })
       );
-      this.waveSurfers[idx].on("region-out", () => this.regionOut(idx));
+      this.waveSurfers[idx].on("region-out", () => {
+        console.log("Out");
+        this.regionOut(idx);
+      });
       this.waveSurfers[idx].on("region-click", (region: any) =>
         this.regionClick(idx, region)
       );
+      this.waveSurfers[idx].on("region-removed", () => {
+        console.log("Removed");
+        // this.forceUpdate();
+      });
     });
   };
 
   componentDidUpdate() {
-    if (this.props.refresh) {
-      this.props.setDJRefresh(false);
-    }
-
     let currSync: string[] = [];
     if (this.props.currentTimeline !== -1) {
       currSync = this.props.timeline[this.props.currentTimeline].syncMedia;
     }
     [0, 1, 2].forEach((idx: number) => {
-      console.log(
-        idx.toString() +
-          ": " +
-          this.loadQueue[idx] +
-          ", " +
-          this.currentPlaying[idx]
-      );
       // Reset if Timeline Changed
       if (currSync.filter((s: any) => s === this.currBlob).length !== 1) {
         // Reset DeeJay State
@@ -118,57 +104,27 @@ export class DeeJay extends Component<DeeJayProps> {
         // -> If LoadQueue Has Something in the Current WS, Check if it Can Load
         // -> Else, Re-Search
         if (this.currentPlaying[idx] !== "") {
-          console.log(idx.toString() + ": Ready");
           // If the Wave Surfer is Ready, Allow Certain Actions
           if (this.waveSurfers[idx].isReady) {
             // Set Volume if Different from State
             if (this.waveSurfers[idx].getVolume() !== this.props.volumes[idx])
               this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
 
-            // Set Position if Directed by State and Reset State Pos to -1
-            if (this.props.pos[idx] !== -1) {
-              this.waveSurfers[idx].play(this.props.pos[idx]);
-              this.props.waveSurferPosChange(idx, -1);
-            }
-
             // Set Clip if Directed by State and Reset State Clip Start/Stop to -1
-            if (this.props.clipStarts[idx] !== -1) {
-              [0, 1, 2].forEach((idx2: number) => {
-                if (idx2 === idx) {
-                  this.props.setWSVolume(idx2, 1);
-                } else {
-                  this.props.setWSVolume(idx2, 0);
-                }
-              });
-              // If No Stop, Play from Start
-              // -> Else, Play Only Clip
-              if (this.props.clipStops[idx] === -1) {
-                this.waveSurfers[idx].play(this.props.clipStarts[idx]);
-              } else {
-                if (this.waveSurfers[idx].regions.list.temp !== undefined) {
-                  this.waveSurfers[idx].regions.list.temp.remove();
-                }
-                this.waveSurfers[idx].addRegion({
-                  id: "temp",
-                  color: "rgba(153,170,255,0.3)",
-                  start: this.props.clipStarts[idx],
-                  end: this.props.clipStops[idx],
-                  drag: false,
-                  resize: false
-                });
-                this.waveSurfers[idx].regions.list.temp.play();
-              }
-
-              // Reset Clip Start/Stop
-              this.props.waveSurferPlayClip(idx, -1, -1);
+            if (this.props.dispatch.dispatchType !== "") {
+              const dispatch = { ...this.props.dispatch };
+              this.props.setDispatch({ dispatchType: "" });
+              this.dispatchDJ(dispatch);
             }
 
             // Play/Pause Source Audio if Different from State
+            /*
             if (
               idx === 0 &&
               this.waveSurfers[idx].isPlaying() !== this.props.playing[0]
             )
               this.waveSurfers[idx].playPause();
+            */
           }
         } else if (this.loadQueue[idx] !== "") {
           // If the LoadQueue File Can Be Loaded, Load It
@@ -180,7 +136,6 @@ export class DeeJay extends Component<DeeJayProps> {
 
             // Set Event Watchers for Ready and Seeking
             this.waveSurfers[idx].on("waveform-ready", () => {
-              console.log("Ready: " + idx.toString());
               this.onSurferReady(idx);
             });
             this.waveSurfers[idx].on("seek", (seek: number) =>
@@ -239,7 +194,6 @@ export class DeeJay extends Component<DeeJayProps> {
 
             // Set Event Watchers for Ready and Seeking
             this.waveSurfers[idx].on("waveform-ready", () => {
-              console.log("Ready: " + idx.toString());
               this.onSurferReady(idx);
             });
             this.waveSurfers[idx].on("seek", (seek: number) =>
@@ -256,12 +210,12 @@ export class DeeJay extends Component<DeeJayProps> {
   regionOut = (idx: any) => {
     if (this.waveSurfers[idx].regions.list.temp !== undefined) {
       this.waveSurfers[idx].regions.list.temp.remove();
-      this.forceUpdate();
+      // this.forceUpdate();
     }
   };
   regionClick = (idx: number, region: any) => {
     this.waveSurfers[idx].seekTo(region.start);
-    this.forceUpdate();
+    // this.forceUpdate();
   };
   fileAllowed = (blobURL: string) => {
     if (blobURL === "") return false;
@@ -279,16 +233,83 @@ export class DeeJay extends Component<DeeJayProps> {
   onSurferReady = (idx: number) => {
     this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
     this.props.setWSDuration(idx, this.waveSurfers[idx].getDuration());
-    this.waveSurfers[idx].play();
+    if (idx === 0) this.waveSurfers[idx].play();
   };
 
   setVolume = (e: any) => {
     this.props.setWSVolume(parseInt(e.target.id), e.target.value);
-    this.props.setDJRefresh(true);
   };
 
-  dispatchDJ = () => {
-    this.props.dispatchSnackbar("🎵 DJ Activated 🎵");
+  solo = (wsNum: number) => {
+    [0, 1, 2].forEach((idx: number) => {
+      this.props.setWSVolume(idx, +(idx === wsNum));
+      if (idx !== wsNum) this.waveSurfers[idx].stop();
+    });
+  };
+
+  dispatchDJ = (dispatch: DeeJayDispatch) => {
+    const wsNum =
+      this.props.dispatch.wsNum !== undefined ? this.props.dispatch.wsNum : -1;
+
+    [0, 1, 2].forEach((idx: number) => {
+      if (this.waveSurfers[idx].regions.list.temp !== undefined)
+        this.waveSurfers[idx].regions.list.temp.remove();
+    });
+
+    switch (dispatch.dispatchType) {
+      case "Clip":
+        this.props.dispatchSnackbar("Playing Clip");
+        this.solo(wsNum);
+        this.waveSurfers[wsNum].on("region-created", region => {
+          console.log("Created");
+          if (region.id === "temp")
+            this.waveSurfers[wsNum].play(region.start, region.end);
+          // this.forceUpdate();
+          this.waveSurfers[wsNum].un("region-created", () => {});
+        });
+        this.waveSurfers[wsNum].addRegion({
+          id: "temp",
+          color: "rgba(153,170,255,0.3)",
+          start: dispatch.clipStart,
+          end: dispatch.clipStop,
+          drag: false,
+          resize: false
+        });
+        break;
+      case "Seek":
+        this.props.dispatchSnackbar("Seeking");
+        break;
+      case "Step":
+        this.props.dispatchSnackbar("Stepping");
+        break;
+      case "PlayThrough":
+        this.props.dispatchSnackbar("Playing Through");
+        break;
+      case "ClipPlus":
+        this.props.dispatchSnackbar("Playing Clip");
+        this.solo(wsNum);
+        this.waveSurfers[wsNum].on("region-created", region => {
+          console.log("Created");
+          if (region.id === "temp") this.waveSurfers[wsNum].play(region.start);
+          // this.forceUpdate();
+          this.waveSurfers[wsNum].un("region-created", () => {});
+        });
+        this.waveSurfers[wsNum].addRegion({
+          id: "temp",
+          color: "rgba(153,170,255,0.3)",
+          start: dispatch.clipStart,
+          end: dispatch.clipStop,
+          drag: false,
+          resize: false
+        });
+        // this.waveSurfers[wsNum].play(this.props.clipStarts[wsNum]);
+        this.waveSurfers[wsNum].play(
+          this.waveSurfers[wsNum].regions.list.temp.start
+        );
+        break;
+    }
+
+    // this.props.dispatchSnackbar("🎵 DJ Activated 🎵");
   };
 
   toggleVol = (idx: number) => {
@@ -316,7 +337,6 @@ export class DeeJay extends Component<DeeJayProps> {
         this.props.setWSVolume(idx, 1);
       }
     }
-    this.props.setDJRefresh(true);
   };
 
   render() {
@@ -376,7 +396,6 @@ export class DeeJay extends Component<DeeJayProps> {
 
     return (
       <div>
-        <button onClick={() => this.dispatchDJ()}>Start DJ</button>
         <div className="wave-table-container">
           <table className="wave-table">
             <tbody>{waveTableRows}</tbody>
@@ -389,10 +408,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   durations: state.deeJay.durations,
-  pos: state.deeJay.pos,
   playing: state.deeJay.playing,
-  clipStarts: state.deeJay.clipStarts,
-  clipStops: state.deeJay.clipStops,
   timeline: state.annotations.timeline,
   volumes: state.deeJay.volumes,
   sourceMedia: state.tree.sourceMedia,
@@ -400,20 +416,18 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   currentTimeline: state.annotations.currentTimeline,
   url: state.player.url,
   timelineChanged: state.annotations.timelineChanged,
-  refresh: state.deeJay.refresh
+  dispatch: state.deeJay.dispatch
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
       dispatchSnackbar: actions.dispatchSnackbar,
-      waveSurferPlayClip: actions.waveSurferPlayClip,
-      waveSurferPosChange: actions.waveSurferPosChange,
-      setDJRefresh: actions.setDJRefresh,
       setWSVolume: actions.setWSVolume,
       setWSDuration: actions.setWSDuration,
       setSeek: actions.setSeek,
-      resetDeeJay: actions.resetDeeJay
+      resetDeeJay: actions.resetDeeJay,
+      setDispatch: actions.setDispatch
     },
     dispatch
   )

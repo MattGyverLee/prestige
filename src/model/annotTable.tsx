@@ -45,9 +45,8 @@ interface DispatchProps {
   setURL: typeof actions.setURL;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
   updatePrevTimeline: typeof actions.updatePrevTimeline;
-  waveSurferPlayClip: typeof actions.waveSurferPlayClip;
-  waveSurferPosChange: typeof actions.waveSurferPosChange;
   setSeek: typeof actions.setSeek;
+  setDispatch: typeof actions.setDispatch;
 }
 
 interface ComponentProps extends StateProps, DispatchProps {}
@@ -133,17 +132,12 @@ class AnnotationTable extends Component<ComponentProps> {
   render() {
     // Table Values
     const TableRow = ({ row, ...restProps }: any) => (
-      <Table.Row
-        {...restProps}
-        onClick={() =>
-          this.props.waveSurferPlayClip(0, row.startTime, row.stopTime)
-        }
-      />
+      <Table.Row {...restProps} />
     );
 
     // Text Cells
     // oneOrTwo: One => Transcription, One => Translation
-    const FlowingCell = ({ oneTwo, value, style, ...restProps }: any) => (
+    const FlowingCell = ({ oneTwo, value, style, row, ...restProps }: any) => (
       <Table.Cell
         {...restProps}
         style={{
@@ -151,6 +145,14 @@ class AnnotationTable extends Component<ComponentProps> {
           wordWrap: "break-word",
           ...style
         }}
+        onClick={() =>
+          this.props.setDispatch({
+            dispatchType: "Clip",
+            wsNum: 0,
+            clipStart: row.startTime,
+            clipStop: row.stopTime
+          })
+        }
       >
         <span
           style={{
@@ -179,13 +181,18 @@ class AnnotationTable extends Component<ComponentProps> {
             if (parsedURL.length > 1) {
               let splitParsed = parsedURL[1].split(",");
               if (splitParsed.length === 1)
-                seekToSec(oneTwo, parseFloat(splitParsed[0].substring(1)));
+                this.props.setDispatch({
+                  dispatchType: "Seek",
+                  wsNum: oneTwo,
+                  clipStart: parseFloat(splitParsed[0].substring(1))
+                });
               else
-                this.props.waveSurferPlayClip(
-                  oneTwo,
-                  parseFloat(splitParsed[0].substring(1)),
-                  parseFloat(splitParsed[1])
-                );
+                this.props.setDispatch({
+                  dispatchType: "Clip",
+                  wsNum: oneTwo,
+                  clipStart: parseFloat(splitParsed[0].substring(1)),
+                  clipStop: parseFloat(splitParsed[1])
+                });
             }
           }}
           style={{
@@ -267,12 +274,6 @@ class AnnotationTable extends Component<ComponentProps> {
       }
     ];
 
-    // End Table Values
-    const seekToSec = (waveSurfNum: number, time: number) => {
-      this.props.setSeek(time / this.props.duration, time, waveSurfNum);
-      this.setState({ playing: true });
-    };
-
     return (
       <Paper className="annotation-table">
         <Grid
@@ -320,9 +321,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setURL: actions.setURL,
       pushAnnotationTable: actions.pushAnnotationTable,
       updatePrevTimeline: actions.updatePrevTimeline,
-      waveSurferPlayClip: actions.waveSurferPlayClip,
-      waveSurferPosChange: actions.waveSurferPosChange,
-      setSeek: actions.setSeek
+      setSeek: actions.setSeek,
+      setDispatch: actions.setDispatch
     },
     dispatch
   )

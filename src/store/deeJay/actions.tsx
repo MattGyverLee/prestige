@@ -6,13 +6,6 @@ export function resetDeeJay(): types.DeeJayActionTypes {
   };
 }
 
-export function setDJRefresh(value: boolean): types.DeeJayActionTypes {
-  return {
-    type: types.SET_DJ_REFRESH,
-    payload: { value }
-  };
-}
-
 export function setWSDuration(
   idx: number,
   duration: number
@@ -23,26 +16,6 @@ export function setWSDuration(
   };
 }
 
-export function waveSurferPlayClip(
-  idx: number,
-  clipStart: number,
-  clipStop: number = -1
-): types.DeeJayActionTypes {
-  return {
-    type: types.WAVE_SURFER_PLAY_CLIP,
-    payload: { idx, clipStart, clipStop }
-  };
-}
-
-export function waveSurferPosChange(
-  idx: number,
-  pos: number
-): types.DeeJayActionTypes {
-  return {
-    type: types.WAVE_SURFER_POS_CHANGE,
-    payload: { idx, pos }
-  };
-}
 export function setWSVolume(
   idx: number,
   volume: number
@@ -50,5 +23,13 @@ export function setWSVolume(
   return {
     type: types.SET_WS_VOLUME,
     payload: { idx, volume }
+  };
+}
+export function setDispatch(
+  type: types.DeeJayDispatch
+): types.DeeJayActionTypes {
+  return {
+    type: types.SET_DISPATCH,
+    payload: type
   };
 }
