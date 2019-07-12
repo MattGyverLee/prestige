@@ -129,3 +129,7 @@ export function annotAudio(
     });
   return [...annotAud];
 }
+
+export function roundIt(value: number, decimals: number): number {
+  return Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
+}
