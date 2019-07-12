@@ -8,7 +8,7 @@ export const playerCleanStore: types.MediaPlayerState = {
   muted: true,
   pip: false,
   playbackRate: 1.0,
-  played: false,
+  played: 0,
   playing: false,
   seek: -1,
   seeking: false,
@@ -51,7 +51,7 @@ export function playerReducer(
         muted: true,
         pip: false,
         playbackRate: 1.0,
-        played: false,
+        played: 0,
         playing: false,
         seeking: false,
         volume: 0.8,
@@ -151,7 +151,7 @@ export function playerReducer(
     case types.SET_SEEK: {
       return {
         ...state,
-        seek: action.payload.prctTime
+        seek: action.payload
       };
     }
     // this.setState({ url: null, playing: false })

@@ -2,7 +2,7 @@ import * as actions from "../store";
 import * as types from "../store/annotations/types";
 
 import React, { Component } from "react";
-import { getTimelineIndex, sourceMedia } from "./globalFunctions";
+import { getTimelineIndex, roundIt, sourceMedia } from "./globalFunctions";
 
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -376,10 +376,6 @@ class SelectFolderZone extends Component<FolderProps> {
   // Merges Annotation Sound Files (Careful/Translation)
   // carefulOrTranslation: True -> careful, False -> Translation
   loadAnnot = (carefulOrTranslation: boolean) => {
-    // Rounding Function to be Used Later
-    const roundIt = (value: number, decimals: number): number =>
-      Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
-
     // Const Requires and Variables for Later Use
     const ctString = carefulOrTranslation ? "Careful" : "Translation";
     const fileURL = require("file-url");

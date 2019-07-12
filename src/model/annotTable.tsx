@@ -45,7 +45,6 @@ interface DispatchProps {
   setURL: typeof actions.setURL;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
   updatePrevTimeline: typeof actions.updatePrevTimeline;
-  setSeek: typeof actions.setSeek;
   setDispatch: typeof actions.setDispatch;
 }
 
@@ -321,7 +320,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setURL: actions.setURL,
       pushAnnotationTable: actions.pushAnnotationTable,
       updatePrevTimeline: actions.updatePrevTimeline,
-      setSeek: actions.setSeek,
       setDispatch: actions.setDispatch
     },
     dispatch

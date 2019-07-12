@@ -1,13 +1,13 @@
 // Describing the shape of the tree's slice of state
 export interface MediaPlayerState {
   controls?: boolean;
-  duration?: any;
+  duration: number;
   loaded: number;
   loop: boolean;
   muted: boolean;
   pip: boolean;
   playbackRate: number;
-  played: any;
+  played: number;
   playing: boolean;
   seek: number;
   seeking?: boolean;
@@ -110,7 +110,7 @@ interface OnVolumeChange {
 }
 interface SetSeek {
   type: typeof SET_SEEK;
-  payload: { prctTime: number; time: number; waveSurferNum?: number };
+  payload: number;
 }
 
 export type PlayerActionTypes =

@@ -112,13 +112,9 @@ export function onVolumeChange(volume: number): types.PlayerActionTypes {
     payload: volume
   };
 }
-export function setSeek(
-  prctTime: number,
-  time: number,
-  waveSurferNum?: number
-): types.PlayerActionTypes {
+export function setSeek(prctTime: number): types.PlayerActionTypes {
   return {
     type: types.SET_SEEK,
-    payload: { prctTime, time, waveSurferNum }
+    payload: prctTime
   };
 }

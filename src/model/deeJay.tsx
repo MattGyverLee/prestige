@@ -1,7 +1,7 @@
 import * as actions from "../store";
 
 import React, { Component } from "react";
-import { annotAudio, sourceAudio } from "./globalFunctions";
+import { annotAudio, roundIt, sourceAudio } from "./globalFunctions";
 
 import { DeeJayDispatch } from "../store/deeJay/types";
 import { LooseObject } from "../store/annotations/types";
@@ -12,8 +12,10 @@ import { connect } from "react-redux";
 interface StateProps {
   annotMedia: any;
   currentTimeline: number;
+  playerDuration: number;
   durations: number[];
   dispatch: DeeJayDispatch;
+  playerPlayed: number;
   playing: boolean[];
   sourceMedia: any;
   timeline: any;
@@ -29,6 +31,7 @@ interface DispatchProps {
   setSeek: typeof actions.setSeek;
   resetDeeJay: typeof actions.resetDeeJay;
   setDispatch: typeof actions.setDispatch;
+  playerPlay: typeof actions.play;
 }
 
 interface DeeJayProps extends StateProps, DispatchProps {}
@@ -69,10 +72,17 @@ export class DeeJay extends Component<DeeJayProps> {
       this.waveSurfers[idx].on("region-removed", () => {
         console.log("Removed");
       });
-      this.waveSurfers[idx].on("seek", (seek: number) =>
-        this.props.setSeek(seek, seek * this.waveSurfers[idx].getDuration())
-      );
+      /*
+      this.waveSurfers[idx].on("seek", (seek: number) => {
+        this.props.setDispatch({
+          dispatchType: "Seek",
+          wsNum: idx,
+          refStart: roundIt(seek * this.waveSurfers[idx].getDuration(), 3)
+        });
+      });
+      */
     });
+    this.waveSurfers[0].on("play", this.props.playerPlay);
   };
 
   componentDidUpdate() {
@@ -236,7 +246,9 @@ export class DeeJay extends Component<DeeJayProps> {
   onSurferReady = (idx: number) => {
     this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
     this.props.setWSDuration(idx, this.waveSurfers[idx].getDuration());
-    if (idx === 0) this.waveSurfers[idx].play();
+    if (idx === 0) {
+      this.waveSurfers[idx].play();
+    }
   };
 
   setVolume = (e: any) => {
@@ -253,8 +265,9 @@ export class DeeJay extends Component<DeeJayProps> {
   dispatchDJ = (dispatch: DeeJayDispatch) => {
     const regionCreated = (region: any) => {
       console.log("Created");
-      if (region.id === "temp")
+      if (region.id === "temp") {
         this.waveSurfers[wsNum].play(region.start, region.end);
+      }
       this.waveSurfers[wsNum].un("region-created", regionCreated);
     };
     const wsNum =
@@ -280,7 +293,84 @@ export class DeeJay extends Component<DeeJayProps> {
         });
         break;
       case "Seek":
-        this.props.dispatchSnackbar("Seeking");
+        if (
+          this.props.currentTimeline !== -1 &&
+          dispatch.refStart !== undefined
+        ) {
+          const ms = this.props.timeline[this.props.currentTimeline].milestones;
+          const actives = [0, 1, 2].filter(
+            (n: number) => this.props.volumes[n] > 0
+          );
+          if (actives.length === 1) {
+            let currWS = this.waveSurfers[actives[0]];
+            this.props.dispatchSnackbar("Seeking");
+            if (actives[0] === 0) {
+              const thisM = ms.filter(
+                (m: any) =>
+                  dispatch.refStart !== undefined &&
+                  m.startTime <= dispatch.refStart &&
+                  dispatch.refStart < m.stopTime
+              )[0];
+
+              currWS.play(dispatch.refStart, thisM.stopTime);
+
+              // On Pause Function for the WS
+              let nextClip = () => {
+                let filtered = ms.filter(
+                  (m: any) =>
+                    m.startTime <= currWS.getCurrentTime() &&
+                    currWS.getCurrentTime() < m.stopTime
+                );
+                if (filtered.length === 1) {
+                  let nextM = filtered[0];
+                  // TODO: Console Log for Video Delay
+                  currWS.play(nextM.startTime, nextM.stopTime);
+                  this.props.setSeek(
+                    roundIt(nextM.startTime / this.props.playerDuration, 3)
+                  );
+                } else {
+                  currWS.un("pause", nextClip);
+                }
+              };
+
+              currWS.on("pause", nextClip);
+              this.props.setSeek(
+                roundIt(dispatch.refStart / this.props.playerDuration, 3)
+              );
+              this.props.setWSVolume(actives[0], 1);
+            } else if (actives[0] === 1) {
+              const filtered = ms.filter(
+                (m: any) =>
+                  m.data.filter(
+                    (me: any) =>
+                      m.channel === "CarefulMerged" &&
+                      dispatch.refStart !== undefined &&
+                      m.clipStart <= dispatch.refStart &&
+                      dispatch.refStart < m.clipStop
+                  ).length === 1
+              );
+              if (filtered.length !== 1) {
+                console.log("No Careful Annotation");
+                break;
+              }
+            } else {
+              const filtered = ms.filter(
+                (m: any) =>
+                  m.data.filter(
+                    (me: any) =>
+                      m.channel === "TranslationMerged" &&
+                      dispatch.refStart !== undefined &&
+                      m.clipStart <= dispatch.refStart &&
+                      dispatch.refStart < m.clipStop
+                  ).length === 1
+              );
+              if (filtered.length !== 1) {
+                console.log("No Translation Annotation");
+                break;
+              }
+            }
+          }
+        }
         break;
       case "Step":
         this.props.dispatchSnackbar("Stepping");
@@ -413,7 +503,9 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   currentTimeline: state.annotations.currentTimeline,
   url: state.player.url,
   timelineChanged: state.annotations.timelineChanged,
-  dispatch: state.deeJay.dispatch
+  dispatch: state.deeJay.dispatch,
+  playerDuration: state.player.duration,
+  playerPlayed: state.player.played
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -424,7 +516,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setWSDuration: actions.setWSDuration,
       setSeek: actions.setSeek,
       resetDeeJay: actions.resetDeeJay,
-      setDispatch: actions.setDispatch
+      setDispatch: actions.setDispatch,
+      playerPlay: actions.play
     },
     dispatch
   )
