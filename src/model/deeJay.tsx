@@ -292,7 +292,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   toggleVol = (idx: number) => {
-    if (this.waveSurfers[idx].getVolume() !== undefined) {
+    if (this.waveSurfers[idx] !== undefined && this.waveSurfers[idx].isReady) {
       let name = "";
       switch (idx) {
         case 0:
@@ -305,29 +305,18 @@ export class DeeJay extends Component<DeeJayProps> {
           name = "Translation Audio set to ";
           break;
       }
-      if (this.waveSurfers[idx].getVolume() >= 0.5) {
+      if (this.props.volumes[idx] >= 0.5) {
         this.props.dispatchSnackbar(name + "25% (Background)");
         this.props.setWSVolume(idx, 0.25);
-      } else if (this.waveSurfers[idx].getVolume() >= 0.2) {
+      } else if (this.props.volumes[idx] >= 0.2) {
         this.props.dispatchSnackbar(name + "0% (Muted)");
         this.props.setWSVolume(idx, 0);
-      } else if (this.waveSurfers[idx].getVolume() < 0.2) {
+      } else if (this.props.volumes[idx] < 0.2) {
         this.props.dispatchSnackbar(name + "100% (Main)");
         this.props.setWSVolume(idx, 1);
       }
     }
     this.props.setDJRefresh(true);
-  };
-
-  renderPlay = (idx: number) => {
-    if (
-      this.waveSurfers[idx] === undefined ||
-      this.waveSurfers[idx].getVolume() > 0
-    ) {
-      return <FontAwesomeIcon icon={faVolumeUp} />;
-    } else {
-      return <FontAwesomeIcon icon={faVolumeMute} />;
-    }
   };
 
   render() {
@@ -340,7 +329,6 @@ export class DeeJay extends Component<DeeJayProps> {
                 className="ThreeDimButton"
                 onClick={() => this.toggleVol(idx)}
                 onMouseDown={() => false}
-                onMouseUp={() => this.forceUpdate()}
               >
                 <img
                   className="black"
@@ -360,7 +348,7 @@ export class DeeJay extends Component<DeeJayProps> {
                         opacity:
                           this.waveSurfers[idx] !== undefined &&
                           this.waveSurfers[idx].isReady
-                            ? this.waveSurfers[idx].getVolume()
+                            ? this.props.volumes[idx]
                             : 0
                       }}
                       src={require("../assets/buttons/enabled50.png")}
@@ -370,16 +358,6 @@ export class DeeJay extends Component<DeeJayProps> {
               </div>
             </div>
           </td>
-          <td className="wave-table-play">
-            <button onClick={() => this.props.setWSVolume(idx, 0)}>
-              {this.renderPlay(idx)}
-            </button>
-          </td>
-          <td className="wave-table-overlay">
-            <button onClick={() => this.props.setWSVolume(idx, 0.5)}>
-              <FontAwesomeIcon icon={faLayerGroup} />
-            </button>
-          </td>
           <td className="wave-table-volume">
             <input
               id={idx.toString()}
@@ -388,7 +366,6 @@ export class DeeJay extends Component<DeeJayProps> {
               max={1}
               step={0.1}
               onChange={this.setVolume}
-              onMouseUp={this.setVolume}
               value={this.props.volumes[idx]}
             />
           </td>
