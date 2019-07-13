@@ -165,7 +165,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   url: state.player.url,
   loaded: state.tree.loaded,
   userName: state.system.userName,
-  annot: state.annot,
+  annot: state.annot
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

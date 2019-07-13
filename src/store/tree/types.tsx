@@ -41,6 +41,7 @@ export const CHANGE_PREV_PATH = "CHANGE_PREV_PATH";
 export const SET_ANNOT_MEDIA_IN_MILESTONES = "SET_ANNOT_MEDIA_IN_MILESTONES";
 export const SET_ANNOT_MEDIA_WS_ALLOWED = "SET_ANNOT_MEDIA_WS_ALLOWED";
 export const SET_SOURCE_MEDIA_WS_ALLOWED = "SET_SOURCE_MEDIA_WS_ALLOWED";
+export const LOAD_TREE = "LOAD_TREE";
 
 interface TreeHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -61,6 +62,12 @@ interface UpdateTree {
   type: typeof UPDATE_TREE;
   payload: TreeState;
 }
+
+interface LoadTree {
+  type: typeof LOAD_TREE;
+  payload: TreeState;
+}
+
 interface UpdateActiveFolder {
   // deprecate
   type: typeof UPDATE_ACTIVE_FOLDER;
@@ -129,4 +136,5 @@ export type TreeActionTypes =
   | ChangePrevPath
   | SetAnnotMediaInMilestones
   | SetAnnotMediaWSAllowed
-  | SetSourceMediaWSAllowed;
+  | SetSourceMediaWSAllowed
+  | LoadTree;

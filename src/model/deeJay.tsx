@@ -471,13 +471,6 @@ export class DeeJay extends Component<DeeJayProps> {
                 </div>
               </div>
             </div>
-            {roundIt(
-              this.waveSurfers[idx] !== undefined &&
-                this.waveSurfers[idx].isReady
-                ? this.props.volumes[idx]
-                : 0,
-              2
-            )}
           </td>
           <td className="wave-table-volume">
             <input

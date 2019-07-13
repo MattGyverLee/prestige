@@ -7,6 +7,7 @@ import { getTimelineIndex, roundIt, sourceMedia } from "./globalFunctions";
 
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import { loadAnnot } from "../store/annot/actions";
 
 var watcherRef: any;
 
@@ -22,6 +23,8 @@ interface StateProps {
   sourceMedia: aTypes.LooseObject[];
   timeline: aTypes.LooseObject[];
   url: string;
+  annot: aTypes.AnnotationState;
+  tree: tTypes.TreeState;
 }
 
 interface DispatchProps {
@@ -34,6 +37,8 @@ interface DispatchProps {
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
+  loadAnnot: typeof actions.loadAnnot;
+  loadTree: typeof actions.loadTree;
   onNewFolder: typeof actions.onNewFolder;
   onReloadFolder: typeof actions.onReloadFolder;
   pushAnnotation: typeof actions.pushAnnotation;
@@ -65,9 +70,11 @@ class SelectFolderZone extends Component<FolderProps> {
   private isChokReady: boolean = false;
   private currentFolder: any;
   private readyPlayURL: string = "";
+  private parentThis = this;
+  private usingStoredData = false;
 
   // Starts the Chokidar File Watcher
-  startWatcher = (path: string, props: any) => {
+  startWatcher = (path: string, props: any, ignoreInitial: boolean = false) => {
     // Closes Existing Watcher
     if (watcherRef !== undefined) watcherRef.close();
 
@@ -75,7 +82,7 @@ class SelectFolderZone extends Component<FolderProps> {
     const watcher = require("chokidar").watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
-      ignoreInitial: false
+      ignoreInitial: ignoreInitial
     });
     watcherRef = watcher;
 
@@ -151,7 +158,7 @@ class SelectFolderZone extends Component<FolderProps> {
 
       // If Chokidar is Ready and New File is ".eaf" => Reload Current Folder
       // -> Add File to annotMedia, sourceMedia, or availableFiles According to its Type
-      if (this.isChokReady && path.endsWith(".eaf")) {
+      if (this.isChokReady && path.endsWith(".eaf") && !this.usingStoredData) {
         // Uninstantiate Timelines and Reset Chok Readiness
         this.props.setTimelinesInstantiated(false);
         this.isChokReady = false;
@@ -175,7 +182,7 @@ class SelectFolderZone extends Component<FolderProps> {
           this.props.fileAdded({ file: fileDef });
         }
       }
-
+      this.testDir(this, this.currentFolder.files[0].path);
       // Log the Added File
       console.log(`File ${path} has been added`);
     };
@@ -184,7 +191,6 @@ class SelectFolderZone extends Component<FolderProps> {
     const chokChange = (path: string) => {
       // Show Timeline Has Changed
       this.props.setTimelineChanged(true);
-
       // If Chokidar is Ready and New File is ".eaf" => Reload Current Folder
       // -> Add File to annotMedia, sourceMedia, or availableFiles According to its Type
       if (this.isChokReady && path.endsWith(".eaf")) {
@@ -211,7 +217,7 @@ class SelectFolderZone extends Component<FolderProps> {
           props.fileChanged({ file: fileDef });
         }
       }
-
+      this.testDir(this, this.currentFolder.files[0].path);
       // Log the Changed File
       console.log(`File ${path} has been changed`);
     };
@@ -234,21 +240,25 @@ class SelectFolderZone extends Component<FolderProps> {
 
     // Plays the First URL
     const chokReady = () => {
-      // Grabs and Sets First URL If it Exists
-      if (this.readyPlayURL !== "") {
-        props.setURL(this.readyPlayURL);
-        this.readyPlayURL = "";
-      } else if (this.props.sourceMedia.length !== 0) {
-        this.loadAnnot(true);
-        this.loadAnnot(false);
-        props.setURL(sourceMedia(this.props.sourceMedia, false)[0].blobURL);
-        console.log(`Initial scan complete. Ready for changes`);
+      if (!this.usingStoredData) {
+        // Grabs and Sets First URL If it Exists
+        if (this.readyPlayURL !== "") {
+          props.setURL(this.readyPlayURL);
+          this.readyPlayURL = "";
+        } else if (this.props.sourceMedia.length !== 0) {
+          this.loadAnnot(true);
+          this.loadAnnot(false);
+          props.setURL(sourceMedia(this.props.sourceMedia, false)[0].blobURL);
+          console.log(`Initial scan complete. Ready for changes`);
+        } else {
+          console.log("Empty Directory");
+        }
       } else {
-        console.log("Empty Directory");
+        props.setURL(sourceMedia(this.props.sourceMedia, false)[0].blobURL);
       }
-
       // Notifies that Chok is Ready and the Timelines are Instantiated
       this.isChokReady = true;
+      this.usingStoredData = false;
       this.props.setTimelinesInstantiated(true);
     };
 
@@ -270,6 +280,67 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   }
 
+  private dirSnapshot(dir: string): any {
+    // Returns Stringified DIR Object
+    let fs = require("fs");
+    let path = require("path");
+    const walkSync = (inDir: string, filelist = []) =>
+      fs
+        .readdirSync(inDir)
+        .map((file: any) =>
+          fs.statSync(path.join(inDir, file)).isDirectory()
+            ? walkSync(path.join(inDir, file), filelist)
+            : filelist.concat(
+                path.join(inDir, file) +
+                  [", "] +
+                  fs.statSync(path.join(inDir, file)).mtime
+              )[0]
+        );
+    return JSON.stringify(walkSync(dir));
+  }
+  private testDir(parentThis: any, dir: string, initial: boolean = true): any {
+    // returns True if dir has changed (or no data stored), otherwise False
+    const currentDir = this.dirSnapshot(dir);
+    if (
+      localStorage.getItem("Prestige." + dir) !== null &&
+      localStorage.getItem("Prestige." + dir) === currentDir &&
+      localStorage.getItem("Prestige.annot." + dir) !== null &&
+      localStorage.getItem("Prestige.tree." + dir) !== null &&
+      this.props.annot.timeline.length === 0
+    ) {
+      const inAnnot = localStorage.getItem("Prestige.annot." + dir) + "";
+      parentThis.props.loadAnnot(JSON.parse(inAnnot));
+
+      const inTree = localStorage.getItem("Prestige.tree." + dir) + "";
+      parentThis.props.loadTree(JSON.parse(inTree));
+
+      this.usingStoredData = true;
+
+      // The Folder is unchanged. No need to scan.
+      return false;
+    } else {
+      if (
+        this.props.annot.timeline.length !== 0 &&
+        this.props.tree.sourceMedia.length !== 0
+      ) {
+        localStorage.setItem("Prestige." + dir, currentDir);
+        localStorage.setItem(
+          "Prestige.tree." + dir,
+          JSON.stringify(this.props.tree)
+        );
+        localStorage.setItem(
+          "Prestige.annot." + dir,
+          JSON.stringify(this.props.annot)
+        );
+        let time = Date.now() + 0;
+        let timeString = time.toString();
+        localStorage.setItem("Prestige.time", timeString);
+        return true;
+      }
+      // The Folder is different. Save State and Dir and load folder
+      return true;
+    }
+  }
   // Loads a Local Folder from its Path
   loadLocalFolder(inputElement: any) {
     // Reset the Current Folder
@@ -282,20 +353,33 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log("Undefined Directory Selected");
     } else if (inputElement.files[0].path !== this.props.prevPath) {
       console.log("Setting Folder to: " + inputElement.files[0].path);
-
-      this.props.onNewFolder(inputElement.files[0].path);
-      const path = inputElement.files[0].path.toString();
-      if (path !== "" && path !== this.props.prevPath) {
-        this.startWatcher(path, this.props);
-        this.props.changePrevPath(path);
+      // here
+      if (!this.testDir(this, this.currentFolder.files[0].path, false)) {
+        // Setting up imported State
+        const path = inputElement.files[0].path.toString();
+        if (path !== "" && path !== this.props.prevPath) {
+          this.startWatcher(path, this.props, true);
+        }
+        this.readyPlayURL = path;
+      } else {
+        this.props.onNewFolder(inputElement.files[0].path);
+        const path = inputElement.files[0].path.toString();
+        if (path !== "" && path !== this.props.prevPath) {
+          this.startWatcher(path, this.props);
+          this.props.changePrevPath(path);
+        }
+        /// /////////////////////////////////////////////////////////////////////////
       }
     } else if (
       inputElement.files[0].path === this.props.prevPath &&
       !this.isChokReady
     ) {
+      // folder Reloading
       this.readyPlayURL = this.props.url;
       this.props.onReloadFolder(inputElement.files[0].path);
       this.startWatcher(inputElement.files[0].path.toString(), this.props);
+    } else {
+      console.log("fell through");
     }
   }
 
@@ -526,10 +610,19 @@ class SelectFolderZone extends Component<FolderProps> {
         this.props.setAnnotMediaWSAllowed(
           fileURL(dir + ctString + "_Merged.mp3")
         );
+        this.updateLS();
       })
       .save(dir + ctString + "_Merged.mp3");
   };
+  updateLS = async () => {
+    let promise = new Promise((resolve, reject) => {
+      setTimeout(() => resolve("done!"), 1000);
+    });
 
+    let result = await promise; // wait till the promise resolves (*)
+    this.testDir(this, this.currentFolder.files[0].path);
+    // alert(result); // "done!"
+  };
   convertToMP3 = (path: string) => {
     // Set Up Fluent FFMpeg and its Associated Paths
     const ffmpegStaticElectron = require("ffmpeg-static-electron");
@@ -579,6 +672,7 @@ class SelectFolderZone extends Component<FolderProps> {
             path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3"
           )
         );
+        this.updateLS();
       })
       .save(path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3");
   };
@@ -622,6 +716,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   sourceMedia: state.tree.sourceMedia,
   timeline: state.annot.timeline,
   url: state.player.url,
+  annot: state.annot,
+  tree: state.tree
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -637,6 +733,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
+      loadAnnot: actions.loadAnnot,
+      loadTree: actions.loadTree,
       onNewFolder: actions.onNewFolder,
       onReloadFolder: actions.onReloadFolder,
       pushAnnotation: actions.pushAnnotation,

@@ -38,9 +38,12 @@ export function treeReducer(
     }
     case types.UPDATE_TREE: {
       return {
-        ...state,
         ...action.payload
       };
+    }
+    case types.LOAD_TREE: {
+      state = action.payload;
+      return state;
     }
     case types.FILE_ADDED: {
       return {

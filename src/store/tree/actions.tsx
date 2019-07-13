@@ -18,6 +18,12 @@ export function updateTree(newTree: types.TreeState): types.TreeActionTypes {
     payload: newTree
   };
 }
+export function loadTree(inState: types.TreeState): types.TreeActionTypes {
+  return {
+    type: types.LOAD_TREE,
+    payload: inState
+  };
+}
 /* export function updateActiveFolder(newFolder: types.Folders) {
   //might deprecate this
   return {
