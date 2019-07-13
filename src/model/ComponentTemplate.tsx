@@ -37,13 +37,13 @@ class ComponentZone extends Component<ComponentProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  // annotations: state.annotations.annotations,
+  // annotations: state.annot.annotations,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      // annotations: state.annotations.annotations,
+      // annotations: state.annot.annotations,
     },
     dispatch
   )

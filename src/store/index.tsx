@@ -1,6 +1,6 @@
 import { applyMiddleware, combineReducers, createStore } from "redux";
 
-import { annotationReducer } from "./annotations/reducers";
+import { annotationReducer } from "./annot/reducers";
 import { composeWithDevTools } from "redux-devtools-extension";
 import { deeJayReducer } from "./deeJay/reducers";
 import { playerReducer } from "./player/reducers";
@@ -14,7 +14,7 @@ export const allReducers = combineReducers({
   tree: treeReducer,
   player: playerReducer,
   deeJay: deeJayReducer,
-  annotations: annotationReducer
+  annot: annotationReducer
 });
 
 export type StateProps = ReturnType<typeof allReducers>;
@@ -31,7 +31,7 @@ export default function configureStore() {
   return store;
 }
 // export * from "./allState/actions";
-export * from "./annotations/actions";
+export * from "./annot/actions";
 export * from "./system/actions";
 export * from "./player/actions";
 export * from "./tree/actions";

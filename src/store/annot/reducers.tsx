@@ -37,6 +37,10 @@ export function annotationReducer(
       state = annCleanStore;
       return state;
     }
+    case types.LOAD_ANNOT: {
+      state = action.payload;
+      return state;
+    }
     case types.ON_NEW_FOLDER: {
       state = annCleanStore;
       return state;

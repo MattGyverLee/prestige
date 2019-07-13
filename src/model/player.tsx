@@ -11,7 +11,7 @@ import {
 
 import Duration from "./duration";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { LooseObject } from "../store/annotations/types";
+import { LooseObject } from "../store/annot/types";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";

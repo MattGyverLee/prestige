@@ -1,4 +1,4 @@
-import { LooseObject } from "../store/annotations/types";
+import { LooseObject } from "../store/annot/types";
 
 interface tempTimeline {
   syncMedia: string[];

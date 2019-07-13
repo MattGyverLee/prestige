@@ -1,6 +1,6 @@
 import * as actions from "../store";
 
-import { AnnotationRow, LooseObject } from "../store/annotations/types";
+import { AnnotationRow, LooseObject } from "../store/annot/types";
 import {
   FilteringState,
   IntegratedFiltering,
@@ -300,16 +300,16 @@ class AnnotationTable extends Component<ComponentProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  annotationTable: state.annotations.annotationTable,
-  categories: state.annotations.categories,
-  currentTimeline: state.annotations.currentTimeline,
+  annotationTable: state.annot.annotationTable,
+  categories: state.annot.categories,
+  currentTimeline: state.annot.currentTimeline,
   duration: state.player.duration,
   durations: state.deeJay.durations,
-  prevTimeline: state.annotations.prevTimeline,
+  prevTimeline: state.annot.prevTimeline,
   sourceMedia: state.tree.sourceMedia,
-  timelineChanged: state.annotations.timelineChanged,
-  timelines: state.annotations.timeline,
-  timelinesInstantiated: state.annotations.timelinesInstantiated,
+  timelineChanged: state.annot.timelineChanged,
+  timelines: state.annot.timeline,
+  timelinesInstantiated: state.annot.timelinesInstantiated,
   url: state.player.url
 });
 

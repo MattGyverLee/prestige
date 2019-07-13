@@ -1,5 +1,6 @@
+import * as aTypes from "../store/annot/types";
 import * as actions from "../store";
-import * as types from "../store/annotations/types";
+import * as tTypes from "../store/tree/types";
 
 import React, { Component } from "react";
 import { getTimelineIndex, roundIt, sourceMedia } from "./globalFunctions";
@@ -10,16 +11,16 @@ import { connect } from "react-redux";
 var watcherRef: any;
 
 interface StateProps {
-  annotMedia: types.LooseObject[];
+  annotMedia: aTypes.LooseObject[];
   annotations: object;
-  availableFiles: types.LooseObject[];
+  availableFiles: aTypes.LooseObject[];
   categories: string[];
   env: string;
   folderName: string;
   folderPath: string;
   prevPath: string;
-  sourceMedia: types.LooseObject[];
-  timeline: types.LooseObject[];
+  sourceMedia: aTypes.LooseObject[];
+  timeline: aTypes.LooseObject[];
   url: string;
 }
 
@@ -84,7 +85,7 @@ class SelectFolderZone extends Component<FolderProps> {
     };
 
     // Processes File (Convert Media or Process EAF) and Returns File Definition
-    const chocFileDescribe = (path: string): types.LooseObject => {
+    const chocFileDescribe = (path: string): aTypes.LooseObject => {
       // Define Fields for Returned FileDef
       const blobURL = require("file-url")(path);
       const parsedPath = require("path").parse(path);
@@ -314,7 +315,7 @@ class SelectFolderZone extends Component<FolderProps> {
         const tier = splitPath[3] + "_audio";
 
         // Create oralMilestone
-        const oralMilestone: types.Milestone = {
+        const oralMilestone: aTypes.Milestone = {
           annotationID: "",
           data: [
             {
@@ -456,7 +457,7 @@ class SelectFolderZone extends Component<FolderProps> {
 
           // Add All Oral Annotations of the Files
           let lastTime = 0;
-          let oralMilestone: types.Milestone;
+          let oralMilestone: aTypes.Milestone;
           for (let i = 0, l = inputTimes.length; i < l; i++) {
             // Create Merged Audio Milestone
             oralMilestone = {
@@ -611,16 +612,16 @@ class SelectFolderZone extends Component<FolderProps> {
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotMedia: state.tree.annotMedia,
-  annotations: state.annotations.annotations,
+  annotations: state.annot.annotations,
   availableFiles: state.tree.availableFiles,
-  categories: state.annotations.categories,
+  categories: state.annot.categories,
   env: state.tree.env,
   folderName: state.tree.folderName,
   folderPath: state.tree.folderPath,
   prevPath: state.tree.prevPath,
   sourceMedia: state.tree.sourceMedia,
-  timeline: state.annotations.timeline,
-  url: state.player.url
+  timeline: state.annot.timeline,
+  url: state.player.url,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

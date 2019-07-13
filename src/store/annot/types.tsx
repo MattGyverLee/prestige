@@ -78,6 +78,12 @@ export const FILE_DELETED = "FILE_DELETED";
 export const UPDATE_PREV_TIMELINE = "UPDATE_PREV_TIMELINE";
 export const SET_TIMELINES_INSTANTIATED = "SET_TIMELINES_INSTANTIATED";
 export const SET_TIMELINE_CHANGED = "SET_TIMELINE_CHANGED";
+export const LOAD_ANNOT = "LOAD_ANNOT";
+
+interface LoadAnnot {
+  type: typeof LOAD_ANNOT;
+  payload: AnnotationState;
+}
 
 interface HardResetApp {
   type: typeof HARD_RESET_APP;
@@ -214,4 +220,5 @@ export type AnnotationActionTypes =
   | FileDeleted
   | UpdatePrevTimeline
   | SetTimelinesInstantiated
-  | SetTimelineChanged;
+  | SetTimelineChanged
+  | LoadAnnot;

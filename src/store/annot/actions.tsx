@@ -7,6 +7,15 @@ export function hardResetApp(inString: string): types.AnnotationActionTypes {
   };
 }
 
+export function loadAnnot(
+  inState: types.AnnotationState
+): types.AnnotationActionTypes {
+  return {
+    type: types.LOAD_ANNOT,
+    payload: inState
+  };
+}
+
 export function onNewFolder(
   inString: string,
   blobURL?: string

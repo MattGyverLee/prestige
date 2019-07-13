@@ -4,7 +4,7 @@ import React, { Component } from "react";
 import { annotAudio, roundIt, sourceAudio } from "./globalFunctions";
 
 import { DeeJayDispatch } from "../store/deeJay/types";
-import { LooseObject } from "../store/annotations/types";
+import { LooseObject } from "../store/annot/types";
 import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -421,7 +421,7 @@ export class DeeJay extends Component<DeeJayProps> {
       if (this.props.volumes[idx] > 0.25) {
         this.props.dispatchSnackbar(name + "25% (Background)");
         this.props.setWSVolume(idx, 0.25);
-      } else if (this.props.volumes[idx] == 0) {
+      } else if (this.props.volumes[idx] === 0) {
         this.props.dispatchSnackbar(name + "100% (Main)");
         this.props.setWSVolume(idx, 1);
       } else if (this.props.volumes[idx] <= 0.25) {
@@ -515,13 +515,13 @@ export class DeeJay extends Component<DeeJayProps> {
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   durations: state.deeJay.durations,
   playing: state.deeJay.playing,
-  timeline: state.annotations.timeline,
+  timeline: state.annot.timeline,
   volumes: state.deeJay.volumes,
   sourceMedia: state.tree.sourceMedia,
   annotMedia: state.tree.annotMedia,
-  currentTimeline: state.annotations.currentTimeline,
+  currentTimeline: state.annot.currentTimeline,
   url: state.player.url,
-  timelineChanged: state.annotations.timelineChanged,
+  timelineChanged: state.annot.timelineChanged,
   dispatch: state.deeJay.dispatch,
   playerDuration: state.player.duration,
   playerPlayed: state.player.played
