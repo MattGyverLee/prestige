@@ -10,6 +10,12 @@ export interface TreeState {
   prevPath: string;
 }
 
+export interface Wavein {
+  ref: string;
+  sourceAnnot: boolean;
+  // True: Source
+  wavedata: string;
+}
 export interface Folders {
   folderName: string;
   folderPath: string;
@@ -42,6 +48,7 @@ export const SET_ANNOT_MEDIA_IN_MILESTONES = "SET_ANNOT_MEDIA_IN_MILESTONES";
 export const SET_ANNOT_MEDIA_WS_ALLOWED = "SET_ANNOT_MEDIA_WS_ALLOWED";
 export const SET_SOURCE_MEDIA_WS_ALLOWED = "SET_SOURCE_MEDIA_WS_ALLOWED";
 export const LOAD_TREE = "LOAD_TREE";
+export const WAVEFORM_ADDED = "WAVEFORM_ADDED";
 
 interface TreeHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -97,6 +104,10 @@ interface AnnotMediaChanged {
   type: typeof ANNOT_MEDIA_CHANGED;
   payload: FileDesc;
 }
+interface WaveformAdded {
+  type: typeof WAVEFORM_ADDED;
+  payload: Wavein;
+}
 interface FileDeleted {
   type: typeof FILE_DELETED;
   payload: string;
@@ -137,4 +148,5 @@ export type TreeActionTypes =
   | SetAnnotMediaInMilestones
   | SetAnnotMediaWSAllowed
   | SetSourceMediaWSAllowed
-  | LoadTree;
+  | LoadTree
+  | WaveformAdded;

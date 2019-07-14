@@ -7,7 +7,6 @@ import { getTimelineIndex, roundIt, sourceMedia } from "./globalFunctions";
 
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { loadAnnot } from "../store/annot/actions";
 
 var watcherRef: any;
 
@@ -147,7 +146,8 @@ class SelectFolderZone extends Component<FolderProps> {
         mimeType: tempMime,
         name: parsedPath.base,
         path: path,
-        wsAllowed: false
+        wsAllowed: false,
+        waveform: ""
       };
     };
 

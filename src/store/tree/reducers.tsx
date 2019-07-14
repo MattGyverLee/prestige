@@ -115,6 +115,49 @@ export function treeReducer(
         ]
       };
     }
+    case types.WAVEFORM_ADDED: {
+      if (action.payload.sourceAnnot) {
+        const tempState = state.sourceMedia.filter(sfile => {
+          if (sfile.name === action.payload.ref) {
+            return false;
+          }
+          return true;
+        });
+        const waveFile = state.sourceMedia.filter(sfile => {
+          if (sfile.name === action.payload.ref) {
+            return true;
+          }
+          return false;
+        });
+        return {
+          ...state,
+          sourceMedia: [
+            ...tempState,
+            { waveFile, waveform: action.payload.wavedata }
+          ]
+        };
+      } else {
+        const tempState = state.annotMedia.filter(afile => {
+          if (afile.name === action.payload.ref) {
+            return false;
+          }
+          return true;
+        });
+        const waveFile = state.annotMedia.filter(afile => {
+          if (afile.name === action.payload.ref) {
+            return true;
+          }
+          return false;
+        });
+        return {
+          ...state,
+          annotMedia: [
+            ...tempState,
+            { waveFile, waveform: action.payload.wavedata }
+          ]
+        };
+      }
+    }
     case types.SET_ANNOT_MEDIA_IN_MILESTONES: {
       const tempAnnot = state.annotMedia.map(m => {
         return m.blobURL === action.payload ? { ...m, inMilestones: true } : m;

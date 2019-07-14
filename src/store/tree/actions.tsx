@@ -79,6 +79,12 @@ export function sourceMediaChanged(
     payload: inFile
   };
 }
+export function waveformAdded(waveIn: types.Wavein): types.TreeActionTypes {
+  return {
+    type: types.WAVEFORM_ADDED,
+    payload: waveIn
+  };
+}
 export function annotMediaChanged(
   inFile: types.FileDesc
 ): types.TreeActionTypes {

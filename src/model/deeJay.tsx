@@ -32,6 +32,7 @@ interface DispatchProps {
   resetDeeJay: typeof actions.resetDeeJay;
   setDispatch: typeof actions.setDispatch;
   playerPlay: typeof actions.play;
+  waveformAdded: typeof actions.waveformAdded;
 }
 
 interface DeeJayProps extends StateProps, DispatchProps {}
@@ -247,6 +248,16 @@ export class DeeJay extends Component<DeeJayProps> {
 
   onSurferReady = (idx: number) => {
     this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
+    const sourceAnnot = idx > 0 ? true : false;
+    const cp = this.currentPlaying[idx];
+    const waveform = this.waveSurfers[idx].exportPCM(500, 1000, true);
+    const waveIn = {
+      ref: cp,
+      sourceAnnot,
+      // True: Source
+      wavedata: waveform
+    };
+    this.props.waveformAdded(waveIn);
     this.props.setWSDuration(idx, this.waveSurfers[idx].getDuration());
     if (idx === 0) {
       this.waveSurfers[idx].play();
@@ -529,7 +540,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setSeek: actions.setSeek,
       resetDeeJay: actions.resetDeeJay,
       setDispatch: actions.setDispatch,
-      playerPlay: actions.play
+      playerPlay: actions.play,
+      waveformAdded: actions.waveformAdded
     },
     dispatch
   )
