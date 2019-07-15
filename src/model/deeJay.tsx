@@ -64,24 +64,26 @@ export class DeeJay extends Component<DeeJayProps> {
         })
       );
       this.waveSurfers[idx].on("region-out", () => {
-        console.log("Out");
+        console.log(`${idx} Region Out`);
         this.regionOut(idx);
       });
-      this.waveSurfers[idx].on("region-click", (region: any) =>
-        this.regionClick(idx, region)
-      );
-      this.waveSurfers[idx].on("region-removed", () => {
-        console.log("Removed");
+      this.waveSurfers[idx].on("region-click", (region: any) => {
+        console.log(`${idx} Region Click`);
+        this.regionClick(idx, region);
       });
-      /*
+      this.waveSurfers[idx].on("region-removed", () => {
+        console.log(`${idx} Region Removed`);
+      });
       this.waveSurfers[idx].on("seek", (seek: number) => {
+        console.log(`${idx} Seek`);
+        /*
         this.props.setDispatch({
           dispatchType: "Seek",
           wsNum: idx,
           refStart: roundIt(seek * this.waveSurfers[idx].getDuration(), 3)
         });
+        */
       });
-      */
     });
     this.waveSurfers[0].on("play", this.props.playerPlay);
   };
@@ -167,6 +169,7 @@ export class DeeJay extends Component<DeeJayProps> {
             this.loadQueue[idx] = "";
             // Set Event Watcher for Ready
             let waveformReady = () => {
+              console.log(`${idx} Waveform Ready`);
               this.onSurferReady(idx);
               this.waveSurfers[idx].un(wsFunction, waveformReady);
             };
@@ -237,6 +240,7 @@ export class DeeJay extends Component<DeeJayProps> {
             this.currentPlaying[idx] = loadFile;
             // Set Event Watcher for Ready
             let waveformReady = () => {
+              console.log(`${idx} Waveform Ready`);
               this.onSurferReady(idx);
               this.waveSurfers[idx].un(wsFunction, waveformReady);
             };
@@ -312,7 +316,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
   dispatchDJ = (dispatch: DeeJayDispatch) => {
     const regionCreated = (region: any) => {
-      console.log("Created");
+      console.log(`${wsNum} Created`);
       if (region.id === "temp") {
         this.waveSurfers[wsNum].play(region.start, region.end);
       }
@@ -364,6 +368,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
               // On Pause Function for the WS
               let nextClip = () => {
+                console.log(`${wsNum} Next Clip`);
                 let filtered = ms.filter(
                   (m: any) =>
                     m.startTime <= currWS.getCurrentTime() &&

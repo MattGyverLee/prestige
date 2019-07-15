@@ -55,7 +55,7 @@ interface DispatchProps {
 
   addCategory: typeof actions.addCategory;
   addOralAnnotation: typeof actions.addOralAnnotation;
-  enableAudtranscMain: typeof actions.enableAudtranscMain;
+  toggleAudtranscMain: typeof actions.toggleAudtranscMain;
   pushAnnotation: typeof actions.pushAnnotation;
   pushTimeline: typeof actions.pushTimeline;
   hardResetApp: typeof actions.hardResetApp;
@@ -181,7 +181,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       completeSnackbar: actions.completeSnackbar,
       pushAnnotation: actions.pushAnnotation,
       dispatchSnackbar: actions.dispatchSnackbar,
-      enableAudtranscMain: actions.enableAudtranscMain,
+      toggleAudtranscMain: actions.toggleAudtranscMain,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,

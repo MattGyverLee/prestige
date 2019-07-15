@@ -1,6 +1,7 @@
 export interface LooseObject extends Object {
   [key: string]: any;
 }
+
 export interface AnnotationRow {
   id: number;
   startTime: number;
@@ -10,6 +11,7 @@ export interface AnnotationRow {
   txtTransc: string;
   txtTransl: string;
 }
+
 export interface Milestone {
   annotationID: string;
   data: {
@@ -21,64 +23,55 @@ export interface Milestone {
     clipStart?: number;
     clipStop?: number;
     duration?: number;
-    // timelineIdx: number;
   }[];
   startTime: number;
   stopTime: number;
 }
 
 export interface AnnotationState {
-  annotations: any[];
   annotationSet: any[];
   annotationTable: any[];
+  annotations: any[];
   audCarefulMain: boolean;
   audTranslMain: boolean;
   categories: string[];
+  currentTimeline: number;
   fileInfoMain: boolean;
+  prevTimeline: number;
   sayMoreMetaMain: boolean;
   timeline: LooseObject[];
-  currentTimeline: number;
-  prevTimeline: number;
+  timelineChanged: boolean;
+  timelinesInstantiated: boolean;
   txtTranscMain: boolean;
   txtTranscSubtitle: boolean;
   txtTranslMain: boolean;
   txtTranslSubtitle: boolean;
-  timelineChanged: boolean;
-  timelinesInstantiated: boolean;
 }
 
 // Describing the different ACTION NAMES available
-export const ADD_ORAL_ANNOTATION = "ADD_ORAL_ANNOTATION";
 export const ADD_CATEGORY = "ADD_CATEGORY";
-export const DISABLE_AUDCAREFUL_MAIN = "DISABLE_AUDCAREFUL_MAIN";
-export const DISABLE_AUDTRANSC_MAIN = "DISABLE_AUDTRANSC_MAIN";
-export const DISABLE_AUDTRANSL_MAIN = "DISABLE_AUDTRANSL_MAIN";
-export const DISABLE_AUDTRANSL_SUB = "DISABLE_AUDTRANSL_SUB";
-export const DISABLE_FILEINFO = "DISABLE_FILEINFO";
-export const DISABLE_META_MAIN = "DISABLE_META_MAIN";
-export const DISABLE_TRANSC_SUB = "DISABLE_TRANSC_SUB";
-export const DISABLE_TXTTRANSL_MAIN = "DISABLE_TXTTRANSL_MAIN";
-export const ENABLE_AUDCAREFUL_MAIN = "ENABLE_AUDCAREFUL_MAIN";
-export const ENABLE_AUDTRANSC_MAIN = "ENABLE_AUDTRANSC_MAIN";
-export const ENABLE_AUDTRANSL_MAIN = "ENABLE_AUDTRANSL_MAIN";
-export const ENABLE_FILEINFO = "ENABLE_FILEINFO";
-export const ENABLE_META_MAIN = "ENABLE_META_MAIN";
-export const ENABLE_TRANSC_SUB = "ENABLE_TRANSC_SUB";
-export const ENABLE_TXTTRANSL_MAIN = "ENABLE_TXTTRANSL_MAIN";
-export const ENABLE_AUDTRANSL_SUB = "ENABLE_AUDTRANSL_SUB";
-export const PUSH_ANNOTATION = "REMOVE_ANNOTATION";
-export const PUSH_TIMELINE = "PUSH_TIMELINE";
-export const PUSH_ANNOTATION_TABLE = "PUSH_ANNOTATION_TABLE";
-export const RESET_ANNOTATION_SESSION = "RESET_ANNOTATION_SESSION";
+export const ADD_ORAL_ANNOTATION = "ADD_ORAL_ANNOTATION";
+export const FILE_DELETED = "FILE_DELETED";
 export const HARD_RESET_APP = "HARD_RESET_APP";
+export const LOAD_ANNOT = "LOAD_ANNOT";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const ON_RELOAD_FOLDER = "ON_RELOAD_FOLDER";
-export const SET_URL = "SET_URL";
-export const FILE_DELETED = "FILE_DELETED";
-export const UPDATE_PREV_TIMELINE = "UPDATE_PREV_TIMELINE";
+export const PUSH_ANNOTATION = "REMOVE_ANNOTATION";
+export const PUSH_ANNOTATION_TABLE = "PUSH_ANNOTATION_TABLE";
+export const PUSH_TIMELINE = "PUSH_TIMELINE";
+export const RESET_ANNOTATION_SESSION = "RESET_ANNOTATION_SESSION";
 export const SET_TIMELINES_INSTANTIATED = "SET_TIMELINES_INSTANTIATED";
 export const SET_TIMELINE_CHANGED = "SET_TIMELINE_CHANGED";
-export const LOAD_ANNOT = "LOAD_ANNOT";
+export const SET_URL = "SET_URL";
+export const TOGGLE_AUDCAREFUL_MAIN = "TOGGLE_AUDCAREFUL_MAIN";
+export const TOGGLE_AUDTRANSC_MAIN = "TOGGLE_AUDTRANSC_MAIN";
+export const TOGGLE_AUDTRANSL_MAIN = "TOGGLE_AUDTRANSL_MAIN";
+export const TOGGLE_AUDTRANSL_SUB = "TOGGLE_AUDTRANSL_SUB";
+export const TOGGLE_FILEINFO = "TOGGLE_FILEINFO";
+export const TOGGLE_META_MAIN = "TOGGLE_META_MAIN";
+export const TOGGLE_TRANSC_SUB = "DISABLE_TRANSC_SUB";
+export const TOGGLE_TXTTRANSL_MAIN = "TOGGLE_TXTTRANSL_MAIN";
+export const UPDATE_PREV_TIMELINE = "UPDATE_PREV_TIMELINE";
 
 interface LoadAnnot {
   type: typeof LOAD_ANNOT;
@@ -104,78 +97,77 @@ interface AddOralAnnotation {
   type: typeof ADD_ORAL_ANNOTATION;
   payload: LooseObject;
 }
+
 interface PushAnnotation {
   type: typeof PUSH_ANNOTATION;
   payload: Milestone[];
 }
+
 interface PushAnnotationTable {
   type: typeof PUSH_ANNOTATION_TABLE;
   payload: AnnotationRow[];
 }
+
 interface PushTimeline {
   type: typeof PUSH_TIMELINE;
   payload: LooseObject;
 }
+
 interface AddCategory {
   type: typeof ADD_CATEGORY;
   payload: string;
 }
-interface EnableAudcarefulMain {
-  type: typeof ENABLE_AUDCAREFUL_MAIN;
+
+interface ToggleAudcarefulMain {
+  type: typeof TOGGLE_AUDCAREFUL_MAIN;
+  payload?: boolean;
 }
-interface DisableAudcarefulMain {
-  type: typeof DISABLE_AUDCAREFUL_MAIN;
+
+interface ToggleAudtranslMain {
+  type: typeof TOGGLE_AUDTRANSL_MAIN;
+  payload?: boolean;
 }
-interface EnableAudtranslMain {
-  type: typeof ENABLE_AUDTRANSL_MAIN;
+
+interface ToggleAudtranscMain {
+  type: typeof TOGGLE_AUDTRANSC_MAIN;
+  payload?: boolean;
 }
-interface DisableAudtranslMain {
-  type: typeof DISABLE_AUDTRANSL_MAIN;
+
+interface ToggleTranscSub {
+  type: typeof TOGGLE_TRANSC_SUB;
+  payload?: boolean;
 }
-interface EnableAudtranscMain {
-  type: typeof ENABLE_AUDTRANSC_MAIN;
+
+interface ToggleTxttranslMain {
+  type: typeof TOGGLE_TXTTRANSL_MAIN;
+  payload?: boolean;
 }
-interface DisableAudtranscMain {
-  type: typeof DISABLE_AUDTRANSC_MAIN;
+
+interface ToggleAudtranslSub {
+  type: typeof TOGGLE_AUDTRANSL_SUB;
+  payload?: boolean;
 }
-interface EnableTranscSub {
-  type: typeof ENABLE_TRANSC_SUB;
+
+interface ToggleMetaMain {
+  type: typeof TOGGLE_META_MAIN;
+  payload?: boolean;
 }
-interface DisableTranscSub {
-  type: typeof DISABLE_TRANSC_SUB;
+
+interface ToggleFileinfo {
+  type: typeof TOGGLE_FILEINFO;
+  payload?: boolean;
 }
-interface EnableTxttranslMain {
-  type: typeof ENABLE_TXTTRANSL_MAIN;
-}
-interface DisableTxttranslMain {
-  type: typeof DISABLE_TXTTRANSL_MAIN;
-}
-interface EnableAudtranslSub {
-  type: typeof ENABLE_AUDTRANSL_SUB;
-}
-interface DisableAudtranslSub {
-  type: typeof DISABLE_AUDTRANSL_SUB;
-}
-interface EnableMetaMain {
-  type: typeof ENABLE_META_MAIN;
-}
-interface DisableMetaMain {
-  type: typeof DISABLE_META_MAIN;
-}
-interface EnableFileinfo {
-  type: typeof ENABLE_FILEINFO;
-}
-interface DisableFileinfo {
-  type: typeof DISABLE_FILEINFO;
-}
+
 interface SetURL {
   type: typeof SET_URL;
   payload: string;
 }
+
 interface FileDeleted {
   type: typeof FILE_DELETED;
   payload: string;
 }
+
 interface UpdatePrevTimeline {
   type: typeof UPDATE_PREV_TIMELINE;
   payload: number;
@@ -185,40 +177,32 @@ interface SetTimelinesInstantiated {
   type: typeof SET_TIMELINES_INSTANTIATED;
   payload: boolean;
 }
+
 interface SetTimelineChanged {
   type: typeof SET_TIMELINE_CHANGED;
   payload: boolean;
 }
 
-// TODO: Convert En/Disables to Toggles with Optional Boolean
 export type AnnotationActionTypes =
-  | AddOralAnnotation
   | AddCategory
-  | DisableAudcarefulMain
-  | DisableAudtranscMain
-  | DisableAudtranslMain
-  | DisableAudtranslSub
-  | DisableFileinfo
-  | DisableMetaMain
-  | DisableTranscSub
-  | DisableTxttranslMain
-  | EnableAudcarefulMain
-  | EnableAudtranscMain
-  | EnableAudtranslMain
-  | EnableAudtranslSub
-  | EnableFileinfo
-  | EnableMetaMain
-  | EnableTranscSub
-  | EnableTxttranslMain
+  | AddOralAnnotation
+  | FileDeleted
+  | HardResetApp
+  | LoadAnnot
+  | OnNewFolder
+  | OnReloadFolder
   | PushAnnotation
   | PushAnnotationTable
   | PushTimeline
-  | HardResetApp
-  | OnNewFolder
-  | OnReloadFolder
-  | SetURL
-  | FileDeleted
-  | UpdatePrevTimeline
-  | SetTimelinesInstantiated
   | SetTimelineChanged
-  | LoadAnnot;
+  | SetTimelinesInstantiated
+  | SetURL
+  | ToggleAudcarefulMain
+  | ToggleAudtranscMain
+  | ToggleAudtranslMain
+  | ToggleAudtranslSub
+  | ToggleFileinfo
+  | ToggleMetaMain
+  | ToggleTranscSub
+  | ToggleTxttranslMain
+  | UpdatePrevTimeline;

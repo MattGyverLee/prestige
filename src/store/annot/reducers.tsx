@@ -124,88 +124,52 @@ export function annotationReducer(
         timelineChanged: true
       };
     }
-    case types.ENABLE_AUDCAREFUL_MAIN: {
-      return {
-        ...state
-      };
-    }
-    case types.DISABLE_AUDCAREFUL_MAIN: {
-      return {
-        ...state
-      };
-    }
-    case types.ENABLE_AUDTRANSL_MAIN: {
+    case types.TOGGLE_AUDCAREFUL_MAIN: {
       return {
         ...state,
-        audTranslMain: true
+        audCarefulMain: action.payload || !state.audCarefulMain
       };
     }
-    case types.DISABLE_AUDTRANSL_MAIN: {
+    case types.TOGGLE_AUDTRANSL_MAIN: {
       return {
         ...state,
-        audTranslMain: false
+        audTranslMain: action.payload || !state.audTranslMain
       };
     }
-    case types.ENABLE_AUDTRANSC_MAIN: {
+    case types.TOGGLE_AUDTRANSC_MAIN: {
       return {
         ...state,
-        txtTranscMain: true
+        txtTranscMain: action.payload || !state.txtTranscMain
       };
     }
-    case types.DISABLE_AUDTRANSC_MAIN: {
+    case types.TOGGLE_TRANSC_SUB: {
       return {
         ...state,
-        txtTranscMain: false
+        txtTranscSubtitle: action.payload || !state.txtTranscSubtitle
       };
     }
-    case types.ENABLE_TRANSC_SUB: {
+    case types.TOGGLE_TXTTRANSL_MAIN: {
       return {
-        ...state
+        ...state,
+        txtTranslMain: action.payload || !state.txtTranslMain
       };
     }
-    case types.DISABLE_TRANSC_SUB: {
+    case types.TOGGLE_AUDTRANSL_SUB: {
       return {
-        ...state
+        ...state,
+        audTranslMain: action.payload || !state.audTranslMain
       };
     }
-    case types.ENABLE_TXTTRANSL_MAIN: {
+    case types.TOGGLE_META_MAIN: {
       return {
-        ...state
+        ...state,
+        sayMoreMetaMain: action.payload || !state.sayMoreMetaMain
       };
     }
-    case types.DISABLE_TXTTRANSL_MAIN: {
+    case types.TOGGLE_FILEINFO: {
       return {
-        ...state
-      };
-    }
-    case types.ENABLE_AUDTRANSL_SUB: {
-      return {
-        ...state
-      };
-    }
-    case types.DISABLE_AUDTRANSL_SUB: {
-      return {
-        ...state
-      };
-    }
-    case types.ENABLE_META_MAIN: {
-      return {
-        ...state
-      };
-    }
-    case types.DISABLE_META_MAIN: {
-      return {
-        ...state
-      };
-    }
-    case types.ENABLE_FILEINFO: {
-      return {
-        ...state
-      };
-    }
-    case types.DISABLE_FILEINFO: {
-      return {
-        ...state
+        ...state,
+        fileInfoMain: action.payload || !state.fileInfoMain
       };
     }
     case types.FILE_DELETED: {

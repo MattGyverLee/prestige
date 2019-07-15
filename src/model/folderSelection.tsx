@@ -91,15 +91,16 @@ class SelectFolderZone extends Component<FolderProps> {
     };
 
     // Processes File (Convert Media or Process EAF) and Returns File Definition
-    const chocFileDescribe = (path: string): aTypes.LooseObject => {
+    const chokFileDescribe = (path: string): aTypes.LooseObject => {
       // Define Fields for Returned FileDef
-      const blobURL = require("file-url")(path);
+      const fileURL = require("file-url");
       const parsedPath = require("path").parse(path);
       const isMerged = parsedPath.base.includes("_Merged");
       const isAnnotation =
         parsedPath.dir.endsWith("_Annotations") ||
         parsedPath.base.includes("oralAnnotations") ||
         isMerged;
+      let blobURL = fileURL(path);
 
       // Get Temporary Mime Type of File
       const mime = require("mime");
@@ -121,8 +122,10 @@ class SelectFolderZone extends Component<FolderProps> {
                 error: Error,
                 file: File
               ) {
-                if (!error) console.log("New video file: " + file);
-                // TODO: update/replace Blob on conversion
+                if (!error) {
+                  console.log("New video file: " + file);
+                }
+                return;
               });
           },
           // Reports on Video Conversion Errors
@@ -165,7 +168,8 @@ class SelectFolderZone extends Component<FolderProps> {
 
         this.loadLocalFolder(this.currentFolder);
       } else {
-        const fileDef = chocFileDescribe(path);
+        const fileDef = chokFileDescribe(path);
+        if (fileDef === undefined) return;
         const isAudVid =
           fileDef.mimeType.startsWith("video") ||
           fileDef.mimeType.startsWith("audio");
@@ -200,7 +204,8 @@ class SelectFolderZone extends Component<FolderProps> {
 
         this.loadLocalFolder(this.currentFolder);
       } else {
-        const fileDef = chocFileDescribe(path);
+        const fileDef = chokFileDescribe(path);
+        if (fileDef === undefined) return;
         const isAudVid =
           fileDef.mimeType.startsWith("video") ||
           fileDef.mimeType.startsWith("audio");
@@ -302,16 +307,16 @@ class SelectFolderZone extends Component<FolderProps> {
     // returns True if dir has changed (or no data stored), otherwise False
     const currentDir = this.dirSnapshot(dir);
     if (
-      localStorage.getItem("Prestige." + dir) !== null &&
-      localStorage.getItem("Prestige." + dir) === currentDir &&
-      localStorage.getItem("Prestige.annot." + dir) !== null &&
-      localStorage.getItem("Prestige.tree." + dir) !== null &&
+      localStorage.getItem(`Prestige.${dir}`) !== null &&
+      localStorage.getItem(`Prestige.${dir}`) === currentDir &&
+      localStorage.getItem(`Prestige.annot.${dir}`) !== null &&
+      localStorage.getItem(`Prestige.tree.${dir}`) !== null &&
       this.props.annot.timeline.length === 0
     ) {
-      const inAnnot = localStorage.getItem("Prestige.annot." + dir) + "";
+      const inAnnot = localStorage.getItem(`Prestige.annot.${dir}`) + "";
       parentThis.props.loadAnnot(JSON.parse(inAnnot));
 
-      const inTree = localStorage.getItem("Prestige.tree." + dir) + "";
+      const inTree = localStorage.getItem(`Prestige.tree.${dir}`) + "";
       parentThis.props.loadTree(JSON.parse(inTree));
 
       this.usingStoredData = true;
@@ -323,13 +328,13 @@ class SelectFolderZone extends Component<FolderProps> {
         this.props.annot.timeline.length !== 0 &&
         this.props.tree.sourceMedia.length !== 0
       ) {
-        localStorage.setItem("Prestige." + dir, currentDir);
+        localStorage.setItem(`Prestige.${dir}`, currentDir);
         localStorage.setItem(
-          "Prestige.tree." + dir,
+          `Prestige.tree.${dir}`,
           JSON.stringify(this.props.tree)
         );
         localStorage.setItem(
-          "Prestige.annot." + dir,
+          `Prestige.annot.${dir}`,
           JSON.stringify(this.props.annot)
         );
         let time = Date.now() + 0;
@@ -352,7 +357,7 @@ class SelectFolderZone extends Component<FolderProps> {
     if (inputElement.files.length === 0) {
       console.log("Undefined Directory Selected");
     } else if (inputElement.files[0].path !== this.props.prevPath) {
-      console.log("Setting Folder to: " + inputElement.files[0].path);
+      console.log(`Setting Folder to: ${inputElement.files[0].path}`);
       // here
       if (!this.testDir(this, this.currentFolder.files[0].path, false)) {
         // Setting up imported State
@@ -368,7 +373,6 @@ class SelectFolderZone extends Component<FolderProps> {
           this.startWatcher(path, this.props);
           this.props.changePrevPath(path);
         }
-        /// /////////////////////////////////////////////////////////////////////////
       }
     } else if (
       inputElement.files[0].path === this.props.prevPath &&
@@ -396,7 +400,7 @@ class SelectFolderZone extends Component<FolderProps> {
         const splitPath = require("path")
           .parse(mediaFile.path)
           .name.split("_");
-        const tier = splitPath[3] + "_audio";
+        const tier = `${splitPath[3]}_audio`;
 
         // Create oralMilestone
         const oralMilestone: aTypes.Milestone = {
@@ -469,19 +473,19 @@ class SelectFolderZone extends Component<FolderProps> {
     // Set Up Fluent FFMpeg and its Associated Paths
     let fluentFfmpeg = require("fluent-ffmpeg");
     if (require("electron-is-dev")) {
-      fluentFfmpeg.setFfmpegPath(process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe");
+      fluentFfmpeg.setFfmpegPath(`${process.cwd()}\\bin\\win\\x64\\ffmpeg.exe`);
       fluentFfmpeg.setFfprobePath(
-        process.cwd() + "\\bin\\win\\x64\\ffprobe.exe"
+        `${process.cwd()}\\bin\\win\\x64\\ffprobe.exe`
       );
     } else {
       // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
       // Do I want a relative (__dirname) or absolute (process.cwd()) path?
       fluentFfmpeg.setFfmpegPath(
-        process.cwd() + "/resources" + ffmpegStaticElectron.path
+        `${process.cwd()}/resources${ffmpegStaticElectron.path}`
       );
       // __dirname + "resources" + require("ffmpeg-static-electron").path;
       fluentFfmpeg.setFfprobePath(
-        process.cwd() + "/resources" + ffmpegStaticElectron.path
+        `${process.cwd()}/resources${ffmpegStaticElectron.path}`
       );
       // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
@@ -506,12 +510,9 @@ class SelectFolderZone extends Component<FolderProps> {
     let idx = 0;
     inputFiles.forEach((v: string) => {
       mergedAudio = mergedAudio.addInput(v);
-      cf +=
-        "[" +
-        idx.toString() +
-        "]loudnorm=I=-16:TP=-1.5:LRA=11[" +
-        (idx ? "b" : "out") +
-        "];";
+      cf += `[${idx.toString()}]loudnorm=I=-16:TP=-1.5:LRA=11[${
+        idx ? "b" : "out"
+      }];`;
       if (idx) cf += "[out][b]concat=v=0:a=1[out];";
       idx++;
     });
@@ -548,9 +549,9 @@ class SelectFolderZone extends Component<FolderProps> {
               annotationID: "",
               data: [
                 {
-                  channel: ctString + "Merged",
-                  data: fileURL(dir + ctString + "_Merged.mp3"),
-                  linguisticType: ctString + "Merged",
+                  channel: `${ctString}Merged`,
+                  data: fileURL(`${dir}${ctString}_Merged.mp3`),
+                  linguisticType: `${ctString}Merged`,
                   locale: "",
                   mimeType: "audio-mp3",
                   clipStart: roundIt(lastTime, 3),

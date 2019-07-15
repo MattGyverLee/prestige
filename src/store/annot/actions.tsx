@@ -72,113 +72,62 @@ export function pushTimeline(
     payload: timeline
   };
 }
-
-export function enableAudcarefulMain(
-  annotState: types.AnnotationState
+export function toggleAudcarefulMain(
+  toggle?: boolean
 ): types.AnnotationActionTypes {
   return {
-    type: types.ENABLE_AUDCAREFUL_MAIN
+    type: types.TOGGLE_AUDCAREFUL_MAIN,
+    payload: toggle
   };
 }
-export function disableAudcarefulMain(
-  annotState: types.AnnotationState
+export function toggleAudtranslMain(
+  toggle?: boolean
 ): types.AnnotationActionTypes {
   return {
-    type: types.DISABLE_AUDCAREFUL_MAIN
+    type: types.TOGGLE_AUDTRANSL_MAIN,
+    payload: toggle
   };
 }
-export function enableAudtranslMain(
-  annotState: types.AnnotationState
+export function toggleAudtranscMain(
+  toggle?: boolean
 ): types.AnnotationActionTypes {
   return {
-    type: types.ENABLE_AUDTRANSL_MAIN
+    type: types.TOGGLE_AUDTRANSC_MAIN,
+    payload: toggle
   };
 }
-export function disableAudtranslMain(
-  annotState: types.AnnotationState
+export function toggleTranscSub(toggle?: boolean): types.AnnotationActionTypes {
+  return {
+    type: types.TOGGLE_TRANSC_SUB,
+    payload: toggle
+  };
+}
+export function toggleTxttranslMain(
+  toggle?: boolean
 ): types.AnnotationActionTypes {
   return {
-    type: types.DISABLE_AUDTRANSL_MAIN
+    type: types.TOGGLE_TXTTRANSL_MAIN,
+    payload: toggle
   };
 }
-export function enableAudtranscMain(): types.AnnotationActionTypes {
-  return {
-    type: types.ENABLE_AUDTRANSC_MAIN
-  };
-}
-export function disableAudtranscMain(): types.AnnotationActionTypes {
-  return {
-    type: types.DISABLE_AUDTRANSC_MAIN
-  };
-}
-export function enableTranscSub(
-  annotState: types.AnnotationState
+export function toggleAudtranslSub(
+  toggle?: boolean
 ): types.AnnotationActionTypes {
   return {
-    type: types.ENABLE_TRANSC_SUB
+    type: types.TOGGLE_AUDTRANSL_SUB,
+    payload: toggle
   };
 }
-export function disableTranscSub(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
+export function toggleMetaMain(toggle?: boolean): types.AnnotationActionTypes {
   return {
-    type: types.DISABLE_TRANSC_SUB
+    type: types.TOGGLE_META_MAIN,
+    payload: toggle
   };
 }
-export function enableTxttranslMain(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
+export function toggleFileinfo(toggle?: boolean): types.AnnotationActionTypes {
   return {
-    type: types.ENABLE_TXTTRANSL_MAIN
-  };
-}
-export function disableTxttranslMain(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.DISABLE_TXTTRANSL_MAIN
-  };
-}
-export function enableAudtranslSub(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.ENABLE_AUDTRANSL_SUB
-  };
-}
-export function disableAudtranslSub(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.DISABLE_AUDTRANSL_SUB
-  };
-}
-export function enableMetaMain(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.ENABLE_META_MAIN
-  };
-}
-export function disableMetaMain(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.DISABLE_META_MAIN
-  };
-}
-export function enableFileinfo(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.ENABLE_FILEINFO
-  };
-}
-export function disableFileinfo(
-  annotState: types.AnnotationState
-): types.AnnotationActionTypes {
-  return {
-    type: types.DISABLE_FILEINFO
+    type: types.TOGGLE_FILEINFO,
+    payload: toggle
   };
 }
 export function updatePrevTimeline(idx: number): types.AnnotationActionTypes {
