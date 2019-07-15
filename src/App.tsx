@@ -118,6 +118,11 @@ class App extends React.Component<AppProps> {
     console.log("#Scanning EAF", inputFile);
   };
 
+  clearLocalStorage = () => {
+    for (let l in localStorage)
+      if (l.startsWith("Prestige")) localStorage.removeItem(l);
+  };
+
   render() {
     return (
       <div className="App">
@@ -141,8 +146,8 @@ class App extends React.Component<AppProps> {
         <div className="App-footer">
           <SelectFolderZone callProcessEAF={this.callProcessEAF} />
           <div className="SnackBar">
-            <button onClick={() => this.props.dispatchSnackbar(this.props.url)}>
-              Click To Open Snackbar
+            <button onClick={this.clearLocalStorage}>
+              Click To Clear Local Storage
             </button>
             <Snackbar
               ref={this.snackbarRef}

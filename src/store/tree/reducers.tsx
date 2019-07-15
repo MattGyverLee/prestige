@@ -116,45 +116,23 @@ export function treeReducer(
       };
     }
     case types.WAVEFORM_ADDED: {
+      const tempFiltered = (action.payload.sourceAnnot
+        ? state.sourceMedia
+        : state.annotMedia
+      ).map(file =>
+        file.blobURL === action.payload.ref
+          ? { ...file, waveform: action.payload.wavedata }
+          : file
+      );
       if (action.payload.sourceAnnot) {
-        const tempState = state.sourceMedia.filter(sfile => {
-          if (sfile.name === action.payload.ref) {
-            return false;
-          }
-          return true;
-        });
-        const waveFile = state.sourceMedia.filter(sfile => {
-          if (sfile.name === action.payload.ref) {
-            return true;
-          }
-          return false;
-        });
         return {
           ...state,
-          sourceMedia: [
-            ...tempState,
-            { waveFile, waveform: action.payload.wavedata }
-          ]
+          sourceMedia: [...tempFiltered]
         };
       } else {
-        const tempState = state.annotMedia.filter(afile => {
-          if (afile.name === action.payload.ref) {
-            return false;
-          }
-          return true;
-        });
-        const waveFile = state.annotMedia.filter(afile => {
-          if (afile.name === action.payload.ref) {
-            return true;
-          }
-          return false;
-        });
         return {
           ...state,
-          annotMedia: [
-            ...tempState,
-            { waveFile, waveform: action.payload.wavedata }
-          ]
+          annotMedia: [...tempFiltered]
         };
       }
     }

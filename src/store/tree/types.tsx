@@ -1,12 +1,26 @@
 // Describing the shape of the tree's slice of state
+export interface Media {
+  blobURL: string;
+  extension: string;
+  hasAnnotation: boolean;
+  isAnnotation: boolean;
+  isMerged: boolean;
+  inMilestones: boolean;
+  mimeType: string;
+  name: string;
+  path: string;
+  wsAllowed: boolean;
+  waveform: string;
+}
+
 export interface TreeState {
   env: string;
   folderPath: string;
   folderName: string;
   loaded: boolean;
   availableFiles: any[];
-  sourceMedia: any[];
-  annotMedia: any[];
+  sourceMedia: Media[];
+  annotMedia: Media[];
   prevPath: string;
 }
 

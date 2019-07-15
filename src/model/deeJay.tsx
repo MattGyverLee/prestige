@@ -144,17 +144,33 @@ export class DeeJay extends Component<DeeJayProps> {
         } else if (this.loadQueue[idx] !== "") {
           // If the LoadQueue File Can Be Loaded, Load It
           if (this.fileAllowed(this.loadQueue[idx])) {
+            let wave = "";
+            if (idx === 0) {
+              wave = this.props.sourceMedia.filter(
+                (f: any) => f.blobURL === this.loadQueue[idx]
+              )[0].waveform.wavedata;
+            } else {
+              wave = this.props.annotMedia.filter(
+                (f: any) => f.blobURL === this.loadQueue[idx]
+              )[0].waveform.wavedata;
+            }
+
             // Load the File, and Change CurrentPlaying and LoadQueue Accordingly
             this.currentPlaying[idx] = this.loadQueue[idx];
-            this.waveSurfers[idx].load(this.loadQueue[idx]);
+            let wsFunction = "ready";
+            if (wave !== undefined && wave !== "") {
+              this.waveSurfers[idx].load(this.loadQueue[idx], JSON.parse(wave));
+            } else {
+              this.waveSurfers[idx].load(this.loadQueue[idx]);
+              wsFunction = "waveform-" + wsFunction;
+            }
             this.loadQueue[idx] = "";
-
-            // Set Event Watchers for Ready and Seeking
+            // Set Event Watcher for Ready
             let waveformReady = () => {
               this.onSurferReady(idx);
-              this.waveSurfers[idx].un("waveform-ready", waveformReady);
+              this.waveSurfers[idx].un(wsFunction, waveformReady);
             };
-            this.waveSurfers[idx].on("waveform-ready", waveformReady);
+            this.waveSurfers[idx].on(wsFunction, waveformReady);
           }
         } else {
           // Search for File According to WS Number
@@ -199,16 +215,32 @@ export class DeeJay extends Component<DeeJayProps> {
           // If the File is Allowed, Load It
           // -> Else, Add to LoadQueue
           if (this.fileAllowed(loadFile)) {
-            // Load the File, and Change CurrentPlaying Accordingly
-            this.waveSurfers[idx].load(loadFile);
-            this.currentPlaying[idx] = loadFile;
+            let wave = "";
+            if (idx === 0) {
+              wave = this.props.sourceMedia.filter(
+                (f: any) => f.blobURL === loadFile
+              )[0].waveform;
+            } else {
+              wave = this.props.annotMedia.filter(
+                (f: any) => f.blobURL === loadFile
+              )[0].waveform;
+            }
 
-            // Set Event Watchers for Ready and Seeking
+            // Load the File, and Change CurrentPlaying Accordingly
+            let wsFunction = "ready";
+            if (wave !== undefined && wave !== "") {
+              this.waveSurfers[idx].load(loadFile, JSON.parse(wave));
+            } else {
+              this.waveSurfers[idx].load(loadFile);
+              wsFunction = "waveform-" + wsFunction;
+            }
+            this.currentPlaying[idx] = loadFile;
+            // Set Event Watcher for Ready
             let waveformReady = () => {
               this.onSurferReady(idx);
-              this.waveSurfers[idx].un("waveform-ready", waveformReady);
+              this.waveSurfers[idx].un(wsFunction, waveformReady);
             };
-            this.waveSurfers[idx].on("waveform-ready", waveformReady);
+            this.waveSurfers[idx].on(wsFunction, waveformReady);
           } else {
             // Add File to LoadQueue
             this.loadQueue[idx] = loadFile;
@@ -248,13 +280,13 @@ export class DeeJay extends Component<DeeJayProps> {
 
   onSurferReady = (idx: number) => {
     this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
-    const sourceAnnot = idx > 0 ? true : false;
+    const sourceAnnot = idx === 0 ? true : false;
     const cp = this.currentPlaying[idx];
-    const waveform = this.waveSurfers[idx].exportPCM(500, 1000, true);
+    const waveform = this.waveSurfers[idx].exportPCM(1024, 10000, true);
     const waveIn = {
       ref: cp,
-      sourceAnnot,
       // True: Source
+      sourceAnnot,
       wavedata: waveform
     };
     this.props.waveformAdded(waveIn);

@@ -10,19 +10,15 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
     return -1;
   }
   let temp = timelines.map((t: LooseObject, idx: number) => {
-    let syncMedia = t["syncMedia"];
-    let x: tempTimeline = { syncMedia, idx };
+    let x: tempTimeline = { syncMedia: t["syncMedia"], idx };
     return x;
   });
-  let i, j;
-  for (i = 0; i < temp.length; i++) {
-    for (j = 0; j < temp[i].syncMedia.length; j++) {
-      if (temp[i].syncMedia[j] === blobURL) {
-        return temp[i].idx;
-      }
+  for (let i = 0, l = temp.length; i < l; i++) {
+    for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
+      if (temp[i].syncMedia[j] === blobURL) return temp[i].idx;
     }
   }
-  for (i = 0; i < timelines.length; i++) {
+  for (let i = 0, l = timelines.length; i < l; i++) {
     if (
       timelines[i].eafFile.includes(
         blobURL.substring(0, blobURL.lastIndexOf("."))
@@ -41,27 +37,20 @@ export function sourceMedia(
 ): LooseObject[] {
   let sourceVids = sourceMedia
     .filter(file => !file.isAnnotation && file["mimeType"].startsWith("video"))
-    .sort(function(a: LooseObject, b: LooseObject) {
-      const nameA = a["name"].toLowerCase();
-      const nameB = b["name"].toLowerCase();
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) return 1;
-      return 0;
-    });
+    .sort((a: LooseObject, b: LooseObject) =>
+      sortName(a["name"].toLowerCase(), b["name"].toLowerCase())
+    );
   const path = require("path");
   let mp3s: string[] = [];
   let sourceAud = sourceAudio(sourceMedia, allOrViewer)
     .filter((sa: any) => {
       const parsedPath = path.parse(sa.path);
-      if (parsedPath.ext.toLowerCase() === ".mp3") {
-        mp3s.push(parsedPath.name);
-      }
-      let i;
-      for (i = 0; i < sourceVids.length; i++) {
-        const parsedPath2 = path.parse(sourceVids[i].path);
-        if (parsedPath.name === parsedPath2.name + "_StandardAudio") {
+      if (parsedPath.ext.toLowerCase() === ".mp3") mp3s.push(parsedPath.name);
+      for (let i = 0, l = sourceVids.length; i < l; i++) {
+        if (
+          parsedPath.name ===
+          path.parse(sourceVids[i].path).name + "_StandardAudio"
+        ) {
           return false;
         }
       }
@@ -88,15 +77,9 @@ export function sourceAudio(
         file["mimeType"].startsWith("audio") &&
         (!file["isMerged"] || allOrViewer)
     )
-    .sort(function(a: LooseObject, b: LooseObject) {
-      const nameA = a["name"].toLowerCase();
-      const nameB = b["name"].toLowerCase();
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) return 1;
-      return 0;
-    });
+    .sort((a: LooseObject, b: LooseObject) =>
+      sortName(a["name"].toLowerCase(), b["name"].toLowerCase())
+    );
   return [...sourceAud];
 }
 
@@ -118,16 +101,16 @@ export function annotAudio(
           file.blobURL.substring(0, file.blobURL.indexOf("_Annotations"))
         ) === timelineIdx
     )
-    .sort(function(a: LooseObject, b: LooseObject) {
-      const nameA = a["name"].toLowerCase();
-      const nameB = b["name"].toLowerCase();
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) return 1;
-      return 0;
-    });
+    .sort((a: LooseObject, b: LooseObject) =>
+      sortName(a["name"].toLowerCase(), b["name"].toLowerCase())
+    );
   return [...annotAud];
+}
+
+function sortName(a: string, b: string) {
+  if (a < b) return -1;
+  else if (a > b) return 1;
+  else return 0;
 }
 
 export function roundIt(value: number, decimals: number): number {
