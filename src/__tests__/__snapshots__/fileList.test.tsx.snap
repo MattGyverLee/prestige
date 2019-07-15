@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Displays the Full Set 1`] = `
+<ul
+  class="list-group list-group-flush"
+  data-testid="fileList.UL"
+>
+   
+  <li
+    class="list-group-item flex-container"
+  >
+    <div>
+       
+      Messsage for Cameroon Branch - lo res_Source.mp4
+       
+    </div>
+  </li>
+  <li
+    class="list-group-item flex-container"
+  >
+    <div>
+       
+      zPearfilm.mp4
+       
+    </div>
+  </li>
+   
+</ul>
+`;
+
+exports[`Displays the MP4 1`] = `
+<ul
+  class="list-group list-group-flush"
+  data-testid="fileList.UL"
+>
+   
+  <li
+    class="list-group-item flex-container"
+  >
+    <div>
+       
+      Messsage for Cameroon Branch - lo res_Source.mp4
+       
+    </div>
+  </li>
+   
+</ul>
+`;
+
+exports[`Displays the WAV 1`] = `
+<ul
+  class="list-group list-group-flush"
+  data-testid="fileList.UL"
+>
+   
+  <li
+    class="list-group-item flex-container"
+  >
+    <div>
+       
+      Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav
+       
+    </div>
+  </li>
+   
+</ul>
+`;

@@ -31,7 +31,7 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
 }
 
 // allOrViewer: True -> All, False -> Filtered
-export function sourceMedia(
+export function getSourceMedia(
   sourceMedia: LooseObject[],
   allOrViewer: boolean
 ): LooseObject[] {

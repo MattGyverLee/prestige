@@ -3,7 +3,7 @@ import * as actions from "../store";
 import * as tTypes from "../store/tree/types";
 
 import React, { Component } from "react";
-import { getTimelineIndex, roundIt, sourceMedia } from "./globalFunctions";
+import { getSourceMedia, getTimelineIndex, roundIt } from "./globalFunctions";
 
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -253,13 +253,15 @@ class SelectFolderZone extends Component<FolderProps> {
         } else if (this.props.sourceMedia.length !== 0) {
           this.loadAnnot(true);
           this.loadAnnot(false);
-          props.setURL(sourceMedia(this.props.sourceMedia, false)[0].blobURL);
+          props.setURL(
+            getSourceMedia(this.props.sourceMedia, false)[0].blobURL
+          );
           console.log(`Initial scan complete. Ready for changes`);
         } else {
           console.log("Empty Directory");
         }
       } else {
-        props.setURL(sourceMedia(this.props.sourceMedia, false)[0].blobURL);
+        props.setURL(getSourceMedia(this.props.sourceMedia, false)[0].blobURL);
       }
       // Notifies that Chok is Ready and the Timelines are Instantiated
       this.isChokReady = true;
