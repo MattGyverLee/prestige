@@ -1,20 +1,12 @@
 import "jest-dom/extend-expect";
 
-import * as actions from "../store";
+import { cleanup, render } from "@testing-library/react";
+import configureStore, * as actions from "../../store";
 
-import {
-  cleanup,
-  fireEvent,
-  render,
-  waitForElement
-} from "@testing-library/react";
-import fileList, { FileList } from "../model/fileList";
-
-import App from "../App";
+import { FileList } from "../fileList";
 import { Provider } from "react-redux";
 import React from "react";
-import configureStore from "../store";
-import { getSourceMedia } from "../model/globalFunctions";
+import { getSourceMedia } from "../globalFunctions";
 
 const store = configureStore();
 
@@ -33,7 +25,7 @@ const sourceMedia = [
     name:
       "Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
     path:
-      "C:Users\thouaDocumentsSayMoreFrench TranscriptionSessionsMichelMesssage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
+      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
     wsAllowed: true
   },
   {
@@ -48,7 +40,7 @@ const sourceMedia = [
     mimeType: "audio/wav",
     name: "Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav",
     path:
-      "C:Users\thouaDocumentsSayMoreFrench TranscriptionSessionsMichelMesssage for Cameroon Branch - lo res_Source_StandardAudio.wav",
+      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav",
     wsAllowed: false
   },
   {
@@ -63,11 +55,11 @@ const sourceMedia = [
     mimeType: "video/mp4",
     name: "Messsage for Cameroon Branch - lo res_Source.mp4",
     path:
-      "C:Users\thouaDocumentsSayMoreFrench TranscriptionSessionsMichelMesssage for Cameroon Branch - lo res_Source.mp4",
+      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source.mp4",
     wsAllowed: false
   },
   {
-    //Unrelated File
+    // Unrelated File
     blobURL:
       "file:///C:/Users/thoua/Documents/SayMore/French%20Transcription/Sessions/Michel/zPearfilm.mp4",
     extension: ".mp4",
@@ -78,7 +70,7 @@ const sourceMedia = [
     mimeType: "video/mp4",
     name: "zPearfilm.mp4",
     path:
-      "C:Users\thouaDocumentsSayMoreFrench TranscriptionSessionsMichelzPearfilm.mp4",
+      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\zPearfilm.mp4",
     wsAllowed: false
   }
 ];
@@ -89,7 +81,7 @@ let tree = (props?: any) => (
   <Provider store={store}>
     <FileList
       sourceMedia={getSourceMedia(sourceMedia, true)}
-      play={actions.play}
+      togglePlay={() => actions.togglePlay(true)}
       setURL={actions.setURL}
     />
   </Provider>
@@ -98,39 +90,40 @@ let tree = (props?: any) => (
 afterEach(cleanup);
 
 it("Displays the Full Set", () => {
-  const { getByTestId, container } = render(tree());
+  const { getByTestId } = render(tree());
   const ul = getByTestId("fileList.UL");
-  expect(ul).toBeVisible;
-  expect(ul.childNodes.length == 2);
+  expect(ul).toBeVisible();
+  expect(ul.childNodes.length === 2);
   expect(ul).toMatchSnapshot();
 });
 
 it("Displays the MP4", () => {
   sourceMedia.pop();
-  const { getByTestId, container } = render(tree());
+  const { getByTestId } = render(tree());
   const ul = getByTestId("fileList.UL");
-  expect(ul).toBeVisible;
-  expect(ul.childNodes.length == 1);
+  expect(ul).toBeVisible();
+  expect(ul.childNodes.length === 1);
   expect(ul.firstElementChild).toHaveTextContent("res_Source.mp4");
   expect(ul).toMatchSnapshot();
 });
 it("Displays the WAV", () => {
   sourceMedia.pop();
-  const { getByTestId, container } = render(tree());
+  const { getByTestId } = render(tree());
   const ul = getByTestId("fileList.UL");
-  expect(ul).toBeVisible;
-  expect(ul.childNodes.length == 1);
+  expect(ul).toBeVisible();
+  expect(ul.childNodes.length === 1);
   expect(ul.firstElementChild).toHaveTextContent("rce_StandardAudio.wav");
   expect(ul).toMatchSnapshot();
 });
 
-//currently Failing
+// Todo: Enable MP3 Test
+// currently Failing
 /* it("Displays the MP3", () => {
   sourceMedia.pop();
   const { getByTestId, container } = render(tree());
   const ul = getByTestId("fileList.UL");
-  expect(ul).toBeVisible;
-  expect(ul.childNodes.length == 1);
+  expect(ul).toBeVisible();
+  expect(ul.childNodes.length === 1);
   expect(ul.firstElementChild).toHaveTextContent("_Normalized.mp3");
   expect(ul).toMatchSnapshot();
 }); */

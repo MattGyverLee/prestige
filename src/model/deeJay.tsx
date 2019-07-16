@@ -51,9 +51,8 @@ export class DeeJay extends Component<DeeJayProps> {
       this.waveSurfers.push(
         WaveSurfer.create({
           container: "#waveform" + idx.toString(),
-          height: 50,
           barWidth: 1,
-          cursorWidth: 1,
+          cursorWidth: 2,
           backend: "MediaElement",
           progressColor: "#4a74a5",
           cursorColor: "#4a74a5",
@@ -264,7 +263,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
   onSurferReady = (idx: number) => {
     this.waveSurfers[idx].setVolume(this.props.volumes[idx]);
-    const sourceAnnot = idx === 0 ? true : false;
+    const sourceAnnot = idx === 0;
     const cp = this.currentPlaying[idx];
     const waveform = this.waveSurfers[idx].exportPCM(1024, 10000, true);
     const waveIn = {
@@ -328,6 +327,18 @@ export class DeeJay extends Component<DeeJayProps> {
     this.props.setDispatch({ dispatchType: "" });
     this.clearRegions();
 
+    // Grab the Current Milestone Indicated by the Passed Time
+    const ms = this.props.timeline[this.props.currentTimeline].milestones;
+    const currM = ms.filter((m: any) => {
+      return wsNum === 0
+        ? m.startTime === dispatch.clipStart && m.stopTime === dispatch.clipStop
+        : m.data.filter((d: any) => {
+            return (
+              d.clipStart === dispatch.clipStart &&
+              d.clipStop === dispatch.clipStop
+            );
+          }).length > 0;
+    })[0];
     switch (dispatch.dispatchType) {
       case "PlayPause":
         this.solo(wsNum);
@@ -337,20 +348,6 @@ export class DeeJay extends Component<DeeJayProps> {
         // Clear Any Issues with Undefined Input (There Won't Be Any)
         dispatch.clipStop = dispatch.clipStop || 0;
         dispatch.clipStart = dispatch.clipStart || 0;
-
-        // Grab the Current Milestone Indicated by the Passed Time
-        const ms = this.props.timeline[this.props.currentTimeline].milestones;
-        const currM = ms.filter((m: any) => {
-          return wsNum === 0
-            ? m.startTime === dispatch.clipStart &&
-                m.stopTime === dispatch.clipStop
-            : m.data.filter((d: any) => {
-                return (
-                  d.clipStart === dispatch.clipStart &&
-                  d.clipStop === dispatch.clipStop
-                );
-              }).length > 0;
-        })[0];
 
         // Let the User Know Something is Playing
         this.props.dispatchSnackbar("Playing Clip");
@@ -488,7 +485,17 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // this.props.dispatchSnackbar("🎵 DJ Activated 🎵");
   };
-
+  describeVol = (idx: number) => {
+    if (!this.props.volumes !== undefined) {
+      if (this.props.volumes[idx] > 0.25) {
+        return "High";
+      } else if (this.props.volumes[idx] === 0) {
+        return "Muted";
+      } else {
+        return "Low";
+      }
+    } else return "Undefined";
+  };
   toggleVol = (idx: number) => {
     if (this.waveSurfers[idx] !== undefined && this.waveSurfers[idx].isReady) {
       let name = "";
@@ -535,27 +542,26 @@ export class DeeJay extends Component<DeeJayProps> {
                   src={require("../assets/buttons/disabled50.png")}
                 />
                 <div className="overlay">
-                  <div className="overlay">
-                    <img
-                      className="green"
-                      width={50}
-                      height={50}
-                      alt=""
-                      style={{
-                        opacity: roundIt(
-                          this.waveSurfers[idx] !== undefined &&
-                            this.waveSurfers[idx].isReady
-                            ? this.props.volumes[idx]
-                            : 0,
-                          2
-                        )
-                      }}
-                      src={require("../assets/buttons/enabled50.png")}
-                    />
-                  </div>
+                  <img
+                    className="green"
+                    width={50}
+                    height={50}
+                    alt=""
+                    style={{
+                      opacity: roundIt(
+                        this.waveSurfers[idx] !== undefined &&
+                          this.waveSurfers[idx].isReady
+                          ? this.props.volumes[idx]
+                          : 0,
+                        2
+                      )
+                    }}
+                    src={require("../assets/buttons/enabled50.png")}
+                  />
                 </div>
               </div>
             </div>
+            {this.describeVol(idx)}
           </td>
           <td className="wave-table-volume">
             <input

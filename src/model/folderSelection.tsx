@@ -125,7 +125,7 @@ class SelectFolderZone extends Component<FolderProps> {
                 if (!error) {
                   console.log("New video file: " + file);
                 }
-                return;
+                return undefined;
               });
           },
           // Reports on Video Conversion Errors
@@ -619,11 +619,14 @@ class SelectFolderZone extends Component<FolderProps> {
   };
   updateLS = async () => {
     let promise = new Promise((resolve, reject) => {
-      setTimeout(() => resolve("done!"), 1000);
+      setTimeout(() => {
+        this.testDir(this, this.currentFolder.files[0].path);
+        resolve("Success");
+      }, 1000);
     });
 
-    let result = await promise; // wait till the promise resolves (*)
-    this.testDir(this, this.currentFolder.files[0].path);
+    await promise; // wait till the promise resolves (*)
+
     // alert(result); // "done!"
   };
   convertToMP3 = (path: string) => {

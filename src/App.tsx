@@ -66,7 +66,7 @@ interface AppProps extends StateProps, DispatchProps {
   // local state props go here
 }
 
-class App extends React.Component<AppProps> {
+export class App extends React.Component<AppProps> {
   componentDidMount() {
     this.props.updateSession({
       loggedIn: true,

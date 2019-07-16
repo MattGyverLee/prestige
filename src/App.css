@@ -321,10 +321,9 @@ td {
 
 .waveform {
   min-height: 50px;
-  height: 75px;
 }
 
 .wave-table-volume input[type="range"] {
-  width: 50px;
+  width: 100px;
   transform: rotate(-90deg);
 }

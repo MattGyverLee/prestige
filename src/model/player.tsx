@@ -227,31 +227,6 @@ class PlayerZone extends Component<PlayerProps> {
           </div>
           <div className="current-transcription"></div>
         </div>
-        <div className="audio-Layers">
-          <div>
-            <input
-              id="contactChoice1"
-              name="contact"
-              type="radio"
-              value="email"
-            />
-            <label htmlFor="contactChoice1">Translation</label>
-            <input
-              id="contactChoice2"
-              name="contact"
-              type="radio"
-              value="phone"
-            />
-            <label htmlFor="contactChoice2">Original</label>
-            <input
-              id="contactChoice3"
-              name="contact"
-              type="radio"
-              value="mail"
-            />
-            <label htmlFor="contactChoice3">Careful</label>
-          </div>
-        </div>
         <div className="mediaControls">
           <table>
             <tbody>

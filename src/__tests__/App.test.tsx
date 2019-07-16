@@ -1,24 +1,56 @@
-import App from "../App";
+import "jest-dom/extend-expect";
+
+import ConnectedApp, { App } from "../App";
 import { Provider } from "react-redux";
 import React from "react";
-import ReactDOM from "react-dom";
-import configureStore from "../store";
+import { annCleanStore } from "../store/annot/reducers";
+import configureMockStore from "redux-mock-store";
+import { deeJayCleanStore } from "../store/deeJay/reducers";
+import { playerCleanStore } from "../store/player/reducers";
+import { systemCleanStore } from "../store/system/reducers";
+import { treeCleanStore } from "../store/tree/reducers";
 
-const store = configureStore();
+/*
+import {
+  cleanup,
+  fireEvent,
+  render,
+  waitForElement
+} from "@testing-library/react"; 
+*/
 
-let tree = (props?: any) => (
-  <Provider store={store}>
-    <App />
-  </Provider>
-);
+const renderer = require("react-test-renderer");
 
-it("is true", () => {
-  true === true;
+declare global {
+  interface Window {
+    AudioContext: any;
+  }
+}
+const store = configureMockStore([])({
+  annot: { ...annCleanStore },
+  deeJay: {
+    ...deeJayCleanStore
+  },
+  player: { ...playerCleanStore },
+  system: { ...systemCleanStore },
+  tree: { ...treeCleanStore }
 });
 
-/* it("renders without crashing", () => {
-  const div = document.createElement("div");
-  ReactDOM.render(tree(), div);
-  ReactDOM.unmountComponentAtNode(div);
+let appMaster: any;
+
+jest.autoMockOn();
+
+it("is true", () => true);
+
+it("renders without crashing", () => {
+  renderer.act(() => {
+    appMaster = renderer.create(
+      <Provider store={store}>
+        <ConnectedApp />
+      </Provider>
+    );
+  });
+  expect(appMaster).toMatchSnapshot();
+  const appHandle: App = appMaster.root.findByType(App).instance;
+  expect(appHandle).toBeVisible();
 });
- */

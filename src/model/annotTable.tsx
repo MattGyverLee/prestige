@@ -50,7 +50,7 @@ interface DispatchProps {
 
 interface ComponentProps extends StateProps, DispatchProps {}
 
-class AnnotationTable extends Component<ComponentProps> {
+export class AnnotationTable extends Component<ComponentProps> {
   constructor(props: any) {
     super(props);
     this.state = {
