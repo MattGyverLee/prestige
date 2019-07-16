@@ -18,11 +18,10 @@ export interface MediaPlayerState {
 // Describing the different ACTION NAMES available
 export const ON_ENDED = "ON_ENDED";
 export const ON_PLAY = "ON_PLAY";
-export const PLAY = "PLAY";
+export const TOGGLE_PLAY = "TOGGLE_PLAY";
 export const SET_URL = "SET_URL";
 export const ON_PROGRESS = "ON_PROGESS";
 export const SET_DURATION = "SET_DURATION";
-export const PLAY_PAUSE = "PLAY_PAUSE";
 export const SET_VOLUME = "SET_VOLUME";
 export const STOP_PLAYING = "STOP_PLAYING";
 export const TOGGLE_LOOP = "TOGGLE_LOOP";
@@ -57,11 +56,9 @@ interface SetURL {
   payload: string;
 }
 
-interface PlayPause {
-  type: typeof PLAY_PAUSE;
-}
-interface Play {
-  type: typeof PLAY;
+interface TogglePlay {
+  type: typeof TOGGLE_PLAY;
+  payload?: boolean;
 }
 interface StopPlaying {
   type: typeof STOP_PLAYING;
@@ -115,12 +112,11 @@ interface SetSeek {
 
 export type PlayerActionTypes =
   | OnEnded
-  | Play
+  | TogglePlay
   | SetURL
   | OnPlay
   | SetDuration
   | OnProgress
-  | PlayPause
   | SetVolume
   | StopPlaying
   | ToggleLoop

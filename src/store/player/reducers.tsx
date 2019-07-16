@@ -58,16 +58,10 @@ export function playerReducer(
         url: action.payload
       };
     }
-    case types.PLAY: {
+    case types.TOGGLE_PLAY: {
       return {
         ...state,
-        playing: true
-      };
-    }
-    case types.PLAY_PAUSE: {
-      return {
-        ...state,
-        playing: !state.playing
+        playing: action.payload !== undefined ? action.payload : !state.playing
       };
     }
     case types.STOP_PLAYING: {

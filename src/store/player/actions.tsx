@@ -29,14 +29,10 @@ export function setURL(inURL: string): types.PlayerActionTypes {
     payload: inURL
   };
 }
-export function play(): types.PlayerActionTypes {
+export function togglePlay(playPause?: boolean): types.PlayerActionTypes {
   return {
-    type: types.PLAY
-  };
-}
-export function playPause(): types.PlayerActionTypes {
-  return {
-    type: types.PLAY_PAUSE
+    type: types.TOGGLE_PLAY,
+    payload: playPause
   };
 }
 

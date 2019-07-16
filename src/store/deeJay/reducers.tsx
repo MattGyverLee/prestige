@@ -3,7 +3,6 @@ import * as types from "./types";
 export const deeJayCleanStore: types.DeeJayState = {
   durations: [-1, -1, -1],
   volumes: [1, 0, 0],
-  playing: [false, false, false],
   dispatch: { dispatchType: "" }
 };
 
@@ -31,14 +30,6 @@ export function deeJayReducer(
         ...state,
         volumes: state.volumes.map((v: number, idx: number) =>
           idx === action.payload.idx ? action.payload.volume : v
-        )
-      };
-    }
-    case types.PLAY_PAUSE: {
-      return {
-        ...state,
-        playing: state.playing.map((p: boolean, idx: number) =>
-          idx === 0 ? !p : p
         )
       };
     }

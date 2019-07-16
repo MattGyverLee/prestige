@@ -42,13 +42,12 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  playPause: typeof actions.playPause;
+  togglePlay: typeof actions.togglePlay;
   stopPlaying: typeof actions.stopPlaying;
   toggleLoop: typeof actions.toggleLoop;
   onPlay: typeof actions.onPlay;
   onEnded: typeof actions.onEnded;
   onProgress: typeof actions.onProgress;
-  play: typeof actions.play;
   setURL: typeof actions.setURL;
   setDuration: typeof actions.setDuration;
   setPlaybackRate: typeof actions.setPlaybackRate;
@@ -58,6 +57,7 @@ interface DispatchProps {
   onSeekMouseUp: typeof actions.onSeekMouseUp;
   onSeekChange: typeof actions.onSeekChange;
   onVolumeChange: typeof actions.onVolumeChange;
+  setDispatch: typeof actions.setDispatch;
 }
 
 interface PlayerProps extends StateProps, DispatchProps {}
@@ -119,7 +119,7 @@ class PlayerZone extends Component<PlayerProps> {
   };
 
   loadNewFile(blobURL: string) {
-    this.props.play();
+    this.props.togglePlay(true);
     this.props.setURL(blobURL);
   }
 
@@ -130,6 +130,14 @@ class PlayerZone extends Component<PlayerProps> {
 
   onClickFullscreen = () => {
     // screenfull.request(findDOMNode(this.player))
+  };
+
+  playPauseButton = () => {
+    this.props.togglePlay();
+    this.props.setDispatch({
+      dispatchType: "PlayPause",
+      wsNum: 0
+    });
   };
 
   ref = (player: any) => {
@@ -158,6 +166,7 @@ class PlayerZone extends Component<PlayerProps> {
             pip={this.props.pip}
             playbackRate={this.props.playbackRate}
             playing={this.props.playing}
+            progressInterval={200}
             ref={this.ref}
             url={this.props.url}
             volume={this.props.volume}
@@ -167,7 +176,7 @@ class PlayerZone extends Component<PlayerProps> {
             <div className="control-row-items">
               <button
                 className="play-pause-button"
-                onClick={this.props.playPause}
+                onClick={() => this.playPauseButton()}
               >
                 <FontAwesomeIcon
                   icon={this.props.playing ? faPause : faPlay}
@@ -318,9 +327,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      play: actions.play,
       setURL: actions.setURL,
-      playPause: actions.playPause,
+      togglePlay: actions.togglePlay,
       stopPlaying: actions.stopPlaying,
       toggleLoop: actions.toggleLoop,
       onPlay: actions.onPlay,
@@ -333,7 +341,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onSeekMouseDown: actions.onSeekMouseDown,
       onSeekMouseUp: actions.onSeekMouseUp,
       onSeekChange: actions.onSeekChange,
-      onVolumeChange: actions.onVolumeChange
+      onVolumeChange: actions.onVolumeChange,
+      setDispatch: actions.setDispatch
     },
     dispatch
   )

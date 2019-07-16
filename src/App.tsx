@@ -48,7 +48,7 @@ interface DispatchProps {
   onEnded: typeof actions.onEnded;
   onPlay: typeof actions.onPlay;
   onProgress: typeof actions.onProgress;
-  playPause: typeof actions.playPause;
+  togglePlay: typeof actions.togglePlay;
   stopPlaying: typeof actions.stopPlaying;
   toggleLoop: typeof actions.toggleLoop;
   updatePlayerAction: typeof actions.updatePlayerAction;
@@ -193,7 +193,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onEnded: actions.onEnded,
       onPlay: actions.onPlay,
       onProgress: actions.onProgress,
-      playPause: actions.playPause,
+      togglePlay: actions.togglePlay,
       pushTimeline: actions.pushTimeline,
       processEAF,
       stopPlaying: actions.stopPlaying,

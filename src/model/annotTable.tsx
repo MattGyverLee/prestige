@@ -41,7 +41,7 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  play: typeof actions.play;
+  togglePlay: typeof actions.togglePlay;
   setURL: typeof actions.setURL;
   pushAnnotationTable: typeof actions.pushAnnotationTable;
   updatePrevTimeline: typeof actions.updatePrevTimeline;
@@ -316,7 +316,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      play: actions.play,
+      togglePlay: actions.togglePlay,
       setURL: actions.setURL,
       pushAnnotationTable: actions.pushAnnotationTable,
       updatePrevTimeline: actions.updatePrevTimeline,

@@ -2,7 +2,6 @@ export interface DeeJayState {
   durations: number[];
   dispatch: DeeJayDispatch;
   volumes: number[];
-  playing: boolean[];
 }
 
 export interface DeeJayDispatch {
@@ -17,7 +16,6 @@ export interface DeeJayDispatch {
 
 export const SET_WS_DURATION = "SET_WS_DURATION";
 export const SET_WS_VOLUME = "SET_WS_VOLUME";
-export const PLAY_PAUSE = "PLAY_PAUSE";
 export const RESET_DEE_JAY = "RESET_DEE_JAY";
 export const SET_DISPATCH = "SET_DISPATCH";
 
@@ -31,9 +29,6 @@ interface SetWSVolume {
   payload: { idx: number; volume: number };
 }
 
-interface PlayPause {
-  type: typeof PLAY_PAUSE;
-}
 interface ResetDeeJay {
   type: typeof RESET_DEE_JAY;
 }
@@ -45,6 +40,5 @@ interface SetDispatch {
 export type DeeJayActionTypes =
   | SetWSDuration
   | SetWSVolume
-  | PlayPause
   | ResetDeeJay
   | SetDispatch;
