@@ -471,7 +471,6 @@ class SelectFolderZone extends Component<FolderProps> {
   loadAnnot = (carefulOrTranslation: boolean) => {
     // Const Requires and Variables for Later Use
     const ctString = carefulOrTranslation ? "Careful" : "Translation";
-    const fileURL = require("file-url");
     const ffmpegStaticElectron = require("ffmpeg-static-electron");
 
     // Set Up Fluent FFMpeg and its Associated Paths
@@ -511,81 +510,20 @@ class SelectFolderZone extends Component<FolderProps> {
     // Builds MergedAudio Object with Inputs and the Concatenation Command.
     let mergedAudio = fluentFfmpeg();
     let cf = "";
-    let idx = 0;
-    inputFiles.forEach((v: string) => {
+    mergedAudio.options.stdoutLines = 0;
+    mergedAudio.addInput(process.cwd() + "/public/silence.wav");
+    inputFiles.forEach((v: string, idx: number) => {
       mergedAudio = mergedAudio.addInput(v);
-      cf += `[${idx.toString()}]loudnorm=I=-16:TP=-1.5:LRA=11[${
+      cf += `[${(
+        idx + 1
+      ).toString()}]loudnorm=I=-16:TP=-1.5:LRA=11[n];[n]silenceremove=start_periods=1:start_duration=0.1:start_threshold=-40dB[${
         idx ? "b" : "out"
       }];`;
-      if (idx) cf += "[out][b]concat=v=0:a=1[out];";
+      if (idx) cf += "[out][0][b]concat=v=0:n=3:a=1[out];";
+      else cf += "[0][out]concat=v=0:a=1[out];";
       idx++;
     });
     cf = cf.substring(0, cf.lastIndexOf(";"));
-
-    // Creates and Add Oral Milestones to Timeline
-    let primaryIdx = 0;
-    let inputTimes: any[] = [];
-    mergedAudio._inputs.forEach((v: any, idx: number) => {
-      mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
-        // TODO: Async May Run Multiple Times in Else Statement Below
-        // Store a Table of Contents in InputTimes for the Milestones
-        const name = v.source.substring(v.source.lastIndexOf(path.sep) + 1);
-        inputTimes.push({
-          file: v.source,
-          name,
-          duration: roundIt(metadata.streams[0].duration, 3),
-          refStart: name.split("_")[0],
-          refStop: name.split("_")[2]
-        });
-
-        // Create Milestones if Last FFProbe Has Been Called
-        primaryIdx++;
-        if (primaryIdx === mergedAudio._inputs.length) {
-          // Sort InputTimes Based on Start Time
-          inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
-
-          // Add All Oral Annotations of the Files
-          let lastTime = 0;
-          let oralMilestone: aTypes.Milestone;
-          for (let i = 0, l = inputTimes.length; i < l; i++) {
-            // Create Merged Audio Milestone
-            oralMilestone = {
-              annotationID: "",
-              data: [
-                {
-                  channel: `${ctString}Merged`,
-                  data: fileURL(`${dir}${ctString}_Merged.mp3`),
-                  linguisticType: `${ctString}Merged`,
-                  locale: "",
-                  mimeType: "audio-mp3",
-                  clipStart: roundIt(lastTime, 3),
-                  clipStop: roundIt(lastTime + inputTimes[i].duration, 3)
-                }
-              ],
-              startTime: parseFloat(inputTimes[i].refStart),
-              stopTime: parseFloat(inputTimes[i].refStop)
-            };
-
-            // Add Milestone to Timeline
-            this.props.addOralAnnotation(
-              oralMilestone,
-              getTimelineIndex(
-                this.props.timeline,
-                fileURL(dir.substring(0, dir.indexOf("_Annotations")))
-              )
-            );
-
-            // Increment Last Time for Next Clip Start/Stop Times
-            lastTime += inputTimes[i].duration;
-          }
-        }
-
-        // ffProbe Error Handling
-        if (err) {
-          console.log("Error: " + err);
-        }
-      });
-    });
 
     // Writes Concatenated Audio to Compressed MP3
     mergedAudio
@@ -593,7 +531,8 @@ class SelectFolderZone extends Component<FolderProps> {
       .audioBitrate("128k")
       .audioChannels(1)
       .audioCodec("libmp3lame")
-      .outputOptions(["-map [out]", "-y"])
+      .audioFrequency(44100)
+      .outputOptions(["-map [out]", "-y", "-v verbose"])
       .complexFilter(cf)
       .on("start", (command: any) => {
         console.log("ffmpeg process started:", command);
@@ -606,8 +545,110 @@ class SelectFolderZone extends Component<FolderProps> {
       .on("error", function(err: any) {
         console.log("An error occurred: " + err.message);
       })
-      .on("end", () => {
+      .on("end", (err: any, stdout: any) => {
+        const fileURL = require("file-url");
+        const path = require("path");
+
         console.log("Merging finished!");
+        const relevantlines: number[] = stdout
+          .split("\n")
+          .filter(
+            (line: string) =>
+              line.startsWith("[Parsed_concat") && line.includes("=")
+          )
+          .map((line: string) =>
+            // Note: Conversion to MP3 always adds 0.05 second delay to start of audio and miniscule amount to end.
+            // The below calculation accounts for it. The 0.1 seconds we are adding will help space them.
+            roundIt(
+              parseFloat(line.substring(line.indexOf("=") + 1)) / 1000000 +
+                0.05,
+              3
+            )
+          );
+        var timecodes: number[] = [];
+        var len = relevantlines.length - 1;
+        if (len >= 0) {
+          for (var i = 0; i < len; i++) {
+            if (relevantlines[i] !== relevantlines[i + 1]) {
+              timecodes.push(relevantlines[i]);
+            }
+          }
+          timecodes.push(relevantlines[len]);
+        }
+
+        // fixme: filter milestones to find ctStringMerged.
+        // fixme: Creae Reducer to update timings: this.props.updateClipTimes(ctString, index, start, stop, duration)
+
+        // Creates and Add Oral Milestones to Timeline
+        const TOGGLE_TIMES = true;
+        let primaryIdx = 0;
+        let inputTimes: any[] = [];
+        mergedAudio._inputs.forEach((v: any, idx: number) => {
+          if (!v.source.endsWith("silence.wav"))
+            mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
+              // TODO: Async May Run Multiple Times in Else Statement Below
+              // Store a Table of Contents in InputTimes for the Milestones
+              const name = v.source.substring(
+                v.source.lastIndexOf(path.sep) + 1
+              );
+              inputTimes.push({
+                file: v.source,
+                name,
+                duration: roundIt(metadata.streams[0].duration, 3),
+                refStart: name.split("_")[0],
+                refStop: name.split("_")[2]
+              });
+
+              // Create Milestones if Last FFProbe Has Been Called
+              primaryIdx++;
+              if (primaryIdx === mergedAudio._inputs.length - 1) {
+                // Sort InputTimes Based on Start Time
+                inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
+
+                // Add All Oral Annotations of the Files
+                let oralMilestone: aTypes.Milestone;
+                for (let i = 0, l = inputTimes.length; i < l; i++) {
+                  if (v.source.endsWith("silence.wav")) continue;
+                  // Create Merged Audio Milestone
+                  oralMilestone = {
+                    annotationID: "",
+                    data: [
+                      {
+                        channel: `${ctString}Merged`,
+                        data: fileURL(`${dir}${ctString}_Merged.mp3`),
+                        linguisticType: `${ctString}Merged`,
+                        locale: "",
+                        mimeType: "audio-mp3",
+                        clipStart: TOGGLE_TIMES
+                          ? i === 0
+                            ? 0
+                            : roundIt(timecodes[2 * i - 1], 3)
+                          : roundIt(timecodes[2 * i], 3),
+                        clipStop: roundIt(timecodes[2 * i + 1], 3)
+                      }
+                    ],
+                    startTime: parseFloat(inputTimes[i].refStart),
+                    stopTime: parseFloat(inputTimes[i].refStop)
+                  };
+
+                  // Add Milestone to Timeline
+                  this.props.addOralAnnotation(
+                    oralMilestone,
+                    getTimelineIndex(
+                      this.props.timeline,
+                      fileURL(dir.substring(0, dir.indexOf("_Annotations")))
+                    )
+                  );
+                }
+              }
+
+              // ffProbe Error Handling
+              if (err) {
+                console.log("Error: " + err);
+              }
+            });
+        });
+
         this.props.dispatchSnackbar(
           (carefulOrTranslation ? "Careful Speech" : "Translation") +
             " annotations merged!"
@@ -619,12 +660,13 @@ class SelectFolderZone extends Component<FolderProps> {
       })
       .save(dir + ctString + "_Merged.mp3");
   };
+
   updateLS = async () => {
     let promise = new Promise((resolve, reject) => {
       setTimeout(() => {
         this.testDir(this, this.currentFolder.files[0].path);
         resolve("Success");
-      }, 1000);
+      }, 2000);
     });
 
     await promise; // wait till the promise resolves (*)
