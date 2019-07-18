@@ -6,10 +6,8 @@ export default function processEAF(path: string, props: any) {
   require("xml2js").parseString(
     require("fs-extra").readFileSync(path),
     function(err: Error, result: any) {
-      if (err) {
-        console.log(err.stack);
-      }
-      content = result;
+      if (!err) content = result;
+      else console.log(err.stack);
     }
   );
 
@@ -54,7 +52,7 @@ export default function processEAF(path: string, props: any) {
   for (let j = 0, l = fileData.TIER.length; j < l; j++) {
     // Verify Current lingType is a Category and Add if Otherwise
     const lingType = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
-    if (props.annot !== undefined) console.error("Props not passed.");
+    if (props.annot === undefined) console.error("Props not passed.");
     if (
       props.annot !== undefined &&
       props.annot.categories.indexOf(lingType) === -1

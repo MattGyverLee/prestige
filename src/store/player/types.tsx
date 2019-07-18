@@ -5,7 +5,6 @@ export interface MediaPlayerState {
   loaded: number;
   loop: boolean;
   muted: boolean;
-  pip: boolean;
   playbackRate: number;
   played: number;
   playing: boolean;

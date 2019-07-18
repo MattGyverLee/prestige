@@ -124,6 +124,8 @@ class SelectFolderZone extends Component<FolderProps> {
               ) {
                 if (!error) {
                   console.log("New video file: " + file);
+                } else {
+                  console.log("Error: " + error)
                 }
                 return undefined;
               });
