@@ -107,7 +107,7 @@ export function playerReducer(
     case types.SET_PLAYBACK_RATE: {
       return {
         ...state,
-        playbackRate: action.payload
+        playbackRate: action.payload >= 16 ? 15.5 : action.payload
       };
     }
     case types.TOGGLE_MUTED: {

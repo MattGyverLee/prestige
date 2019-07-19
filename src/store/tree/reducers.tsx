@@ -74,26 +74,18 @@ export function treeReducer(
       };
     }
     case types.SOURCE_MEDIA_CHANGED: {
-      const tempState = state.sourceMedia.filter(file => {
-        if (file.name === action.payload.file.name) {
-          action.payload.file.wsAllowed = file.wsAllowed;
-          return false;
-        }
-        return true;
-      });
+      const tempState = state.sourceMedia.filter(
+        file => file.name !== action.payload.file.name
+      );
       return {
         ...state,
         sourceMedia: [...tempState, action.payload.file]
       };
     }
     case types.ANNOT_MEDIA_CHANGED: {
-      const tempState = state.annotMedia.filter(file => {
-        if (file.name === action.payload.file.name) {
-          action.payload.file.wsAllowed = file.wsAllowed;
-          return false;
-        }
-        return true;
-      });
+      const tempState = state.annotMedia.filter(
+        file => file.name !== action.payload.file.name
+      );
       return {
         ...state,
         annotMedia: [...tempState, action.payload.file]

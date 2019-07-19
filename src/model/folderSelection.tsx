@@ -108,7 +108,7 @@ class SelectFolderZone extends Component<FolderProps> {
       if (mime.getType(path) !== null) tempMime = mime.getType(path);
 
       // If ".mts" File => Convert
-      // -> If ".eaf" File => Process
+      // -> Else If ".eaf" File => Process
       if (tempMime.startsWith("model") && tempMime.endsWith(".mts")) {
         require("ffmpeg")(blobURL).then(
           // Converts Video
@@ -125,7 +125,7 @@ class SelectFolderZone extends Component<FolderProps> {
                 if (!error) {
                   console.log("New video file: " + file);
                 } else {
-                  console.log("Error: " + error)
+                  console.log("Error: " + error);
                 }
                 return undefined;
               });
@@ -162,7 +162,7 @@ class SelectFolderZone extends Component<FolderProps> {
       this.props.setTimelineChanged(true);
 
       // If Chokidar is Ready and New File is ".eaf" => Reload Current Folder
-      // -> Add File to annotMedia, sourceMedia, or availableFiles According to its Type
+      // -> Else => Add File to annotMedia, sourceMedia, or availableFiles According to its Type
       if (this.isChokReady && path.endsWith(".eaf") && !this.usingStoredData) {
         // Uninstantiate Timelines and Reset Chok Readiness
         this.props.setTimelinesInstantiated(false);
@@ -198,7 +198,7 @@ class SelectFolderZone extends Component<FolderProps> {
       // Show Timeline Has Changed
       this.props.setTimelineChanged(true);
       // If Chokidar is Ready and New File is ".eaf" => Reload Current Folder
-      // -> Add File to annotMedia, sourceMedia, or availableFiles According to its Type
+      // -> Else => Add File to annotMedia, sourceMedia, or availableFiles According to its Type
       if (this.isChokReady && path.endsWith(".eaf")) {
         // Uninstantiate Timelines and Reset Chok Readiness
         this.props.setTimelinesInstantiated(false);
@@ -580,8 +580,8 @@ class SelectFolderZone extends Component<FolderProps> {
         // fixme: Creae Reducer to update timings: this.props.updateClipTimes(ctString, index, start, stop, duration)
 
         // Creates and Add Oral Milestones to Timeline
-        const TOGGLE_TIMES = true;
-        let primaryIdx = 0;
+        const TOGGLE_TIMES: boolean = true;
+        let primaryIdx: number = 0;
         let inputTimes: any[] = [];
         mergedAudio._inputs.forEach((v: any, idx: number) => {
           if (!v.source.endsWith("silence.wav"))
@@ -622,9 +622,10 @@ class SelectFolderZone extends Component<FolderProps> {
                         clipStart: TOGGLE_TIMES
                           ? i === 0
                             ? 0
-                            : roundIt(timecodes[2 * i - 1], 3)
-                          : roundIt(timecodes[2 * i], 3),
-                        clipStop: roundIt(timecodes[2 * i + 1], 3)
+                            : timecodes[2 * i - 1]
+                          : timecodes[2 * i],
+                        // Accounts for Excessive Time Padding
+                        clipStop: timecodes[2 * i + 1]
                       }
                     ],
                     startTime: parseFloat(inputTimes[i].refStart),
