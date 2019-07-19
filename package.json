@@ -51,7 +51,7 @@
     "path": "^0.12.7",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-hot-loader": "^4.11.0",
+    "react-hot-loader": "^4.12.6",
     "react-player": "^1.11.1",
     "react-redux": "^7.1.0",
     "react-scripts": "^3.0.1",
@@ -132,9 +132,6 @@
     "typescript": "^3.5.2",
     "wait-on": "^3.2.0",
     "yarn": "^1.17.2"
-  },
-  "resolutions": {
-    "chokidar/fsevents": ""
   },
   "lint-staged": {
     "src/**/*.js": [

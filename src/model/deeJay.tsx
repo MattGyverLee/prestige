@@ -58,6 +58,8 @@ export class DeeJay extends Component<DeeJayProps> {
   private currBlob: string = "";
   private speeds: number[] = [0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5, 2, 3, 5];
   private speedsIndex: number = 5;
+  private regionsOn: number = 0;
+  private ts: string[] = [];
 
   componentDidMount = () => {
     let regionsPlugin = require("../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
@@ -85,6 +87,21 @@ export class DeeJay extends Component<DeeJayProps> {
       this.waveSurfers[idx].on("region-out", () => {
         console.log(`${idx} Region Out`);
         this.regionOut(idx);
+      });
+
+      // Log and Process Region Hover In
+      this.waveSurfers[idx].on("region-mouseenter", region => {
+        console.log(`${idx} Region Mouse In`);
+        this.ts.push(region.id);
+        this.regionMouseIn(idx, region);
+      });
+
+      // Log and Process Region Hover Out
+      this.waveSurfers[idx].on("region-mouseleave", region => {
+        console.log(`${idx} Region Mouse out`);
+        this.props.dispatchSnackbar("Playing Clip");
+        this.ts = this.ts.filter((item: string) => item !== region.id);
+        this.regionMouseOut(idx, region);
       });
 
       // Log and Process Region Click
@@ -400,13 +417,102 @@ export class DeeJay extends Component<DeeJayProps> {
     this.waveSurfers[wsNum].play();
   };
 
-  // Clears All WS Regions
+  // Clears All Temp WS Regions
   clearRegions = () => {
     [0, 1, 2].forEach((idx: number) => {
       if (this.waveSurfers[idx].regions.list.temp !== undefined)
         this.waveSurfers[idx].regions.list.temp.remove();
     });
   };
+
+  regionMouseIn = (inIdx: number, sourceRegion: any) => {
+    [0, 1, 2].forEach((idx: number) => {
+      if (this.waveSurfers[idx].regions.list[sourceRegion.id]) {
+        const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
+        thisRegion.color = thisRegion.color.replace("0.1", "0.5");
+        thisRegion.element.id = "hover";
+        if (this.regionsOn === 2) {
+          thisRegion.element.style.backgroundColor = "rgba(18, 117, 240, 0.1)";
+        }
+        thisRegion.element.style.outlineOffset = "-3px";
+        this.forceUpdate();
+      }
+    });
+  };
+  regionMouseOut = (inIdx: number, sourceRegion: any) => {
+    [0, 1, 2].forEach((idx: number) => {
+      if (this.waveSurfers[idx].regions.list[sourceRegion.id]) {
+        const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
+        thisRegion.element.id = "";
+        if (this.regionsOn === 2) {
+          thisRegion.element.style.backgroundColor = "";
+        }
+        this.forceUpdate();
+      }
+    });
+  };
+  toggleAllRegions = () => {
+    if (this.regionsOn === 0 || this.regionsOn === 1) {
+      // Clear Regions first
+      [0, 1, 2].forEach((idx: number) => {
+        this.waveSurfers[idx].clearRegions();
+        this.waveSurfers[idx].clearRegions();
+      });
+      // Draw Regions
+      let milestones = this.props.timeline[this.props.currentTimeline]
+        .milestones;
+      milestones.forEach((m: any) => {
+        const startId = m.startId;
+        const tempColor = this.regionsOn
+          ? this.randomColor(0.0)
+          : this.randomColor(0.1);
+        this.waveSurfers[0].addRegion({
+          id: startId,
+          start: m.startTime,
+          end: m.stopTime,
+          color: tempColor,
+          drag: false,
+          resize: false
+        });
+        m.data
+          .filter(
+            (data: any) =>
+              data.channel !== undefined && data.channel.endsWith("Merged")
+          )
+          .forEach((d: LooseObject) => {
+            this.waveSurfers[d.channel.startsWith("Careful") ? 1 : 2].addRegion(
+              {
+                id: startId,
+                start: d.clipStart,
+                end: d.clipStop,
+                color: tempColor,
+                drag: false,
+                resize: false
+              }
+            );
+          });
+      });
+      this.regionsOn++;
+    } else {
+      [0, 1, 2].forEach((idx: number) => {
+        this.waveSurfers[idx].clearRegions();
+      });
+      this.regionsOn = 0;
+    }
+  };
+
+  randomColor(alpha: number) {
+    return (
+      "rgba(" +
+      [
+        ~~(Math.random() * 255),
+        ~~(Math.random() * 255),
+        ~~(Math.random() * 255),
+        alpha
+      ] +
+      ")"
+    );
+  }
 
   // Fetches the Current Milestone of the Specified WS
   getCurrentMilestone = (
@@ -903,7 +1009,10 @@ export class DeeJay extends Component<DeeJayProps> {
             <tbody>{waveTableRows}</tbody>
           </table>
         </div>
-        <button onClick={this.inspect} />
+        <button onClick={this.inspect} />{" "}
+        <button onClick={() => this.toggleAllRegions()}>
+          {this.regionsOn == 2 ? "Hide Regions" : "Toggle Regions"}
+        </button>
       </div>
     );
   }

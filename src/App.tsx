@@ -71,7 +71,7 @@ export class App extends React.Component<AppProps> {
     this.props.updateSession({
       loggedIn: true,
       session: "my_session",
-      userName: "Matthew",
+      userName: "Blaine",
       clicks: 0,
       snackbarText: [],
       snackbarIsActive: false
