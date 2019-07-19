@@ -29,31 +29,27 @@ export const annCleanStore: types.AnnotationState = {
 };
 
 export function annotationReducer(
-  state = annCleanStore,
+  state = { ...annCleanStore },
   action: types.AnnotationActionTypes
 ): types.AnnotationState {
   switch (action.type) {
     case types.HARD_RESET_APP: {
-      state = annCleanStore;
-      return state;
+      return { ...annCleanStore };
     }
     case types.LOAD_ANNOT: {
       state = action.payload;
       return state;
     }
     case types.ON_NEW_FOLDER: {
-      state = annCleanStore;
-      return state;
+      return { ...state, timeline: [] };
     }
     case types.ON_RELOAD_FOLDER: {
-      state = annCleanStore;
-      return { ...state, timelineChanged: true };
+      return { ...annCleanStore, timelineChanged: true };
     }
     case types.SET_URL: {
-      const idx = getTimelineIndex(state.timeline, action.payload);
       return {
         ...state,
-        currentTimeline: idx
+        currentTimeline: action.payload.timelineIndex
       };
     }
     case types.ADD_ORAL_ANNOTATION: {

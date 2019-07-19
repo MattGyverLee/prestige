@@ -1107,7 +1107,7 @@ export class DeeJay extends Component<DeeJayProps> {
         </div>
         <button onClick={this.inspect} />{" "}
         <button onClick={() => this.toggleAllRegions()}>
-          {this.regionsOn == 2 ? "Hide Regions" : "Toggle Regions"}
+          {this.regionsOn === 2 ? "Hide Regions" : "Toggle Regions"}
         </button>
       </div>
     );

@@ -40,8 +40,6 @@ interface DispatchProps {
   loadTree: typeof actions.loadTree;
   onNewFolder: typeof actions.onNewFolder;
   onReloadFolder: typeof actions.onReloadFolder;
-  pushAnnotation: typeof actions.pushAnnotation;
-  pushAnnotationTable: typeof actions.pushAnnotationTable;
   pushTimeline: typeof actions.pushTimeline;
   setURL: typeof actions.setURL;
   sourceMediaAdded: typeof actions.sourceMediaAdded;
@@ -58,14 +56,6 @@ interface FolderProps extends StateProps, DispatchProps {
 }
 
 class SelectFolderZone extends Component<FolderProps> {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      prevPath: "",
-      open: false
-    };
-  }
-
   private isChokReady: boolean = false;
   private currentFolder: any;
   private readyPlayURL: string = "";
@@ -250,20 +240,25 @@ class SelectFolderZone extends Component<FolderProps> {
       if (!this.usingStoredData) {
         // Grabs and Sets First URL If it Exists
         if (this.readyPlayURL !== "") {
-          props.setURL(this.readyPlayURL);
+          props.setURL(
+            this.readyPlayURL,
+            getTimelineIndex(this.props.timeline, this.readyPlayURL)
+          );
           this.readyPlayURL = "";
         } else if (this.props.sourceMedia.length !== 0) {
           this.loadAnnot(true);
           this.loadAnnot(false);
-          props.setURL(
-            getSourceMedia(this.props.sourceMedia, false)[0].blobURL
-          );
+          const blobURL = getSourceMedia(this.props.sourceMedia, false)[0]
+            .blobURL;
+          props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
           console.log(`Initial scan complete. Ready for changes`);
         } else {
           console.log("Empty Directory");
         }
       } else {
-        props.setURL(getSourceMedia(this.props.sourceMedia, false)[0].blobURL);
+        const blobURL = getSourceMedia(this.props.sourceMedia, false)[0]
+          .blobURL;
+        props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
       }
       // Notifies that Chok is Ready and the Timelines are Instantiated
       this.isChokReady = true;
@@ -387,8 +382,9 @@ class SelectFolderZone extends Component<FolderProps> {
       this.props.onReloadFolder(inputElement.files[0].path);
       this.startWatcher(inputElement.files[0].path.toString(), this.props);
     } else {
-      console.log("fell through");
+      console.log("Fell through");
     }
+    console.log("End of Load Folder");
   }
 
   // Adds All Oral Annotations not Yet in Milestones into Milestones
@@ -788,8 +784,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       loadTree: actions.loadTree,
       onNewFolder: actions.onNewFolder,
       onReloadFolder: actions.onReloadFolder,
-      pushAnnotation: actions.pushAnnotation,
-      pushAnnotationTable: actions.pushAnnotationTable,
       pushTimeline: actions.pushTimeline,
       setURL: actions.setURL,
       sourceMediaAdded: actions.sourceMediaAdded,

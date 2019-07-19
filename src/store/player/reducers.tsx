@@ -53,7 +53,7 @@ export function playerReducer(
         playing: false,
         seeking: false,
         volume: 0.8,
-        url: action.payload
+        url: action.payload.blobURL
       };
     }
     case types.TOGGLE_PLAY: {

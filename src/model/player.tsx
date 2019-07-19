@@ -7,6 +7,7 @@ import React, { Component } from "react";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import { getTimelineIndex } from "./globalFunctions";
 
 interface StateProps {
   duration: any;
@@ -17,6 +18,7 @@ interface StateProps {
   seek: number;
   url: string;
   volume: number;
+  timeline: any[];
 }
 
 interface DispatchProps {
@@ -51,7 +53,7 @@ class PlayerZone extends Component<PlayerProps> {
 
   loadNewFile(blobURL: string) {
     this.props.togglePlay(true);
-    this.props.setURL(blobURL);
+    this.props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
   }
 
   onDuration = (duration: number) => {
@@ -104,7 +106,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   playing: state.player.playing,
   seek: state.player.seek,
   url: state.player.url,
-  volume: state.player.volume
+  volume: state.player.volume,
+  timeline: state.annot.timeline
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

@@ -1,15 +1,16 @@
 import * as actions from "../store";
 
 import React, { Component } from "react";
+import { getSourceMedia, getTimelineIndex } from "./globalFunctions";
 
 import { LooseObject } from "../store/annot/types";
 import Paper from "@material-ui/core/Paper";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { getSourceMedia } from "./globalFunctions";
 
 interface StateProps {
   sourceMedia: LooseObject[];
+  timeline: any[];
 }
 
 interface DispatchProps {
@@ -22,7 +23,7 @@ interface FileListProps extends StateProps, DispatchProps {}
 export class FileList extends Component<FileListProps> {
   loadNewFile(blobURL: string) {
     this.props.togglePlay(true);
-    this.props.setURL(blobURL);
+    this.props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
   }
 
   render() {
@@ -48,7 +49,8 @@ export class FileList extends Component<FileListProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  sourceMedia: state.tree.sourceMedia
+  sourceMedia: state.tree.sourceMedia,
+  timeline: state.annot.timeline
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

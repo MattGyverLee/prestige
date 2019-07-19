@@ -160,7 +160,7 @@ interface ToggleFileinfo {
 
 interface SetURL {
   type: typeof SET_URL;
-  payload: string;
+  payload: { blobURL: string; timelineIndex: number };
 }
 
 interface FileDeleted {

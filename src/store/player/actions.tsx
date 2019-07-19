@@ -23,10 +23,13 @@ export function updatePlayerAction(
   };
 }
 
-export function setURL(inURL: string): types.PlayerActionTypes {
+export function setURL(
+  blobURL: string,
+  timelineIndex: number
+): types.PlayerActionTypes {
   return {
     type: types.SET_URL,
-    payload: inURL
+    payload: { blobURL: timelineIndex === -1 ? "" : blobURL, timelineIndex }
   };
 }
 export function togglePlay(playPause?: boolean): types.PlayerActionTypes {
