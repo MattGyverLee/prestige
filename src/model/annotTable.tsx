@@ -153,13 +153,16 @@ export class AnnotationTable extends Component<ComponentProps> {
           wordWrap: "break-word",
           ...style
         }}
-        onClick={() =>
-          this.props.setDispatch({
-            dispatchType: "Clip",
-            wsNum: 0,
-            clipStart: row.startTime,
-            clipStop: row.stopTime
-          })
+        onClick={
+          this.props.currentTimeline === -1
+            ? () => console.log("Empty Timeline Click")
+            : () =>
+                this.props.setDispatch({
+                  dispatchType: "Clip",
+                  wsNum: 0,
+                  clipStart: row.startTime,
+                  clipStop: row.stopTime
+                })
         }
       >
         <span
