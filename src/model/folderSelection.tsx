@@ -1,14 +1,13 @@
 import * as aTypes from "../store/annot/types";
 import * as actions from "../store";
 import * as tTypes from "../store/tree/types";
+
 import Timelines from "./timeline";
 import React, { Component } from "react";
 import { getSourceMedia, getTimelineIndex, roundIt } from "./globalFunctions";
 
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-
-var watcherRef: any;
 
 interface StateProps {
   annotMedia: aTypes.LooseObject[];
@@ -56,19 +55,18 @@ class SelectFolderZone extends Component<FolderProps> {
   private currentFolder: any;
   private prevPath: string = "";
   private readyPlayURL: string = "";
-  private parentThis = this;
   private usingStoredData = false;
-  private skipCache: boolean = true;
+  private watcherRef: any;
 
   componentWillUnmount() {
-    watcherRef.close();
+    this.watcherRef.close();
     console.log("UnMounting Tree");
   }
 
   // Starts the Chokidar File Watcher
   startWatcher = (path: string, props: any, ignoreInitial: boolean = false) => {
     // Closes Existing Watcher
-    if (watcherRef !== undefined) watcherRef.close();
+    if (this.watcherRef !== undefined) this.watcherRef.close();
 
     // Creates a Watcher to Watch Input Path
     const watcher = require("chokidar").watch(path, {
@@ -76,7 +74,7 @@ class SelectFolderZone extends Component<FolderProps> {
       persistent: true,
       ignoreInitial: ignoreInitial
     });
-    watcherRef = watcher;
+    this.watcherRef = watcher;
 
     // Adds a Directory Detected by Chokidar
     const choKAddDir = (path: string) => {
@@ -181,7 +179,7 @@ class SelectFolderZone extends Component<FolderProps> {
           this.props.fileAdded({ file: fileDef });
         }
       }
-      this.testDir(this, this.currentFolder);
+      this.setLocal(this.currentFolder);
       // Log the Added File
       console.log(`File ${path} has been added`);
     };
@@ -217,7 +215,7 @@ class SelectFolderZone extends Component<FolderProps> {
           props.fileChanged({ file: fileDef });
         }
       }
-      this.testDir(this, this.currentFolder);
+      this.setLocal(this.currentFolder);
       // Log the Changed File
       console.log(`File ${path} has been changed`);
     };
@@ -305,8 +303,8 @@ class SelectFolderZone extends Component<FolderProps> {
         );
     return JSON.stringify(walkSync(dir).flat(2));
   }
-  private testDir(parentThis: any, dir: string, initial: boolean = true): any {
-    // returns True if dir has changed (or no data stored), otherwise False
+
+  hasLocal = (dir: string) => {
     const currentDir = this.dirSnapshot(dir);
     if (
       localStorage.getItem(`Prestige.${dir}`) !== undefined &&
@@ -322,28 +320,35 @@ class SelectFolderZone extends Component<FolderProps> {
       }
       console.log("Diffed");
     }
-    if (
+
+    return (
       this.props.timeline.length === 0 &&
       localStorage.getItem(`Prestige.${dir}`) !== null &&
       localStorage.getItem(`Prestige.${dir}`) === currentDir &&
       localStorage.getItem(`Prestige.annot.${dir}`) !== null &&
       localStorage.getItem(`Prestige.tree.${dir}`) !== null
-    ) {
-      const inAnnot = localStorage.getItem(`Prestige.annot.${dir}`) + "";
-      parentThis.props.loadAnnot(JSON.parse(inAnnot));
+    );
+  };
 
-      const inTree = localStorage.getItem(`Prestige.tree.${dir}`) + "";
-      parentThis.props.loadTree(JSON.parse(inTree));
+  loadLocal = (dir: string) => {
+    const inAnnot = localStorage.getItem(`Prestige.annot.${dir}`) + "";
+    this.props.loadAnnot(JSON.parse(inAnnot));
 
-      this.usingStoredData = true;
+    const inTree = localStorage.getItem(`Prestige.tree.${dir}`) + "";
+    this.props.loadTree(JSON.parse(inTree));
 
-      // The Folder is unchanged. No need to scan.
-      return false;
-    } else if (
+    this.usingStoredData = true;
+
+    // The Folder is unchanged. No need to scan.
+    return false;
+  };
+
+  setLocal = (dir: string) => {
+    if (
       this.props.timeline.length > 0 &&
       this.props.tree.sourceMedia.length !== 0
     ) {
-      localStorage.setItem(`Prestige.${dir}`, currentDir);
+      localStorage.setItem(`Prestige.${dir}`, this.dirSnapshot(dir));
       localStorage.setItem(
         `Prestige.tree.${dir}`,
         JSON.stringify(this.props.tree)
@@ -357,9 +362,9 @@ class SelectFolderZone extends Component<FolderProps> {
       localStorage.setItem("Prestige.time", timeString);
       return true;
     }
-    // The Folder is different. Save State and Dir and load folder
-    return true;
-  }
+    return false;
+  };
+
   // Loads a Local Folder from its Path
   loadLocalFolder(inputElement: any) {
     // Reset the Current Folder
@@ -379,15 +384,16 @@ class SelectFolderZone extends Component<FolderProps> {
     } else if (this.currentFolder !== this.prevPath) {
       console.log(`Setting Folder to: ${this.currentFolder}`);
       // here
-      if (!this.testDir(this, this.currentFolder, false)) {
+      if (this.hasLocal(this.currentFolder)) {
         // Importing State
+        this.loadLocal(this.currentFolder);
 
         // Setting up imported State
         if (this.currentFolder !== "" && this.currentFolder !== this.prevPath) {
           this.isChokReady = false;
           this.startWatcher(this.currentFolder, this.props, true);
         }
-        this.readyPlayURL = this.currentFolder;
+        this.readyPlayURL = "";
       } else {
         // Normal Build State
         this.props.onNewFolder(this.currentFolder);
@@ -395,7 +401,7 @@ class SelectFolderZone extends Component<FolderProps> {
           this.isChokReady = false;
           this.startWatcher(this.currentFolder, this.props);
         }
-        // this.readyPlayURL = this.currentFolder;
+        this.readyPlayURL = "";
       }
     } else if (this.currentFolder === this.prevPath && !this.isChokReady) {
       // folder Reloading
@@ -587,6 +593,7 @@ class SelectFolderZone extends Component<FolderProps> {
                 3
               )
             );
+          if (err) console.error(err);
           var timecodes: number[] = [];
           var len = relevantlines.length - 1;
           if (len >= 0) {
@@ -597,9 +604,6 @@ class SelectFolderZone extends Component<FolderProps> {
             }
             timecodes.push(relevantlines[len]);
           }
-
-          // fixme: filter milestones to find ctStringMerged.
-          // fixme: Creae Reducer to update timings: this.props.updateClipTimes(ctString, index, start, stop, duration)
 
           // Creates and Add Oral Milestones to Timeline
           const TOGGLE_TIMES: boolean = true;
@@ -685,7 +689,7 @@ class SelectFolderZone extends Component<FolderProps> {
           this.props.setAnnotMediaWSAllowed(
             fileURL(annotDir + ctString + "_Merged.mp3")
           );
-          this.testDir(this, this.currentFolder);
+          this.setLocal(this.currentFolder);
         })
         .save(annotDir + ctString + "_Merged.mp3");
     }
@@ -741,18 +745,11 @@ class SelectFolderZone extends Component<FolderProps> {
             path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3"
           )
         );
-        this.testDir(this, this.currentFolder);
+        this.setLocal(this.currentFolder);
       })
       .save(path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3");
   };
 
-  wait(ms: number) {
-    var start = Date.now(),
-      now = start;
-    while (now - start < ms) {
-      now = Date.now();
-    }
-  }
   callProcessEAF = (inputFile: string) => {
     this.processEAF(inputFile);
     console.log("#Scanning EAF", inputFile);

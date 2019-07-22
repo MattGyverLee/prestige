@@ -1,7 +1,6 @@
 import "./App.css";
 
 import * as actions from "./store";
-import * as aTypes from "./store/annot/types";
 
 import AnnotationTable from "./model/annotTable";
 import DeeJay from "./model/deeJay";

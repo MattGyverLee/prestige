@@ -1,7 +1,5 @@
 import * as types from "./types";
 
-import { getTimelineIndex } from "../../model/globalFunctions";
-
 export const annCleanStore: types.AnnotationState = {
   annotations: [],
   annotationSet: [],

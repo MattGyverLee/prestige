@@ -76,30 +76,30 @@ export class AnnotationTable extends Component<ComponentProps> {
     if (timeline === undefined || timeline === null) {
       let row: AnnotationRow = {
         id: 1,
-          startTime: 0,
-          stopTime: 0,
-          audCareful: "",
-          audTransl: "",
+        startTime: 0,
+        stopTime: 0,
+        audCareful: "",
+        audTransl: "",
         txtTransc: "Not Loaded",
         txtTransl: ""
       };
       table.push(row);
     } else {
       timeline.milestones.forEach((milestone: LooseObject, idx: number) => {
-      // Create Each Row
-      let row: AnnotationRow = {
-        id: idx + 1,
-        startTime: milestone["startTime"],
-        stopTime: milestone["stopTime"],
-        audCareful: "",
-        audTransl: "",
-        txtTransc: "",
-        txtTransl: ""
-      };
+        // Create Each Row
+        let row: AnnotationRow = {
+          id: idx + 1,
+          startTime: milestone["startTime"],
+          stopTime: milestone["stopTime"],
+          audCareful: "",
+          audTransl: "",
+          txtTransc: "",
+          txtTransl: ""
+        };
 
-      // Fill Row with Data
-      for (let d = 0, l = milestone["data"].length; d < l; d++) {
-        let curr = milestone["data"][d];
+        // Fill Row with Data
+        for (let d = 0, l = milestone["data"].length; d < l; d++) {
+          let curr = milestone["data"][d];
           if (curr["mimeType"].startsWith("audio")) {
             if (curr["channel"] === "CarefulMerged")
               row["audCareful"] =
@@ -118,18 +118,18 @@ export class AnnotationTable extends Component<ComponentProps> {
           } else if (curr["mimeType"].startsWith("string")) {
             if (curr["channel"] === "Transcription")
               row["txtTransc"] = curr["data"];
-          else if (curr["channel"] === "Translation")
-            row["txtTransl"] = curr["data"];
+            else if (curr["channel"] === "Translation")
+              row["txtTransl"] = curr["data"];
+          }
         }
-      }
 
-      // Push Row to Table
-      table.push(row);
-    });
+        // Push Row to Table
+        table.push(row);
+      });
     }
     // Set AnnotationTable to Newly Created Table
-    if (this.props.annotationTable != table) {
-    this.props.pushAnnotationTable(table);
+    if (this.props.annotationTable !== table) {
+      this.props.pushAnnotationTable(table);
       this.props.setTimelineChanged(false);
     } else {
       console.log("Error: Timeline not different.");

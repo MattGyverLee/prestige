@@ -151,6 +151,11 @@ export class DeeJay extends Component<DeeJayProps> {
         console.log(`${idx} Playing${this.clicked[idx] ? " and Clicked" : ""}`);
       });
 
+      this.waveSurfers[idx].on("finish", (...args: any) => {
+        console.log(`${idx} Finished Playing`);
+        this.waveSurfers[idx].pause();
+      });
+
       // Log and Process WS Seeking
       this.waveSurfers[idx].on("seek", (...args: any) => {
         // If WS Had Been Clicked => Log and Process
@@ -208,23 +213,28 @@ export class DeeJay extends Component<DeeJayProps> {
               this.props.togglePlay(true);
 
               // Start WS to Match Up With It
-              const miles = this.props.timeline[this.props.currentTimeline]
-                .milestones;
-              const nextMIndex = miles.findIndex(
-                (m: any) => m.startTime === nextM.startTime
-              );
-              const lastMIndex =
-                idx === 0
-                  ? miles.length - 1
-                  : miles
-                      .map((m: any) =>
-                        m.data.findIndex(
-                          (d: any) =>
-                            d.channel ===
-                            `${idx === 1 ? "Careful" : "Translation"}Merged`
+              let nextMIndex = -1;
+              let lastMIndex = 0;
+
+              if (this.props.currentTimeline !== -1) {
+                const miles = this.props.timeline[this.props.currentTimeline]
+                  .milestones;
+                nextMIndex = miles.findIndex(
+                  (m: any) => m.startTime === nextM.startTime
+                );
+                lastMIndex =
+                  idx === 0
+                    ? miles.length - 1
+                    : miles
+                        .map((m: any) =>
+                          m.data.findIndex(
+                            (d: any) =>
+                              d.channel ===
+                              `${idx === 1 ? "Careful" : "Translation"}Merged`
+                          )
                         )
-                      )
-                      .reduce((a: number, b: number) => (a > b ? a : b), 0);
+                        .reduce((a: number, b: number) => (a > b ? a : b), 0);
+              }
 
               if (nextMIndex === lastMIndex) {
                 this.waveSurfers[idx].play(
@@ -235,7 +245,11 @@ export class DeeJay extends Component<DeeJayProps> {
               } else {
                 this.waveSurfers[idx].play(
                   this.waveSurfers[idx].getCurrentTime(),
-                  idx === 0 ? nextM.stopTime : nextM.data[0].clipStop
+                  idx === 0
+                    ? this.props.currentTimeline === -1
+                      ? this.waveSurfers[idx].getDuration()
+                      : nextM.stopTime
+                    : nextM.data[0].clipStop
                 );
               }
             } else this.waveSurfers[idx].un("pause", loadNext);
@@ -247,7 +261,11 @@ export class DeeJay extends Component<DeeJayProps> {
           this.props.togglePlay(true);
           this.waveSurfers[idx].play(
             this.waveSurfers[idx].getCurrentTime(),
-            idx === 0 ? currM.stopTime : currM.data[0].clipStop
+            idx === 0
+              ? this.props.currentTimeline === -1
+                ? this.waveSurfers[idx].getDuration()
+                : currM.stopTime
+              : currM.data[0].clipStop
           );
 
           // Set Continuing So That Watcher Knows to Load
@@ -261,27 +279,39 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   componentDidUpdate() {
+    /*
+    if (this.currBlob !== this.props.url) {
+      // Reset DeeJay State
+      this.props.resetDeeJay();
+    }
+    */
     let currSync: string[] = [];
     if (this.props.currentTimeline !== -1)
       currSync = this.props.timeline[this.props.currentTimeline].syncMedia;
     [0, 1, 2].forEach((idx: number) => {
       // Reset if Timeline Changed
       if (currSync.filter((s: any) => s === this.currBlob).length !== 1) {
-        // Reset DeeJay State
-        this.props.resetDeeJay();
-
         // Fetch New CurrentTimeline SyncMedia Blob if Available
-        if (this.props.currentTimeline !== -1)
-          this.currBlob = currSync.filter((s: any) =>
-            s.endsWith("_StandardAudio.wav")
-          )[0];
+        if (this.currBlob !== this.props.url) {
+          if (idx === 0) {
+            if (this.props.currentTimeline !== -1)
+              this.currBlob = currSync.filter((s: any) =>
+                s.endsWith("_StandardAudio.wav")
+              )[0];
+            else this.currBlob = this.props.url;
+          }
 
-        // Reset Local Variables and WS if LoadQueue or CurrentPlaying Not Empty
-        if (this.loadQueue[idx] || this.currentPlaying[idx]) {
-          this.loadQueue[idx] = "";
-          this.waveSurfers[idx].empty();
-          this.waveSurfers[idx].backend.peaks = [];
-          this.currentPlaying[idx] = "";
+          // Reset Local Variables and WS if LoadQueue or CurrentPlaying Not Empty
+          if (this.loadQueue[idx] || this.currentPlaying[idx]) {
+            this.loadQueue[idx] = "";
+            this.waveSurfers[idx].empty();
+            this.waveSurfers[idx].backend.peaks = [];
+            this.currentPlaying[idx] = "";
+          }
+        }
+        if (idx === 0 && !this.currentPlaying[idx]) {
+          this.waveSurfers[idx].load(this.props.url);
+          this.currentPlaying[idx] = this.props.url;
         }
       } else {
         // If Something is Playing in the Current WS => Allow Certain Actions
@@ -612,9 +642,9 @@ export class DeeJay extends Component<DeeJayProps> {
     wsNum: number,
     dispatch: DeeJayDispatch = { dispatchType: "" }
   ) => {
-    if (!dispatch && wsNum === 0) {
+    if (!dispatch && wsNum === 0)
       console.log("Getting Milestone of WS0 with No Dispatch.");
-    }
+    if (this.props.currentTimeline === -1) return -1;
     const channel = `${wsNum === 1 ? "Careful" : "Translation"}Merged`;
     return this.props.timeline[this.props.currentTimeline].milestones
       .filter((m: any) => {
@@ -667,14 +697,18 @@ export class DeeJay extends Component<DeeJayProps> {
         dispatch.refStart = dispatch.refStart || 0;
 
         // Grab the One Milestone with Data that Matches the Video's Time
-        currM = this.props.timeline[
-          this.props.currentTimeline
-        ].milestones.filter((m: any) => {
-          dispatch.refStart = dispatch.refStart || 0;
-          return (
-            m.startTime <= dispatch.refStart && dispatch.refStart < m.stopTime
-          );
-        })[0];
+        currM =
+          this.props.currentTimeline === -1
+            ? -1
+            : this.props.timeline[this.props.currentTimeline].milestones.filter(
+                (m: any) => {
+                  dispatch.refStart = dispatch.refStart || 0;
+                  return (
+                    m.startTime <= dispatch.refStart &&
+                    dispatch.refStart < m.stopTime
+                  );
+                }
+              )[0];
 
         // Determine Which WSs are Active
         [0, 1, 2].forEach((idx: number) => {
@@ -1033,6 +1067,9 @@ export class DeeJay extends Component<DeeJayProps> {
               step={0.01}
               value={roundIt(this.props.volumes[idx] ** 4, 2)}
               onChange={this.setVolume}
+              disabled={
+                !this.waveSurfers[idx] || !this.waveSurfers[idx].isReady
+              }
             />
           </td>
           <td

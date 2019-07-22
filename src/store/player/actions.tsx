@@ -29,7 +29,7 @@ export function setURL(
 ): types.PlayerActionTypes {
   return {
     type: types.SET_URL,
-    payload: { blobURL: timelineIndex === -1 ? "" : blobURL, timelineIndex }
+    payload: { blobURL, timelineIndex }
   };
 }
 export function togglePlay(playPause?: boolean): types.PlayerActionTypes {
