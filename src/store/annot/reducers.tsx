@@ -29,22 +29,18 @@ export const annCleanStore: types.AnnotationState = {
 };
 
 export function annotationReducer(
-  state = { ...annCleanStore },
+  state = annCleanStore,
   action: types.AnnotationActionTypes
 ): types.AnnotationState {
   switch (action.type) {
-    case types.HARD_RESET_APP: {
-      return { ...annCleanStore };
-    }
-    case types.LOAD_ANNOT: {
-      state = action.payload;
-      return state;
-    }
+    // case types.HARD_RESET_APP: {
+    //   return state;
+    // }
     case types.ON_NEW_FOLDER: {
-      return { ...state, timeline: [] };
+      return { ...state, timelineChanged: true };
     }
     case types.ON_RELOAD_FOLDER: {
-      return { ...annCleanStore, timelineChanged: true };
+      return { ...state, timelineChanged: true };
     }
     case types.SET_URL: {
       return {
@@ -170,7 +166,7 @@ export function annotationReducer(
     }
     case types.FILE_DELETED: {
       const tempTimeline = state.timeline
-        .map(t => {
+        .map((t: types.LooseObject) => {
           let tempTimeline = {
             ...t,
             milestones: t.milestones
@@ -195,14 +191,16 @@ export function annotationReducer(
         .filter((t: any) => t.milestones.length !== 0);
       return {
         ...state,
-        annotationTable: state.annotationTable.map(annot => {
-          if (annot.audCareful === action.payload) {
-            return { ...annot, audCareful: "" };
-          } else if (annot.audTransl === action.payload) {
-            return { ...annot, audTransl: "" };
+        annotationTable: state.annotationTable.map(
+          (annot: types.LooseObject) => {
+            if (annot.audCareful === action.payload) {
+              return { ...annot, audCareful: "" };
+            } else if (annot.audTransl === action.payload) {
+              return { ...annot, audTransl: "" };
+            }
+            return annot;
           }
-          return annot;
-        }),
+        ),
         timeline: tempTimeline,
         timelineChanged: true
       };

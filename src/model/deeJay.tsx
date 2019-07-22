@@ -409,6 +409,10 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   }
 
+  componentWillUnmount() {
+    console.log("UnMounting DeeJay");
+  }
+
   // Processes WS Leaving Region
   regionOut = (idx: any) => {
     // Remove the Specified WS's Region, if it Exists, and Redraw

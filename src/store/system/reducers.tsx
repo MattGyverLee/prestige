@@ -16,13 +16,6 @@ export function systemReducer(
   action: types.SystemActionTypes
 ): types.SystemState {
   switch (action.type) {
-    case types.HARD_RESET_APP: {
-      state = systemCleanStore;
-      return state;
-    }
-    case types.ON_NEW_FOLDER: {
-      return state;
-    }
     case types.UPDATE_SESSION: {
       return {
         ...state,

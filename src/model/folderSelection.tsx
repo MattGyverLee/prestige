@@ -1,7 +1,7 @@
 import * as aTypes from "../store/annot/types";
 import * as actions from "../store";
 import * as tTypes from "../store/tree/types";
-
+import Timelines from "./timeline";
 import React, { Component } from "react";
 import { getSourceMedia, getTimelineIndex, roundIt } from "./globalFunctions";
 
@@ -12,17 +12,16 @@ var watcherRef: any;
 
 interface StateProps {
   annotMedia: aTypes.LooseObject[];
+  annot: aTypes.AnnotationState;
   annotations: object;
   availableFiles: aTypes.LooseObject[];
   categories: string[];
   env: string;
   folderName: string;
   folderPath: string;
-  prevPath: string;
   sourceMedia: aTypes.LooseObject[];
   timeline: aTypes.LooseObject[];
   url: string;
-  annot: aTypes.AnnotationState;
   tree: tTypes.TreeState;
 }
 
@@ -31,7 +30,6 @@ interface DispatchProps {
   addOralAnnotation: typeof actions.addOralAnnotation;
   annotMediaAdded: typeof actions.annotMediaAdded;
   annotMediaChanged: typeof actions.annotMediaChanged;
-  changePrevPath: typeof actions.changePrevPath;
   dispatchSnackbar: typeof actions.dispatchSnackbar;
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
@@ -51,16 +49,21 @@ interface DispatchProps {
   setSourceMediaWSAllowed: typeof actions.setSourceMediaWSAllowed;
 }
 
-interface FolderProps extends StateProps, DispatchProps {
-  callProcessEAF: (inPath: string) => void;
-}
+interface FolderProps extends StateProps, DispatchProps {}
 
 class SelectFolderZone extends Component<FolderProps> {
   private isChokReady: boolean = false;
   private currentFolder: any;
+  private prevPath: string = "";
   private readyPlayURL: string = "";
   private parentThis = this;
   private usingStoredData = false;
+  private skipCache: boolean = true;
+
+  componentWillUnmount() {
+    watcherRef.close();
+    console.log("UnMounting Tree");
+  }
 
   // Starts the Chokidar File Watcher
   startWatcher = (path: string, props: any, ignoreInitial: boolean = false) => {
@@ -127,7 +130,7 @@ class SelectFolderZone extends Component<FolderProps> {
         );
       } else if (tempMime.endsWith("eaf")) {
         console.log(parsedPath.base, tempMime);
-        props.callProcessEAF(path);
+        this.callProcessEAF(path);
       }
 
       // Returns the File Definition
@@ -178,7 +181,7 @@ class SelectFolderZone extends Component<FolderProps> {
           this.props.fileAdded({ file: fileDef });
         }
       }
-      this.testDir(this, this.currentFolder.files[0].path);
+      this.testDir(this, this.currentFolder);
       // Log the Added File
       console.log(`File ${path} has been added`);
     };
@@ -214,7 +217,7 @@ class SelectFolderZone extends Component<FolderProps> {
           props.fileChanged({ file: fileDef });
         }
       }
-      this.testDir(this, this.currentFolder.files[0].path);
+      this.testDir(this, this.currentFolder);
       // Log the Changed File
       console.log(`File ${path} has been changed`);
     };
@@ -255,7 +258,7 @@ class SelectFolderZone extends Component<FolderProps> {
         } else {
           console.log("Empty Directory");
         }
-      } else {
+      } else if (this.props.url === "" && this.props.sourceMedia.length !== 0) {
         const blobURL = getSourceMedia(this.props.sourceMedia, false)[0]
           .blobURL;
         props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
@@ -300,17 +303,31 @@ class SelectFolderZone extends Component<FolderProps> {
                   fs.statSync(path.join(inDir, file)).mtime
               )[0]
         );
-    return JSON.stringify(walkSync(dir));
+    return JSON.stringify(walkSync(dir).flat(2));
   }
   private testDir(parentThis: any, dir: string, initial: boolean = true): any {
     // returns True if dir has changed (or no data stored), otherwise False
     const currentDir = this.dirSnapshot(dir);
     if (
+      localStorage.getItem(`Prestige.${dir}`) !== undefined &&
+      localStorage.getItem(`Prestige.${dir}`) !== null &&
+      localStorage.getItem(`Prestige.${dir}`) !== currentDir
+    ) {
+      let oldDir = JSON.parse(localStorage.getItem(`Prestige.${dir}`) + "");
+      let newDir = JSON.parse(currentDir + "");
+      const _ = require("lodash");
+      const diffs = _.difference(newDir, oldDir);
+      if (diffs.length > 0) {
+        console.log(diffs);
+      }
+      console.log("Diffed");
+    }
+    if (
+      this.props.timeline.length === 0 &&
       localStorage.getItem(`Prestige.${dir}`) !== null &&
       localStorage.getItem(`Prestige.${dir}`) === currentDir &&
       localStorage.getItem(`Prestige.annot.${dir}`) !== null &&
-      localStorage.getItem(`Prestige.tree.${dir}`) !== null &&
-      this.props.annot.timeline.length === 0
+      localStorage.getItem(`Prestige.tree.${dir}`) !== null
     ) {
       const inAnnot = localStorage.getItem(`Prestige.annot.${dir}`) + "";
       parentThis.props.loadAnnot(JSON.parse(inAnnot));
@@ -322,65 +339,70 @@ class SelectFolderZone extends Component<FolderProps> {
 
       // The Folder is unchanged. No need to scan.
       return false;
-    } else {
-      if (
-        this.props.annot.timeline.length !== 0 &&
-        this.props.tree.sourceMedia.length !== 0
-      ) {
-        localStorage.setItem(`Prestige.${dir}`, currentDir);
-        localStorage.setItem(
-          `Prestige.tree.${dir}`,
-          JSON.stringify(this.props.tree)
-        );
-        localStorage.setItem(
-          `Prestige.annot.${dir}`,
-          JSON.stringify(this.props.annot)
-        );
-        let time = Date.now() + 0;
-        let timeString = time.toString();
-        localStorage.setItem("Prestige.time", timeString);
-        return true;
-      }
-      // The Folder is different. Save State and Dir and load folder
+    } else if (
+      this.props.timeline.length > 0 &&
+      this.props.tree.sourceMedia.length !== 0
+    ) {
+      localStorage.setItem(`Prestige.${dir}`, currentDir);
+      localStorage.setItem(
+        `Prestige.tree.${dir}`,
+        JSON.stringify(this.props.tree)
+      );
+      localStorage.setItem(
+        `Prestige.annot.${dir}`,
+        JSON.stringify(this.props.annot)
+      );
+      let time = Date.now() + 0;
+      let timeString = time.toString();
+      localStorage.setItem("Prestige.time", timeString);
       return true;
     }
+    // The Folder is different. Save State and Dir and load folder
+    return true;
   }
   // Loads a Local Folder from its Path
   loadLocalFolder(inputElement: any) {
     // Reset the Current Folder
-    this.currentFolder = inputElement;
-
+    if (
+      inputElement.files[0] !== undefined &&
+      inputElement.files[0].path !== this.currentFolder
+    ) {
+      this.prevPath = this.currentFolder ? this.currentFolder : "";
+      this.currentFolder = inputElement.files[0].path;
+      this.forceUpdate();
+    }
     // If Undefined Selection => Log
     // -> If First Path Not Same as Previous => Start
     // -> If First Path Same as Previous and Chok => Start
     if (inputElement.files.length === 0) {
       console.log("Undefined Directory Selected");
-    } else if (inputElement.files[0].path !== this.props.prevPath) {
-      console.log(`Setting Folder to: ${inputElement.files[0].path}`);
+    } else if (this.currentFolder !== this.prevPath) {
+      console.log(`Setting Folder to: ${this.currentFolder}`);
       // here
-      if (!this.testDir(this, this.currentFolder.files[0].path, false)) {
+      if (!this.testDir(this, this.currentFolder, false)) {
+        // Importing State
+
         // Setting up imported State
-        const path = inputElement.files[0].path.toString();
-        if (path !== "" && path !== this.props.prevPath) {
-          this.startWatcher(path, this.props, true);
+        if (this.currentFolder !== "" && this.currentFolder !== this.prevPath) {
+          this.isChokReady = false;
+          this.startWatcher(this.currentFolder, this.props, true);
         }
-        this.readyPlayURL = path;
+        this.readyPlayURL = this.currentFolder;
       } else {
-        this.props.onNewFolder(inputElement.files[0].path);
-        const path = inputElement.files[0].path.toString();
-        if (path !== "" && path !== this.props.prevPath) {
-          this.startWatcher(path, this.props);
-          this.props.changePrevPath(path);
+        // Normal Build State
+        this.props.onNewFolder(this.currentFolder);
+        if (this.currentFolder !== "" && this.currentFolder !== this.prevPath) {
+          this.isChokReady = false;
+          this.startWatcher(this.currentFolder, this.props);
         }
+        // this.readyPlayURL = this.currentFolder;
       }
-    } else if (
-      inputElement.files[0].path === this.props.prevPath &&
-      !this.isChokReady
-    ) {
+    } else if (this.currentFolder === this.prevPath && !this.isChokReady) {
       // folder Reloading
       this.readyPlayURL = this.props.url;
-      this.props.onReloadFolder(inputElement.files[0].path);
-      this.startWatcher(inputElement.files[0].path.toString(), this.props);
+      this.props.onReloadFolder(this.currentFolder);
+      this.isChokReady = false;
+      this.startWatcher(this.currentFolder, this.props);
     } else {
       console.log("Fell through");
     }
@@ -490,7 +512,7 @@ class SelectFolderZone extends Component<FolderProps> {
     }
 
     // Sort FilteredAnnot Based on Start Time into InputFiles
-    let dir = "";
+    let annotDir = "";
     let path = require("path");
     let inputFiles: any[] = this.props.annotMedia
       .filter((am: any) => am.name.includes("_" + ctString))
@@ -501,175 +523,175 @@ class SelectFolderZone extends Component<FolderProps> {
         );
       })
       .map((a: any) => a.path);
-    dir = inputFiles[0].substring(0, inputFiles[0].lastIndexOf(path.sep) + 1);
+    if (inputFiles.length > 0) {
+      annotDir = inputFiles[0].substring(
+        0,
+        inputFiles[0].lastIndexOf(path.sep) + 1
+      );
 
-    // Builds MergedAudio Object with Inputs and the Concatenation Command.
-    let mergedAudio = fluentFfmpeg();
-    let cf = "";
-    mergedAudio.options.stdoutLines = 0;
-    mergedAudio.addInput(process.cwd() + "/public/silence.wav");
-    inputFiles.forEach((v: string, idx: number) => {
-      mergedAudio = mergedAudio.addInput(v);
-      cf += `[${(
-        idx + 1
-      ).toString()}]loudnorm=I=-16:TP=-1.5:LRA=11[n];[n]silenceremove=start_periods=1:start_duration=0.1:start_threshold=-40dB[${
-        idx ? "b" : "out"
-      }];`;
-      if (idx) cf += "[out][0][b]concat=v=0:n=3:a=1[out];";
-      else cf += "[0][out]concat=v=0:a=1[out];";
-      idx++;
-    });
-    cf = cf.substring(0, cf.lastIndexOf(";"));
+      // Builds MergedAudio Object with Inputs and the Concatenation Command.
+      let mergedAudio = fluentFfmpeg();
+      let cf = "";
+      mergedAudio.options.stdoutLines = 0;
+      mergedAudio.addInput(process.cwd() + "/public/silence.wav");
+      inputFiles.forEach((v: string, idx: number) => {
+        mergedAudio = mergedAudio.addInput(v);
+        cf += `[${(
+          idx + 1
+        ).toString()}]loudnorm=I=-16:TP=-1.5:LRA=11[n];[n]silenceremove=start_periods=1:start_duration=0.1:start_threshold=-40dB[${
+          idx ? "b" : "out"
+        }];`;
+        if (idx) cf += "[out][0][b]concat=v=0:n=3:a=1[out];";
+        else cf += "[0][out]concat=v=0:a=1[out];";
+        idx++;
+      });
+      cf = cf.substring(0, cf.lastIndexOf(";"));
 
-    // Writes Concatenated Audio to Compressed MP3
-    mergedAudio
-      .format("mp3")
-      .audioBitrate("128k")
-      .audioChannels(1)
-      .audioCodec("libmp3lame")
-      .audioFrequency(44100)
-      .outputOptions(["-map [out]", "-y", "-v verbose"])
-      .complexFilter(cf)
-      .on("start", (command: any) => {
-        console.log("ffmpeg process started:", command);
-        this.props.dispatchSnackbar(
-          "Merging " +
-            (carefulOrTranslation ? "Careful Speech" : "Translation") +
-            " files."
-        );
-      })
-      .on("error", function(err: any) {
-        console.log("An error occurred: " + err.message);
-      })
-      .on("end", (err: any, stdout: any) => {
-        const fileURL = require("file-url");
-        const path = require("path");
-
-        console.log("Merging finished!");
-        const relevantlines: number[] = stdout
-          .split("\n")
-          .filter(
-            (line: string) =>
-              line.startsWith("[Parsed_concat") && line.includes("=")
-          )
-          .map((line: string) =>
-            // Note: Conversion to MP3 always adds 0.05 second delay to start of audio and miniscule amount to end.
-            // The below calculation accounts for it. The 0.1 seconds we are adding will help space them.
-            roundIt(
-              parseFloat(line.substring(line.indexOf("=") + 1)) / 1000000 +
-                0.05,
-              3
-            )
+      // Writes Concatenated Audio to Compressed MP3
+      mergedAudio
+        .format("mp3")
+        .audioBitrate("128k")
+        .audioChannels(1)
+        .audioCodec("libmp3lame")
+        .audioFrequency(44100)
+        .outputOptions(["-map [out]", "-y", "-v verbose"])
+        .complexFilter(cf)
+        .on("start", (command: any) => {
+          console.log("ffmpeg process started:", command);
+          this.props.dispatchSnackbar(
+            "Merging " +
+              (carefulOrTranslation ? "Careful Speech" : "Translation") +
+              " files."
           );
-        var timecodes: number[] = [];
-        var len = relevantlines.length - 1;
-        if (len >= 0) {
-          for (var i = 0; i < len; i++) {
-            if (relevantlines[i] !== relevantlines[i + 1]) {
-              timecodes.push(relevantlines[i]);
+        })
+        .on("error", function(err: any) {
+          console.log("An error occurred: " + err.message);
+        })
+        .on("end", (err: any, stdout: any) => {
+          const fileURL = require("file-url");
+          const path = require("path");
+
+          console.log("Merging finished!");
+          const relevantlines: number[] = stdout
+            .split("\n")
+            .filter(
+              (line: string) =>
+                line.startsWith("[Parsed_concat") && line.includes("=")
+            )
+            .map((line: string) =>
+              // Note: Conversion to MP3 always adds 0.05 second delay to start of audio and miniscule amount to end.
+              // The below calculation accounts for it. The 0.1 seconds we are adding will help space them.
+              roundIt(
+                parseFloat(line.substring(line.indexOf("=") + 1)) / 1000000 +
+                  0.05,
+                3
+              )
+            );
+          var timecodes: number[] = [];
+          var len = relevantlines.length - 1;
+          if (len >= 0) {
+            for (var i = 0; i < len; i++) {
+              if (relevantlines[i] !== relevantlines[i + 1]) {
+                timecodes.push(relevantlines[i]);
+              }
             }
+            timecodes.push(relevantlines[len]);
           }
-          timecodes.push(relevantlines[len]);
-        }
 
-        // fixme: filter milestones to find ctStringMerged.
-        // fixme: Creae Reducer to update timings: this.props.updateClipTimes(ctString, index, start, stop, duration)
+          // fixme: filter milestones to find ctStringMerged.
+          // fixme: Creae Reducer to update timings: this.props.updateClipTimes(ctString, index, start, stop, duration)
 
-        // Creates and Add Oral Milestones to Timeline
-        const TOGGLE_TIMES: boolean = true;
-        let primaryIdx: number = 0;
-        let inputTimes: any[] = [];
-        mergedAudio._inputs.forEach((v: any, idx: number) => {
-          if (!v.source.endsWith("silence.wav"))
-            mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
-              // TODO: Async May Run Multiple Times in Else Statement Below
-              // Store a Table of Contents in InputTimes for the Milestones
-              const name = v.source.substring(
-                v.source.lastIndexOf(path.sep) + 1
-              );
-              inputTimes.push({
-                file: v.source,
-                name,
-                duration: roundIt(metadata.streams[0].duration, 3),
-                refStart: name.split("_")[0],
-                refStop: name.split("_")[2]
-              });
+          // Creates and Add Oral Milestones to Timeline
+          const TOGGLE_TIMES: boolean = true;
+          let primaryIdx: number = 0;
+          let inputTimes: any[] = [];
+          mergedAudio._inputs.forEach((v: any, idx: number) => {
+            if (!v.source.endsWith("silence.wav"))
+              mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
+                // TODO: Async May Run Multiple Times in Else Statement Below
+                // Store a Table of Contents in InputTimes for the Milestones
+                const name = v.source.substring(
+                  v.source.lastIndexOf(path.sep) + 1
+                );
+                inputTimes.push({
+                  file: v.source,
+                  name,
+                  duration: roundIt(metadata.streams[0].duration, 3),
+                  refStart: name.split("_")[0],
+                  refStop: name.split("_")[2]
+                });
 
-              // Create Milestones if Last FFProbe Has Been Called
-              primaryIdx++;
-              if (primaryIdx === mergedAudio._inputs.length - 1) {
-                // Sort InputTimes Based on Start Time
-                inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
+                // Create Milestones if Last FFProbe Has Been Called
+                primaryIdx++;
+                if (primaryIdx === mergedAudio._inputs.length - 1) {
+                  // Sort InputTimes Based on Start Time
+                  inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
 
-                // Add All Oral Annotations of the Files
-                let oralMilestone: aTypes.Milestone;
-                for (let i = 0, l = inputTimes.length; i < l; i++) {
-                  if (v.source.endsWith("silence.wav")) continue;
-                  // Create Merged Audio Milestone
-                  oralMilestone = {
-                    annotationID: "",
-                    data: [
-                      {
-                        channel: `${ctString}Merged`,
-                        data: fileURL(`${dir}${ctString}_Merged.mp3`),
-                        linguisticType: `${ctString}Merged`,
-                        locale: "",
-                        mimeType: "audio-mp3",
-                        clipStart: TOGGLE_TIMES
-                          ? i === 0
-                            ? 0
-                            : timecodes[2 * i - 1]
-                          : timecodes[2 * i],
-                        // Accounts for Excessive Time Padding
-                        clipStop: timecodes[2 * i + 1]
-                      }
-                    ],
-                    startTime: parseFloat(inputTimes[i].refStart),
-                    stopTime: parseFloat(inputTimes[i].refStop)
-                  };
+                  // Add All Oral Annotations of the Files
+                  let oralMilestone: aTypes.Milestone;
+                  for (let i = 0, l = inputTimes.length; i < l; i++) {
+                    if (v.source.endsWith("silence.wav")) continue;
+                    // Create Merged Audio Milestone
+                    oralMilestone = {
+                      annotationID: "",
+                      data: [
+                        {
+                          channel: `${ctString}Merged`,
+                          data: fileURL(`${annotDir}${ctString}_Merged.mp3`),
+                          linguisticType: `${ctString}Merged`,
+                          locale: "",
+                          mimeType: "audio-mp3",
+                          clipStart: TOGGLE_TIMES
+                            ? i === 0
+                              ? 0
+                              : timecodes[2 * i - 1]
+                            : timecodes[2 * i],
+                          // Accounts for Excessive Time Padding
+                          clipStop: timecodes[2 * i + 1]
+                        }
+                      ],
+                      startTime: parseFloat(inputTimes[i].refStart),
+                      stopTime: parseFloat(inputTimes[i].refStop)
+                    };
 
-                  // Add Milestone to Timeline
-                  this.props.addOralAnnotation(
-                    oralMilestone,
-                    getTimelineIndex(
-                      this.props.timeline,
-                      fileURL(dir.substring(0, dir.indexOf("_Annotations")))
-                    )
-                  );
+                    // Add Milestone to Timeline
+                    this.props.addOralAnnotation(
+                      oralMilestone,
+                      getTimelineIndex(
+                        this.props.timeline,
+                        fileURL(
+                          annotDir.substring(
+                            0,
+                            annotDir.indexOf("_Annotations")
+                          )
+                        )
+                      )
+                    );
+                    this.props.setTimelineChanged(true);
+                  }
                 }
-              }
 
-              // ffProbe Error Handling
-              if (err) {
-                console.log("Error: " + err);
-              }
-            });
-        });
+                // ffProbe Error Handling
+                if (err) {
+                  console.log("Error: " + err);
+                }
+              });
+          });
 
-        this.props.dispatchSnackbar(
-          (carefulOrTranslation ? "Careful Speech" : "Translation") +
-            " annotations merged!"
-        );
-        this.props.setAnnotMediaWSAllowed(
-          fileURL(dir + ctString + "_Merged.mp3")
-        );
-        this.updateLS();
-      })
-      .save(dir + ctString + "_Merged.mp3");
+          this.props.dispatchSnackbar(
+            (carefulOrTranslation ? "Careful Speech" : "Translation") +
+              " annotations merged!"
+          );
+          this.props.setAnnotMediaWSAllowed(
+            fileURL(annotDir + ctString + "_Merged.mp3")
+          );
+          this.testDir(this, this.currentFolder);
+        })
+        .save(annotDir + ctString + "_Merged.mp3");
+    }
   };
 
-  updateLS = async () => {
-    let promise = new Promise((resolve, reject) => {
-      setTimeout(() => {
-        this.testDir(this, this.currentFolder.files[0].path);
-        resolve("Success");
-      }, 2000);
-    });
-
-    await promise; // wait till the promise resolves (*)
-
-    // alert(result); // "done!"
-  };
+  // alert(result); // "done!"
   convertToMP3 = (path: string) => {
     // Set Up Fluent FFMpeg and its Associated Paths
     const ffmpegStaticElectron = require("ffmpeg-static-electron");
@@ -719,10 +741,145 @@ class SelectFolderZone extends Component<FolderProps> {
             path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3"
           )
         );
-        this.updateLS();
+        this.testDir(this, this.currentFolder);
       })
       .save(path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3");
   };
+
+  wait(ms: number) {
+    var start = Date.now(),
+      now = start;
+    while (now - start < ms) {
+      now = Date.now();
+    }
+  }
+  callProcessEAF = (inputFile: string) => {
+    this.processEAF(inputFile);
+    console.log("#Scanning EAF", inputFile);
+  };
+
+  processEAF(path: string) {
+    // Define Content
+    let content: any = "";
+    require("xml2js").parseString(
+      require("fs-extra").readFileSync(path),
+      function(err: Error, result: any) {
+        if (!err) content = result;
+        else console.log(err.stack);
+      }
+    );
+
+    // Miscellaneous Local Variables
+    const fileData = content.ANNOTATION_DOCUMENT;
+    const timeSlotPointer = fileData.TIME_ORDER[0].TIME_SLOT;
+    const miles: any[] = [];
+
+    // Define SyncMedia for tempTimeline
+    const parsedPath = require("path").parse(path);
+    const fileURL = require("file-url");
+    const syncMedia: string[] = [];
+    for (let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h < l; h++)
+      syncMedia.push(
+        fileURL(
+          parsedPath.dir +
+            "/" +
+            fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL
+        )
+      );
+
+    // Instantiate tempTimeline
+    let tempTimeline = new Timelines({
+      syncMedia: syncMedia,
+      eafFile: fileURL(path)
+    });
+
+    // Inline Function Definition for findTime and findAnnotTime
+    const findTime = (myRef: string) => {
+      for (let i = 0, l = timeSlotPointer.length; i < l; i++)
+        if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef)
+          return timeSlotPointer[i].$.TIME_VALUE;
+      return -1;
+    };
+    const findAnnotTime = (myRef4: any, startStop: string) => {
+      for (let i = 0, l = miles.length; i < l; i++)
+        if (miles[i]["annotationID"] === myRef4) return miles[i][startStop];
+      return -1;
+    };
+
+    // Process All of File's Annotations
+    for (let j = 0, l = fileData.TIER.length; j < l; j++) {
+      // Verify Current lingType is a Category and Add if Otherwise
+      const lingType = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
+      if (this.props.categories.indexOf(lingType) === -1)
+        this.props.addCategory(lingType);
+
+      // Process Annotations
+      for (let k = 0, l2 = fileData.TIER[j].ANNOTATION.length; k < l2; k++) {
+        // Process Alignable Annotations or Ref Annotations
+        if ("ALIGNABLE_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
+          // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
+          const alAnnPointer =
+            fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
+          const milestone = {
+            annotationID: alAnnPointer.$.ANNOTATION_ID,
+            data: [
+              {
+                channel: fileData.TIER[j].$.TIER_ID,
+                linguisticType:
+                  fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text",
+                data: alAnnPointer.ANNOTATION_VALUE[0],
+                locale: fileData.TIER[j].$.DEFAULT_LOCALE,
+                mimeType: "string"
+              }
+            ],
+            startTime: findTime(alAnnPointer.$.TIME_SLOT_REF1) / 1000,
+            startId: alAnnPointer.$.TIME_SLOT_REF1,
+            stopTime: findTime(alAnnPointer.$.TIME_SLOT_REF2) / 1000,
+            stopId: alAnnPointer.$.TIME_SLOT_REF2,
+            timeline: parsedPath.base
+          };
+          miles.push(milestone);
+          tempTimeline.addMilestone(milestone);
+        } else if ("REF_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
+          const refAnnPointer =
+            fileData.TIER[j].ANNOTATION[k].REF_ANNOTATION[0];
+          // Only Process Annotation if it Has Actual Text
+          if (refAnnPointer.ANNOTATION_VALUE[0] !== "") {
+            // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
+            const milestone2 = {
+              annotationID: refAnnPointer.$.ANNOTATION_ID,
+              data: [
+                {
+                  channel: fileData.TIER[j].$.LINGUISTIC_TYPE_REF,
+                  data: refAnnPointer.ANNOTATION_VALUE[0],
+                  linguisticType: fileData.TIER[j].$.TIER_ID + "_text",
+                  locale: fileData.TIER[j].$.DEFAULT_LOCALE,
+                  mimeType: "string"
+                }
+              ],
+              startId: refAnnPointer.$.TIME_SLOT_REF1,
+              startTime: findAnnotTime(
+                refAnnPointer.$.ANNOTATION_REF,
+                "startTime"
+              ),
+              stopId: refAnnPointer.$.TIME_SLOT_REF2,
+              stopTime: findAnnotTime(
+                refAnnPointer.$.ANNOTATION_REF,
+                "stopTime"
+              ),
+              timeline: parsedPath.base
+            };
+            tempTimeline.addMilestone(milestone2);
+          }
+        }
+      }
+    }
+
+    // Push TempTimeline to Timeline
+    // FIXME: ASYNC Unsafe
+    this.props.pushTimeline(tempTimeline);
+    console.log("EAF Processed");
+  }
 
   render() {
     if (this.props.env === "electron") {
@@ -759,7 +916,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   env: state.tree.env,
   folderName: state.tree.folderName,
   folderPath: state.tree.folderPath,
-  prevPath: state.tree.prevPath,
   sourceMedia: state.tree.sourceMedia,
   timeline: state.annot.timeline,
   url: state.player.url,
@@ -775,7 +931,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       addOralAnnotation: actions.addOralAnnotation,
       annotMediaAdded: actions.annotMediaAdded,
       annotMediaChanged: actions.annotMediaChanged,
-      changePrevPath: actions.changePrevPath,
       dispatchSnackbar: actions.dispatchSnackbar,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,

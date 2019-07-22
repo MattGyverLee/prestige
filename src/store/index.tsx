@@ -2,11 +2,11 @@ import { annCleanStore, annotationReducer } from "./annot/reducers";
 import { applyMiddleware, combineReducers, createStore } from "redux";
 
 import { composeWithDevTools } from "redux-devtools-extension";
-import { deeJayReducer } from "./deeJay/reducers";
-import { playerReducer } from "./player/reducers";
+import { deeJayReducer, deeJayCleanStore } from "./deeJay/reducers";
+import { playerReducer, playerCleanStore } from "./player/reducers";
 import { systemReducer } from "./system/reducers";
 import thunkMiddleware from "redux-thunk";
-import { treeReducer } from "./tree/reducers";
+import { treeReducer, treeCleanStore } from "./tree/reducers";
 
 // These are intentionally ordered
 export const appReducer = combineReducers({
@@ -18,14 +18,22 @@ export const appReducer = combineReducers({
 });
 
 const allReducers = (state: any, action: any) => {
-  if (action.type === "ON_NEW_FOLDER") {
+  if (
+    action.type === ("ON_NEW_FOLDER" || "ON_RELOAD_FOLDER" || "HARD_RESET_APP")
+  ) {
     state = {
       ...state,
-      tree: undefined,
-      annot: undefined
+      tree: treeCleanStore,
+      annot: annCleanStore,
+      deeJay: deeJayCleanStore,
+      player: playerCleanStore
+    };
+  } else if (action.type === "RESET_DEE_JAY") {
+    state = {
+      ...state,
+      deeJay: deeJayCleanStore
     };
   }
-
   return appReducer(state, action);
 };
 

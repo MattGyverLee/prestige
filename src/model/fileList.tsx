@@ -26,6 +26,10 @@ export class FileList extends Component<FileListProps> {
     this.props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
   }
 
+  componentWillUnmount() {
+    console.log("UnMounting FileList");
+  }
+
   render() {
     return (
       <div>

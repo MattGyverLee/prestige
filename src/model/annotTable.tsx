@@ -45,16 +45,16 @@ interface DispatchProps {
   pushAnnotationTable: typeof actions.pushAnnotationTable;
   updatePrevTimeline: typeof actions.updatePrevTimeline;
   setDispatch: typeof actions.setDispatch;
+  setTimelineChanged: typeof actions.setTimelineChanged;
 }
 
 interface ComponentProps extends StateProps, DispatchProps {}
 
 export class AnnotationTable extends Component<ComponentProps> {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      open: false
-    };
+  private redrawCount = 0;
+
+  componentWillUnmount() {
+    console.log("UnMounting Annot");
   }
 
   componentDidUpdate() {
@@ -71,25 +71,21 @@ export class AnnotationTable extends Component<ComponentProps> {
 
   // Loads Annotation Table Based on Timeline
   formatTimeline = (timeline: LooseObject) => {
-    // Create Blank Timeline if Undefined
-    if (timeline === undefined) {
-      this.props.pushAnnotationTable([
-        {
-          id: 0,
-          startTime: 0,
-          stopTime: 0,
-          txtTransc: "Not Loaded",
-          audCareful: "",
-          audTransl: "",
-          txtTransl: "Not Loaded"
-        }
-      ]);
-      return;
-    }
-
     // Fill Annotation Table with Annotation Rows by Milestone
     let table: AnnotationRow[] = [];
-    timeline["milestones"].forEach((milestone: LooseObject, idx: number) => {
+    if (timeline === undefined || timeline === null) {
+      let row: AnnotationRow = {
+        id: 1,
+          startTime: 0,
+          stopTime: 0,
+          audCareful: "",
+          audTransl: "",
+        txtTransc: "Not Loaded",
+        txtTransl: ""
+      };
+      table.push(row);
+    } else {
+      timeline.milestones.forEach((milestone: LooseObject, idx: number) => {
       // Create Each Row
       let row: AnnotationRow = {
         id: idx + 1,
@@ -104,16 +100,24 @@ export class AnnotationTable extends Component<ComponentProps> {
       // Fill Row with Data
       for (let d = 0, l = milestone["data"].length; d < l; d++) {
         let curr = milestone["data"][d];
-        if (curr["mimeType"].startsWith("audio")) {
-          if (curr["channel"] === "CarefulMerged")
-            row["audCareful"] =
-              curr["data"] + "#t" + curr["clipStart"] + "," + curr["clipStop"];
-          else if (curr["channel"] === "TranslationMerged")
-            row["audTransl"] =
-              curr["data"] + "#t" + curr["clipStart"] + "," + curr["clipStop"];
-        } else if (curr["mimeType"].startsWith("string")) {
-          if (curr["channel"] === "Transcription")
-            row["txtTransc"] = curr["data"];
+          if (curr["mimeType"].startsWith("audio")) {
+            if (curr["channel"] === "CarefulMerged")
+              row["audCareful"] =
+                curr["data"] +
+                "#t" +
+                curr["clipStart"] +
+                "," +
+                curr["clipStop"];
+            else if (curr["channel"] === "TranslationMerged")
+              row["audTransl"] =
+                curr["data"] +
+                "#t" +
+                curr["clipStart"] +
+                "," +
+                curr["clipStop"];
+          } else if (curr["mimeType"].startsWith("string")) {
+            if (curr["channel"] === "Transcription")
+              row["txtTransc"] = curr["data"];
           else if (curr["channel"] === "Translation")
             row["txtTransl"] = curr["data"];
         }
@@ -122,9 +126,15 @@ export class AnnotationTable extends Component<ComponentProps> {
       // Push Row to Table
       table.push(row);
     });
-
+    }
     // Set AnnotationTable to Newly Created Table
+    if (this.props.annotationTable != table) {
     this.props.pushAnnotationTable(table);
+      this.props.setTimelineChanged(false);
+    } else {
+      console.log("Error: Timeline not different.");
+      this.props.setTimelineChanged(false);
+    }
   };
 
   render() {
@@ -318,7 +328,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       togglePlay: actions.togglePlay,
       pushAnnotationTable: actions.pushAnnotationTable,
       updatePrevTimeline: actions.updatePrevTimeline,
-      setDispatch: actions.setDispatch
+      setDispatch: actions.setDispatch,
+      setTimelineChanged: actions.setTimelineChanged
     },
     dispatch
   )

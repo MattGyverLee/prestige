@@ -6,7 +6,12 @@ interface tempTimeline {
 }
 
 export function getTimelineIndex(timelines: any, blobURL: string): number {
-  if (blobURL === undefined || blobURL === null || blobURL === "") {
+  if (
+    blobURL === undefined ||
+    blobURL === null ||
+    blobURL === "" ||
+    timelines.length === 0
+  ) {
     return -1;
   }
   let temp = timelines.map((t: LooseObject, idx: number) => {

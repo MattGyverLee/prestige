@@ -20,20 +20,13 @@ export function treeReducer(
   action: types.TreeActionTypes
 ): types.TreeState {
   switch (action.type) {
-    case types.HARD_RESET_APP: {
-      state = treeCleanStore;
-      return state;
-    }
     case types.ON_NEW_FOLDER: {
-      state = treeCleanStore;
       return { ...state, folderPath: action.payload };
     }
     case types.ON_RELOAD_FOLDER: {
-      state = treeCleanStore;
       return { ...state, folderPath: action.payload };
     }
     case types.CHANGE_PREV_PATH: {
-      state = treeCleanStore;
       return { ...state, prevPath: action.payload };
     }
     case types.UPDATE_TREE: {

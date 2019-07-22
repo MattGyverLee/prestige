@@ -1,6 +1,7 @@
 import "./App.css";
 
 import * as actions from "./store";
+import * as aTypes from "./store/annot/types";
 
 import AnnotationTable from "./model/annotTable";
 import DeeJay from "./model/deeJay";
@@ -14,7 +15,6 @@ import { connect } from "react-redux";
 import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
-import processEAF from "./model/processEAF";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
@@ -24,7 +24,6 @@ interface StateProps {
   url: string;
   loaded: boolean;
   userName: string;
-  annot: any;
 }
 
 interface DispatchProps {
@@ -40,7 +39,6 @@ interface DispatchProps {
   annotMediaAdded: typeof actions.annotMediaAdded;
   sourceMediaChanged: typeof actions.sourceMediaChanged;
   annotMediaChanged: typeof actions.annotMediaChanged;
-  processEAF: typeof processEAF;
   // updateActiveFolder: typeof actions.updateActiveFolder;
   updateTree: typeof actions.updateTree;
   onNewFolder: typeof actions.onNewFolder;
@@ -113,11 +111,6 @@ export class App extends React.Component<AppProps> {
     console.log("onProgressApp", playState);
   };
 
-  callProcessEAF = (inputFile: string) => {
-    processEAF(inputFile, this.props);
-    console.log("#Scanning EAF", inputFile);
-  };
-
   clearLocalStorage = () => {
     for (let l in localStorage)
       if (l.startsWith("Prestige")) localStorage.removeItem(l);
@@ -144,7 +137,7 @@ export class App extends React.Component<AppProps> {
         </div>
         <p>{this.props.loaded}</p>
         <div className="App-footer">
-          <SelectFolderZone callProcessEAF={this.callProcessEAF} />
+          <SelectFolderZone />
           <div className="SnackBar">
             <button onClick={this.clearLocalStorage}>
               Click To Clear Local Storage
@@ -169,8 +162,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   snackbarText: state.system.snackbarText,
   url: state.player.url,
   loaded: state.tree.loaded,
-  userName: state.system.userName,
-  annot: state.annot
+  userName: state.system.userName
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -195,7 +187,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onProgress: actions.onProgress,
       togglePlay: actions.togglePlay,
       pushTimeline: actions.pushTimeline,
-      processEAF,
       stopPlaying: actions.stopPlaying,
       toggleLoop: actions.toggleLoop,
       // updateActiveFolder: actions.updateActiveFolder,

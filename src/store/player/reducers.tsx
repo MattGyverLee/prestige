@@ -31,7 +31,7 @@ export function playerReducer(
           url: action.payload.blobURL
         };
       }
-      return { ...playerCleanStore };
+      return playerCleanStore;
     }
     case types.UPDATE_PLAYER_SESSION: {
       // I might Deprecate This Action
