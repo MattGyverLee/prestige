@@ -38,8 +38,8 @@
     ]
   },
   "dependencies": {
+    "@types/webpack-env": "^1.14.0",
     "chokidar": "^3.0.2",
-    "craco-plugin-react-hot-reload": "^0.1.0",
     "electron-is-dev": "^1.1.0",
     "env-cmd": "^9.0.3",
     "ffmpeg": "^0.0.4",

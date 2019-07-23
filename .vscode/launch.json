@@ -58,7 +58,7 @@
       "port": 9223,
       "webRoot": "${workspaceFolder}",
       "timeout": 150000,
-      "skipFiles": ["node_modules/**/*.js", "lib/**/*.js"]
+      "skipFiles": ["node_modules/**/*.js", "lib/**/*.js", "webpack/**"]
     }
   ],
   "compounds": [

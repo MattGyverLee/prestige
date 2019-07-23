@@ -1,5 +1,5 @@
 let webpack = require("webpack");
-let reactHotReloadPlugin = require("craco-plugin-react-hot-reload");
+let reactHotReloadPlugin = require("react-hot-loader");
 module.exports = {
   plugins: [{ plugin: reactHotReloadPlugin }],
   webpack: {

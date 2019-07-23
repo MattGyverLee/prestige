@@ -50,6 +50,14 @@ export default function configureStore() {
     composeWithDevTools(middleWareEnhancer)
   );
 
+  if (process.env.NODE_ENV !== "production") {
+    if (module.hot) {
+      module.hot.accept(".", () => {
+        store.replaceReducer(allReducers);
+      });
+    }
+  }
+
   return store;
 }
 // export * from "./allState/actions";

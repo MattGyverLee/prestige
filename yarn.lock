@@ -948,15 +948,6 @@
     lodash.mergewith "^4.6.1"
     webpack-merge "^4.2.1"
 
-"@craco/craco@^5.2.4":
-  version "5.2.4"
-  resolved "https://registry.yarnpkg.com/@craco/craco/-/craco-5.2.4.tgz#689201b4f1d4af0833e94edb12e7392f21ebe929"
-  integrity sha512-PStzEKDtmeueIhLti0X8VF3LymWi66X0N5g7XL4WV0X/D9eroKY7ar80950IzJWVKSU5mR/4JNDS5EKKw4SLPQ==
-  dependencies:
-    cross-spawn "^6.0.5"
-    lodash.mergewith "^4.6.2"
-    webpack-merge "^4.2.1"
-
 "@csstools/convert-colors@^1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@csstools/convert-colors/-/convert-colors-1.4.0.tgz#ad495dc41b12e75d588c6db8b9834f08fa131eb7"
@@ -1744,6 +1735,11 @@
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@types/wavesurfer.js/-/wavesurfer.js-2.0.2.tgz#b98a4d57ca24ee2028ae6dd5c2208b568bb73842"
   integrity sha512-078vSMwH9LNVg9oAe7/M27p1MjfJ3ncuj54ROj+nL4vnrvDEV7Ye1v+o/LTR0Z396r6u6DTNkoEq5kKgJkzFrQ==
+
+"@types/webpack-env@^1.14.0":
+  version "1.14.0"
+  resolved "https://registry.yarnpkg.com/@types/webpack-env/-/webpack-env-1.14.0.tgz#8edfc5f8e6eae20eeed3ca0d02974ed4ee5e4efc"
+  integrity sha512-Fv+0gYJzE/czLoRKq+gnXWr4yBpPM3tO3C8pDLFwqVKlMICQUq5OsxwwFZYDaVr7+L6mgNDp16iOcJHEz3J5RQ==
 
 "@types/yargs@^12.0.2", "@types/yargs@^12.0.9":
   version "12.0.12"
@@ -3601,13 +3597,6 @@ cosmiconfig@^5.0.0, cosmiconfig@^5.2.0, cosmiconfig@^5.2.1:
     is-directory "^0.3.1"
     js-yaml "^3.13.1"
     parse-json "^4.0.0"
-
-craco-plugin-react-hot-reload@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/craco-plugin-react-hot-reload/-/craco-plugin-react-hot-reload-0.1.0.tgz#f044daf0ce5993b65404e1504e62efa18ea7aca8"
-  integrity sha512-g211hDOwaZ4XAyKiGOSSAhyNw4eKzZYiCXXrr1iQd07bONV3o+ciD/wOZGpmkCaI+J4Hpv2yIQWlag/ds+SL6g==
-  dependencies:
-    "@craco/craco" "^5.2.4"
 
 create-ecdh@^4.0.0:
   version "4.0.3"
@@ -7955,11 +7944,6 @@ lodash.mergewith@^4.6.1:
   version "4.6.1"
   resolved "https://registry.yarnpkg.com/lodash.mergewith/-/lodash.mergewith-4.6.1.tgz#639057e726c3afbdb3e7d42741caa8d6e4335927"
   integrity sha512-eWw5r+PYICtEBgrBE5hhlT6aAa75f411bgDz/ZL2KZqYV03USvucsxcHUIlGTDTECs1eunpI7HOV7U+WLDvNdQ==
-
-lodash.mergewith@^4.6.2:
-  version "4.6.2"
-  resolved "https://registry.yarnpkg.com/lodash.mergewith/-/lodash.mergewith-4.6.2.tgz#617121f89ac55f59047c7aec1ccd6654c6590f55"
-  integrity sha512-GK3g5RPZWTRSeLSpgP8Xhra+pnjBC56q9FZYe1d5RN3TJ35dbkGy3YqBSMbyCrlbi+CM9Z3Jk5yTL7RCsqboyQ==
 
 lodash.sortby@^4.7.0:
   version "4.7.0"
