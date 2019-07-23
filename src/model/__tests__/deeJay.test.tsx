@@ -36,7 +36,6 @@ var deejayMaster: any;
 afterEach(cleanup);
 
 const props = {
-  dispatchSnackbar: jest.fn(),
   setWSVolume: jest.fn(),
   setWSDuration: jest.fn(),
   setSeek: jest.fn(),

@@ -33,7 +33,6 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  dispatchSnackbar: typeof actions.dispatchSnackbar;
   onSeekChange: typeof actions.onSeekChange;
   onSeekMouseDown: typeof actions.onSeekMouseDown;
   onSeekMouseUp: typeof actions.onSeekMouseUp;
@@ -45,6 +44,8 @@ interface DispatchProps {
   setWSVolume: typeof actions.setWSVolume;
   toggleLoop: typeof actions.toggleLoop;
   togglePlay: typeof actions.togglePlay;
+  enqueueSnackbar: typeof actions.enqueueSnackbar;
+  closeSnackbar: typeof actions.closeSnackbar;
   waveformAdded: typeof actions.waveformAdded;
 }
 
@@ -107,7 +108,7 @@ export class DeeJay extends Component<DeeJayProps> {
       // Log and Process Region Hover Out
       this.waveSurfers[idx].on("region-mouseleave", region => {
         console.log(`${idx} Region Mouse out`);
-        this.props.dispatchSnackbar("Playing Clip");
+        this.sendSnackbar("Playing Clip");
         this.ts = this.ts.filter((item: string) => item !== region.id);
         this.regionMouseOut(idx, region);
       });
@@ -691,7 +692,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
         if (actives.length === 1) {
           // Let the User Know Something is Playing
-          this.props.dispatchSnackbar("Playing Clip");
+          this.sendSnackbar("Playing Clip");
 
           // Add Watchers and Add Region
           this.waveSurfers[wsNum].addRegion({
@@ -772,10 +773,10 @@ export class DeeJay extends Component<DeeJayProps> {
         console.log(`${wsNum} Entered Seeking`);
         break;
       case "Step":
-        this.props.dispatchSnackbar("Stepping");
+        this.sendSnackbar("Stepping");
         break;
       case "PlayThrough":
-        this.props.dispatchSnackbar("Playing Through");
+        this.sendSnackbar("Playing Through");
         break;
       case "ClipPlus":
         break;
@@ -791,13 +792,13 @@ export class DeeJay extends Component<DeeJayProps> {
         (idx === 1 && "Careful Audio set to ") ||
         (idx === 2 && "Translation Audio set to ");
       if (this.props.volumes[idx] > 0.5 ** 0.25) {
-        this.props.dispatchSnackbar(name + "50% (Background)");
+        this.sendSnackbar(name + "50% (Background)", "vol" + idx.toString());
         this.props.setWSVolume(idx, 0.5 ** 0.25);
       } else if (this.props.volumes[idx] === 0) {
-        this.props.dispatchSnackbar(name + "100% (Main)");
+        this.sendSnackbar(name + "100% (Main)", "vol" + idx.toString());
         this.props.setWSVolume(idx, 1);
       } else if (this.props.volumes[idx] <= 0.5 ** 0.25) {
-        this.props.dispatchSnackbar(name + "0% (Muted)");
+        this.sendSnackbar(name + "0% (Muted)", "vol" + idx.toString());
         this.props.setWSVolume(idx, 0);
       }
     }
@@ -805,6 +806,19 @@ export class DeeJay extends Component<DeeJayProps> {
 
   onClickFullscreen = () => {
     // screenfull.request(findDOMNode(this.player))
+  };
+
+  sendSnackbar = (inMessage: string, inKey?: string) => {
+    this.props.enqueueSnackbar({
+      message: inMessage,
+      options: {
+        key: inKey || new Date().getTime() + Math.random(),
+        variant: "default",
+        action: (key: LooseObject) => (
+          <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
+        )
+      }
+    });
   };
 
   render() {
@@ -1030,7 +1044,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      dispatchSnackbar: actions.dispatchSnackbar,
+      closeSnackbar: actions.closeSnackbar,
+      enqueueSnackbar: actions.enqueueSnackbar,
       onSeekChange: actions.onSeekChange,
       onSeekMouseDown: actions.onSeekMouseDown,
       onSeekMouseUp: actions.onSeekMouseUp,
@@ -1047,7 +1062,11 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     dispatch
   )
 });
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(DeeJay);
+
+const withSnackbar = require("notistack").withSnackbar;
+export default withSnackbar(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(DeeJay)
+);

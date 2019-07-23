@@ -29,7 +29,8 @@ interface DispatchProps {
   addOralAnnotation: typeof actions.addOralAnnotation;
   annotMediaAdded: typeof actions.annotMediaAdded;
   annotMediaChanged: typeof actions.annotMediaChanged;
-  dispatchSnackbar: typeof actions.dispatchSnackbar;
+  enqueueSnackbar: typeof actions.enqueueSnackbar;
+  closeSnackbar: typeof actions.closeSnackbar;
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
@@ -59,8 +60,10 @@ class SelectFolderZone extends Component<FolderProps> {
   private watcherRef: any;
 
   componentWillUnmount() {
-    this.watcherRef.close();
-    console.log("UnMounting Tree");
+    if (this.watcherRef !== undefined) {
+      this.watcherRef.close();
+    }
+    console.log("UnMounting Trees");
   }
 
   // Starts the Chokidar File Watcher
@@ -564,7 +567,8 @@ class SelectFolderZone extends Component<FolderProps> {
         .complexFilter(cf)
         .on("start", (command: any) => {
           console.log("ffmpeg process started:", command);
-          this.props.dispatchSnackbar(
+
+          this.sendSnackbar(
             "Merging " +
               (carefulOrTranslation ? "Careful Speech" : "Translation") +
               " files."
@@ -682,7 +686,7 @@ class SelectFolderZone extends Component<FolderProps> {
               });
           });
 
-          this.props.dispatchSnackbar(
+          this.sendSnackbar(
             (carefulOrTranslation ? "Careful Speech" : "Translation") +
               " annotations merged!"
           );
@@ -731,15 +735,15 @@ class SelectFolderZone extends Component<FolderProps> {
       .outputOptions("-y")
       .on("start", (command: any) => {
         console.log("ffmpeg process started:", command);
-        this.props.dispatchSnackbar("Converting Source Audio.");
+        this.sendSnackbar("Converting Source Audio.");
       })
       .on("error", (err: any) => {
         console.log("An error occurred: " + err.message);
-        this.props.dispatchSnackbar("An error occurred: " + err.message);
+        this.sendSnackbar("An error occurred: " + err.message);
       })
       .on("end", () => {
         console.log("MP3 Conversion finished!");
-        this.props.dispatchSnackbar("Source Audio Converted.");
+        this.sendSnackbar("Source Audio Converted.");
         this.props.setSourceMediaWSAllowed(
           require("file-url")(
             path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3"
@@ -878,6 +882,19 @@ class SelectFolderZone extends Component<FolderProps> {
     console.log("EAF Processed");
   }
 
+  sendSnackbar = (inMessage: string, inKey?: string) => {
+    this.props.enqueueSnackbar({
+      message: inMessage,
+      options: {
+        key: inKey || new Date().getTime() + Math.random(),
+        variant: "default",
+        action: (key: aTypes.LooseObject) => (
+          <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
+        )
+      }
+    });
+  };
+
   render() {
     if (this.props.env === "electron") {
       return (
@@ -928,7 +945,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       addOralAnnotation: actions.addOralAnnotation,
       annotMediaAdded: actions.annotMediaAdded,
       annotMediaChanged: actions.annotMediaChanged,
-      dispatchSnackbar: actions.dispatchSnackbar,
+      closeSnackbar: actions.closeSnackbar,
+      enqueueSnackbar: actions.enqueueSnackbar,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
@@ -949,7 +967,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     dispatch
   )
 });
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SelectFolderZone);
+const withSnackbar = require("notistack").withSnackbar;
+export default withSnackbar(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(SelectFolderZone)
+);

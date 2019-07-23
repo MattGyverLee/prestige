@@ -7,8 +7,7 @@ export const systemCleanStore: types.SystemState = {
   loggedIn: false,
   session: "",
   userName: "",
-  snackbarText: [],
-  snackbarIsActive: false
+  notifications: []
 };
 
 export function systemReducer(
@@ -22,22 +21,51 @@ export function systemReducer(
         ...action.payload
       };
     }
-    case types.DISPATCH_SNACKBAR: {
+    case types.ENQUEUE_SNACKBAR: {
       return {
         ...state,
-        snackbarText: [...state.snackbarText, action.payload]
+        notifications: [
+          ...state.notifications,
+          {
+            key: action.key,
+            ...action.notification
+          }
+        ]
       };
     }
-    case types.COMPLETE_SNACKBAR: {
+    case types.CLOSE_SNACKBAR: {
       return {
         ...state,
-        snackbarText: state.snackbarText.filter(t => t !== action.payload)
+        notifications: state.notifications.map(notification =>
+          action.dismissAll || notification.key === action.key
+            ? { ...notification, dismissed: true }
+            : { ...notification }
+        )
       };
     }
-    case types.SNACKBAR_TOGGLE_ACTIVE: {
+    case types.REMOVE_SNACKBAR: {
       return {
         ...state,
-        snackbarIsActive: action.payload
+        notifications: state.notifications.filter(
+          notification => notification.key !== action.key
+        )
+      };
+    }
+    case types.UPDATE_SNACKBAR: {
+      // TODO: Finish This
+      state.notifications.filter(
+        notification => notification.key === action.key
+      );
+      return {
+        ...state,
+        notifications: [
+          ...state.notifications.filter(
+            notification => notification.key !== action.key
+          ),
+          state.notifications.filter(
+            notification => notification.key === action.key
+          )
+        ]
       };
     }
     default:

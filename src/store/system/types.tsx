@@ -1,34 +1,56 @@
+import { LooseObject } from "../annot/types";
+
 // Describing the shape of the system's slice of state
 
 export interface SystemState {
   clicks: number;
-  snackbarText: string[];
   loggedIn: boolean;
   session: string;
   userName: string;
-  snackbarIsActive: boolean;
+  notifications: LooseObject[];
+}
+
+export interface SnackbarObject {
+  key?: string;
+  message: string;
+  options?: LooseObject;
 }
 
 // Describing the different ACTION NAMES available
-export const COMPLETE_SNACKBAR = "COMPLETE_SNACKBAR";
-export const DISPATCH_SNACKBAR = "DISPATCH_SNACKBAR";
 export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const UPDATE_SESSION = "UPDATE_SESSION";
-export const SNACKBAR_TOGGLE_ACTIVE = "SNACKBAR_TOGGLE_ACTIVE";
-
-interface CompleteSnackbar {
-  type: typeof COMPLETE_SNACKBAR;
-  payload: string;
-}
-interface DispatchSnackbar {
-  type: typeof DISPATCH_SNACKBAR;
-  payload: string;
-}
+export const ENQUEUE_SNACKBAR = "ENQUEUE_SNACKBAR";
+export const CLOSE_SNACKBAR = "CLOSE_SNACKBAR";
+export const REMOVE_SNACKBAR = "REMOVE_SNACKBAR";
+export const UPDATE_SNACKBAR = "UPDATE_SNACKBAR";
 
 interface SysHardResetApp {
   type: typeof HARD_RESET_APP;
   payload: string;
+}
+
+interface EnqueueSnackbar {
+  type: typeof ENQUEUE_SNACKBAR;
+  key: any;
+  notification: LooseObject;
+}
+
+interface CloseSnackbar {
+  type: typeof CLOSE_SNACKBAR;
+  key: LooseObject;
+  dismissAll: boolean;
+}
+
+interface RemoveSnackbar {
+  type: typeof REMOVE_SNACKBAR;
+  key: LooseObject;
+}
+
+interface UpdateSnackbar {
+  type: typeof UPDATE_SNACKBAR;
+  key: LooseObject;
+  message: string;
 }
 
 interface SysOnNewFolder {
@@ -39,15 +61,12 @@ interface UpdateSessionAction {
   type: typeof UPDATE_SESSION;
   payload: SystemState;
 }
-interface SnackbarToggleActive {
-  type: typeof SNACKBAR_TOGGLE_ACTIVE;
-  payload: boolean;
-}
 
 export type SystemActionTypes =
-  | CompleteSnackbar
-  | DispatchSnackbar
   | UpdateSessionAction
   | SysHardResetApp
   | SysOnNewFolder
-  | SnackbarToggleActive;
+  | EnqueueSnackbar
+  | CloseSnackbar
+  | UpdateSnackbar
+  | RemoveSnackbar;

@@ -7,6 +7,7 @@ import { Provider } from "react-redux";
 import React from "react";
 import ReactDOM from "react-dom";
 import configureStore from "./store";
+import { SnackbarProvider } from "notistack";
 
 const store = configureStore();
 
@@ -19,7 +20,9 @@ if (process.env.REACT_APP_MODE === "electron") {
 // eslint:disable-next-line
 const Root = () => (
   <Provider store={store}>
-    <App />
+    <SnackbarProvider maxSnack={3} autoHideDuration={2000}>
+      <App />
+    </SnackbarProvider>
   </Provider>
 );
 

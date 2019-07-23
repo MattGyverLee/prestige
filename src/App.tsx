@@ -8,18 +8,16 @@ import FileList from "./model/fileList";
 import PlayerZone from "./model/player";
 import React from "react";
 import SelectFolderZone from "./model/folderSelection";
-import { Snackbar } from "./model/snackbars";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
+import Notifier from "./model/notifier";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
 interface StateProps {
-  snackbarIsActive: boolean;
-  snackbarText: string[];
   url: string;
   loaded: boolean;
   userName: string;
@@ -27,8 +25,8 @@ interface StateProps {
 
 interface DispatchProps {
   updateSession: typeof actions.updateSession;
-  dispatchSnackbar: typeof actions.dispatchSnackbar;
-  completeSnackbar: typeof actions.completeSnackbar;
+  enqueueSnackbar: typeof actions.enqueueSnackbar;
+  closeSnackbar: typeof actions.closeSnackbar;
 
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
@@ -56,7 +54,6 @@ interface DispatchProps {
   pushAnnotation: typeof actions.pushAnnotation;
   pushTimeline: typeof actions.pushTimeline;
   hardResetApp: typeof actions.hardResetApp;
-  snackbarToggleActive: typeof actions.snackbarToggleActive;
 }
 
 interface AppProps extends StateProps, DispatchProps {
@@ -70,28 +67,14 @@ export class App extends React.Component<AppProps> {
       session: "my_session",
       userName: "Blaine",
       clicks: 0,
-      snackbarText: [],
-      snackbarIsActive: false
+      notifications: []
     });
 
     this.props.onNewFolder("");
   }
 
-  snackbarRef: any = React.createRef();
+  componentDidUpdate() {}
 
-  componentDidUpdate() {
-    if (this.props.snackbarText.length > 0) {
-      if (!this.props.snackbarIsActive) {
-        this.snackbarRef.current.openSnackBar(this.props.snackbarText[0]);
-        this.props.completeSnackbar(this.props.snackbarText[0]);
-      }
-    }
-  }
-
-  _showSnackbarHandler = (e: any) => {
-    e.preventDefault();
-    this.snackbarRef.current.openSnackBar(this.props.snackbarText);
-  };
   // Player Features
 
   hardResetApp = (inString: string) => {
@@ -136,19 +119,15 @@ export class App extends React.Component<AppProps> {
         </div>
         <p>{this.props.loaded}</p>
         <div className="App-footer">
+          <Notifier />
           <SelectFolderZone />
           <div className="SnackBar">
             <button onClick={this.clearLocalStorage}>
               Click To Clear Local Storage
             </button>
-            <Snackbar
-              ref={this.snackbarRef}
-              isActive={this.props.snackbarIsActive}
-              snackbarToggleActive={this.props.snackbarToggleActive}
-            />
           </div>
           <p>
-            {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
+            updated {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
           </p>
         </div>
       </div>
@@ -157,8 +136,6 @@ export class App extends React.Component<AppProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  snackbarIsActive: state.system.snackbarIsActive,
-  snackbarText: state.system.snackbarText,
   url: state.player.url,
   loaded: state.tree.loaded,
   userName: state.system.userName
@@ -169,10 +146,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       addOralAnnotation: actions.addOralAnnotation,
       addCategory: actions.addCategory,
-      completeSnackbar: actions.completeSnackbar,
+      closeSnackbar: actions.closeSnackbar,
       pushAnnotation: actions.pushAnnotation,
-      dispatchSnackbar: actions.dispatchSnackbar,
       toggleAudtranscMain: actions.toggleAudtranscMain,
+      enqueueSnackbar: actions.enqueueSnackbar,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
@@ -193,16 +170,19 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       updateSession: actions.updateSession,
       updateTree: actions.updateTree,
       hardResetApp: actions.hardResetApp,
-      onNewFolder: actions.onNewFolder,
-      snackbarToggleActive: actions.snackbarToggleActive
+      onNewFolder: actions.onNewFolder
     },
     dispatch
   )
 });
 
+const withSnackbar = require("notistack").withSnackbar;
+
 export default hot(module)(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(App)
+  withSnackbar(
+    connect(
+      mapStateToProps,
+      mapDispatchToProps
+    )(App)
+  )
 );
