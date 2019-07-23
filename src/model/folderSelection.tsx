@@ -64,6 +64,7 @@ class SelectFolderZone extends Component<FolderProps> {
       this.watcherRef.close();
     }
     console.log("UnMounting Trees");
+    // Todo: Also Unmount/Kill FFMpeg.
   }
 
   // Starts the Chokidar File Watcher
@@ -170,7 +171,7 @@ class SelectFolderZone extends Component<FolderProps> {
           fileDef.mimeType.startsWith("video") ||
           fileDef.mimeType.startsWith("audio");
         if (isAudVid) {
-          if (fileDef["isAnnotation"]) {
+          if (fileDef.isAnnotation) {
             this.props.annotMediaAdded({ file: fileDef });
           } else {
             this.props.sourceMediaAdded({ file: fileDef });
@@ -206,7 +207,7 @@ class SelectFolderZone extends Component<FolderProps> {
           fileDef.mimeType.startsWith("video") ||
           fileDef.mimeType.startsWith("audio");
         if (isAudVid) {
-          if (fileDef["isAnnotation"]) {
+          if (fileDef.isAnnotation) {
             this.props.annotMediaChanged({ file: fileDef });
           } else {
             this.props.sourceMediaChanged({ file: fileDef });
@@ -293,17 +294,16 @@ class SelectFolderZone extends Component<FolderProps> {
     let fs = require("fs");
     let path = require("path");
     const walkSync = (inDir: string, filelist = []) =>
-      fs
-        .readdirSync(inDir)
-        .map((file: any) =>
-          fs.statSync(path.join(inDir, file)).isDirectory()
-            ? walkSync(path.join(inDir, file), filelist)
-            : filelist.concat(
-                path.join(inDir, file) +
-                  [", "] +
-                  fs.statSync(path.join(inDir, file)).mtime
-              )[0]
-        );
+      fs.readdirSync(inDir).map((file: any) =>
+        // Todo: Flatten this in process.
+        fs.statSync(path.join(inDir, file)).isDirectory()
+          ? walkSync(path.join(inDir, file), filelist)
+          : filelist.concat(
+              path.join(inDir, file) +
+                [", "] +
+                fs.statSync(path.join(inDir, file)).mtime
+            )[0]
+      );
     return JSON.stringify(walkSync(dir).flat(2));
   }
 
@@ -567,15 +567,20 @@ class SelectFolderZone extends Component<FolderProps> {
         .complexFilter(cf)
         .on("start", (command: any) => {
           console.log("ffmpeg process started:", command);
-
+          // Todo: Log IDs of FFMPEg Process so we can kill them FFMpeg on Unload.
+          // https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/138#issuecomment-53767068 
           this.sendSnackbar(
             "Merging " +
               (carefulOrTranslation ? "Careful Speech" : "Translation") +
               " files."
           );
         })
-        .on("error", function(err: any) {
-          console.log("An error occurred: " + err.message);
+        .on("error", (err: any) => {
+          this.sendSnackbar(
+            "File Access error: " + err.message,
+            undefined,
+            "error"
+          );
         })
         .on("end", (err: any, stdout: any) => {
           const fileURL = require("file-url");
@@ -882,12 +887,12 @@ class SelectFolderZone extends Component<FolderProps> {
     console.log("EAF Processed");
   }
 
-  sendSnackbar = (inMessage: string, inKey?: string) => {
+  sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
     this.props.enqueueSnackbar({
       message: inMessage,
       options: {
         key: inKey || new Date().getTime() + Math.random(),
-        variant: "default",
+        variant: vType ? vType : "default",
         action: (key: aTypes.LooseObject) => (
           <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
         )

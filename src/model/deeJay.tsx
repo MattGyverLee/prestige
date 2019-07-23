@@ -11,7 +11,7 @@ import {
 import { DeeJayDispatch } from "../store/deeJay/types";
 import Duration from "./duration";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { LooseObject } from "../store/annot/types";
+import { LooseObject, Milestone } from "../store/annot/types";
 import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -84,6 +84,7 @@ export class DeeJay extends Component<DeeJayProps> {
           plugins: [regionsPlugin.create()]
         })
       );
+      this.waveSurfers[idx].empty();
       this.waveSurfers[idx].setVolume(+(idx === 0));
 
       // Log and Process Region Out
@@ -108,7 +109,6 @@ export class DeeJay extends Component<DeeJayProps> {
       // Log and Process Region Hover Out
       this.waveSurfers[idx].on("region-mouseleave", region => {
         console.log(`${idx} Region Mouse out`);
-        this.sendSnackbar("Playing Clip");
         this.ts = this.ts.filter((item: string) => item !== region.id);
         this.regionMouseOut(idx, region);
       });
@@ -142,6 +142,17 @@ export class DeeJay extends Component<DeeJayProps> {
       this.waveSurfers[idx].on("finish", (...args: any) => {
         console.log(`${idx} Finished Playing`);
         this.waveSurfers[idx].pause();
+      });
+
+      this.waveSurfers[idx].on("error", (err: any) => {
+        this.sendSnackbar(
+          `WaveSurfer ${idx} error:` +
+            JSON.stringify(err) +
+            "File: " +
+            this.currentPlaying[idx],
+          undefined,
+          "error"
+        );
       });
 
       // Log and Process WS Seeking
@@ -228,7 +239,7 @@ export class DeeJay extends Component<DeeJayProps> {
       const ws = this.waveSurfers[idx];
       if (currSync.filter((s: any) => s === this.currBlob).length !== 1) {
         if (this.props.currentTimeline === -1) {
-          if (idx === 0 && !this.currentPlaying[idx]) {
+          if (idx === 0 && !this.currentPlaying[idx] && this.props.url !== "") {
             ws.load(this.props.url);
             this.currentPlaying[idx] = this.props.url;
           }
@@ -308,7 +319,8 @@ export class DeeJay extends Component<DeeJayProps> {
   }
 
   componentWillUnmount() {
-    console.log("UnMounting DeeJay");
+    console.log("UnMounting DeeJay Component");
+    // todo: Make sure Wavesurfers Unloaded Gently. 
   }
 
   checkDispatch = (idx: number) => {
@@ -323,10 +335,10 @@ export class DeeJay extends Component<DeeJayProps> {
   fileAllowed = (blobURL: string) => {
     if (blobURL === "") return false;
     let tempSrc = this.props.sourceMedia.filter(
-      (m: any) => m.blobURL === blobURL
+      (m: LooseObject) => m.blobURL === blobURL
     );
     let tempAnnot = this.props.annotMedia.filter(
-      (m: any) => m.blobURL === blobURL
+      (m: LooseObject) => m.blobURL === blobURL
     );
     return (
       (tempSrc.length === 1 && tempSrc[0].wsAllowed) ||
@@ -462,14 +474,14 @@ export class DeeJay extends Component<DeeJayProps> {
     if (this.props.currentTimeline === -1) return -1;
     const channel = `${wsNum === 1 ? "Careful" : "Translation"}Merged`;
     return this.props.timeline[this.props.currentTimeline].milestones
-      .filter((m: any) => {
+      .filter((m: Milestone) => {
         return wsNum === 0
           ? dispatch.dispatchType !== ""
             ? m.startTime === dispatch.clipStart &&
               m.stopTime === dispatch.clipStop
             : m.startTime <= this.waveSurfers[wsNum].getCurrentTime() &&
               this.waveSurfers[wsNum].getCurrentTime() < m.stopTime
-          : m.data.filter((d: any) => {
+          : m.data.filter((d: LooseObject) => {
               return dispatch.dispatchType !== ""
                 ? d.clipStart === dispatch.clipStart &&
                     d.clipStop === dispatch.clipStop &&
@@ -479,10 +491,12 @@ export class DeeJay extends Component<DeeJayProps> {
                     d.channel === channel;
             }).length === 1;
       })
-      .map((m: any) => {
+      .map((m: Milestone) => {
         return {
           ...m,
-          data: m.data.filter((d: any) => wsNum === 0 || d.channel === channel)
+          data: m.data.filter(
+            (d: LooseObject) => wsNum === 0 || d.channel === channel
+          )
         };
       })[0];
   };
@@ -808,12 +822,12 @@ export class DeeJay extends Component<DeeJayProps> {
     // screenfull.request(findDOMNode(this.player))
   };
 
-  sendSnackbar = (inMessage: string, inKey?: string) => {
+  sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
     this.props.enqueueSnackbar({
       message: inMessage,
       options: {
         key: inKey || new Date().getTime() + Math.random(),
-        variant: "default",
+        variant: vType ? vType : "default",
         action: (key: LooseObject) => (
           <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
         )

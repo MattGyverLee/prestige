@@ -5,6 +5,9 @@ module.exports = {
   webpack: {
     configure: {
       target: "electron-renderer",
+      alias: {
+        "react-dom": "@hot-loader/react-dom"
+      },
       plugins: [
         new webpack.ProvidePlugin({
           WaveSurfer: "wavesurfer.js"

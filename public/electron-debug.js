@@ -9,7 +9,7 @@ const url = require("url");
 const isDev = require("electron-is-dev");
 // TODO: Remove this and follow instructions here:
 // https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings
-process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
 let mainWindow;
 let imageWindow;

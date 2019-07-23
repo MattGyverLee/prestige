@@ -15,7 +15,7 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
     return -1;
   }
   let temp = timelines.map((t: LooseObject, idx: number) => {
-    let x: tempTimeline = { syncMedia: t["syncMedia"], idx };
+    let x: tempTimeline = { syncMedia: t.syncMedia, idx };
     return x;
   });
   for (let i = 0, l = temp.length; i < l; i++) {
@@ -41,9 +41,9 @@ export function getSourceMedia(
   allOrViewer: boolean
 ): LooseObject[] {
   let sourceVids = sourceMedia
-    .filter(file => !file.isAnnotation && file["mimeType"].startsWith("video"))
+    .filter(file => !file.isAnnotation && file.mimeType.startsWith("video"))
     .sort((a: LooseObject, b: LooseObject) =>
-      sortName(a["name"].toLowerCase(), b["name"].toLowerCase())
+      sortName(a.name.toLowerCase(), b.name.toLowerCase())
     );
   const path = require("path");
   let mp3s: string[] = [];
@@ -79,11 +79,11 @@ export function sourceAudio(
     .filter(
       file =>
         !file.isAnnotation &&
-        file["mimeType"].startsWith("audio") &&
-        (!file["isMerged"] || allOrViewer)
+        file.mimeType.startsWith("audio") &&
+        (!file.isMerged || allOrViewer)
     )
     .sort((a: LooseObject, b: LooseObject) =>
-      sortName(a["name"].toLowerCase(), b["name"].toLowerCase())
+      sortName(a.name.toLowerCase(), b.name.toLowerCase())
     );
   return [...sourceAud];
 }
@@ -99,15 +99,15 @@ export function annotAudio(
     .filter(
       file =>
         file.isAnnotation &&
-        file["mimeType"].startsWith("audio") &&
-        (splitOrMerged ? file["isMerged"] : !file["isMerged"]) &&
+        file.mimeType.startsWith("audio") &&
+        (splitOrMerged ? file.isMerged : !file.isMerged) &&
         getTimelineIndex(
           timelines,
           file.blobURL.substring(0, file.blobURL.indexOf("_Annotations"))
         ) === timelineIdx
     )
     .sort((a: LooseObject, b: LooseObject) =>
-      sortName(a["name"].toLowerCase(), b["name"].toLowerCase())
+      sortName(a.name.toLowerCase(), b.name.toLowerCase())
     );
   return [...annotAud];
 }

@@ -2,14 +2,11 @@ const electron = require("electron");
 const ipcMain = electron.ipcMain;
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
-const appMode = process.env.REACT_APP_MODE;
-const envMode = process.env.NODE_ENV;
 const path = require("path");
-const url = require("url");
 const isDev = require("electron-is-dev");
 // TODO: Remove this and follow instructions here:
 // https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings
-process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
 let mainWindow;
 let imageWindow;
@@ -65,10 +62,10 @@ function createWindow() {
     e.preventDefault();
     settingsWindow.hide();
   });
-  /*mainWindow.webContents.on('did-finish-load', () => {
+  /* mainWindow.webContents.on('did-finish-load', () => {
     let windowTitle = "Prestige: " + appMode+ "- " + envMode
     mainWindow.setTitle(windowTitle)
-  })*/
+  }) */
 }
 
 app.on("ready", async () => {

@@ -89,8 +89,8 @@ export class AnnotationTable extends Component<ComponentProps> {
         // Create Each Row
         let row: AnnotationRow = {
           id: idx + 1,
-          startTime: milestone["startTime"],
-          stopTime: milestone["stopTime"],
+          startTime: milestone.startTime,
+          stopTime: milestone.stopTime,
           audCareful: "",
           audTransl: "",
           txtTransc: "",
@@ -98,28 +98,18 @@ export class AnnotationTable extends Component<ComponentProps> {
         };
 
         // Fill Row with Data
-        for (let d = 0, l = milestone["data"].length; d < l; d++) {
-          let curr = milestone["data"][d];
-          if (curr["mimeType"].startsWith("audio")) {
-            if (curr["channel"] === "CarefulMerged")
-              row["audCareful"] =
-                curr["data"] +
-                "#t" +
-                curr["clipStart"] +
-                "," +
-                curr["clipStop"];
-            else if (curr["channel"] === "TranslationMerged")
-              row["audTransl"] =
-                curr["data"] +
-                "#t" +
-                curr["clipStart"] +
-                "," +
-                curr["clipStop"];
-          } else if (curr["mimeType"].startsWith("string")) {
-            if (curr["channel"] === "Transcription")
-              row["txtTransc"] = curr["data"];
-            else if (curr["channel"] === "Translation")
-              row["txtTransl"] = curr["data"];
+        for (let d = 0, l = milestone.data.length; d < l; d++) {
+          let curr = milestone.data[d];
+          if (curr.mimeType.startsWith("audio")) {
+            if (curr.channel === "CarefulMerged")
+              row.audCareful =
+                curr.data + "#t" + curr.clipStart + "," + curr.clipStop;
+            else if (curr.channel === "TranslationMerged")
+              row.audTransl =
+                curr.data + "#t" + curr.clipStart + "," + curr.clipStop;
+          } else if (curr.mimeType.startsWith("string")) {
+            if (curr.channel === "Transcription") row.txtTransc = curr.data;
+            else if (curr.channel === "Translation") row.txtTransl = curr.data;
           }
         }
 
