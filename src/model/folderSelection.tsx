@@ -568,7 +568,7 @@ class SelectFolderZone extends Component<FolderProps> {
         .on("start", (command: any) => {
           console.log("ffmpeg process started:", command);
           // Todo: Log IDs of FFMPEg Process so we can kill them FFMpeg on Unload.
-          // https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/138#issuecomment-53767068 
+          // https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/138#issuecomment-53767068
           this.sendSnackbar(
             "Merging " +
               (carefulOrTranslation ? "Careful Speech" : "Translation") +
@@ -892,7 +892,7 @@ class SelectFolderZone extends Component<FolderProps> {
       message: inMessage,
       options: {
         key: inKey || new Date().getTime() + Math.random(),
-        variant: vType ? vType : "default",
+        variant: vType || "default",
         action: (key: aTypes.LooseObject) => (
           <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
         )

@@ -13,12 +13,13 @@ interface StateProps {
   duration: any;
   loop: boolean;
   muted: boolean;
+  playbackMultiplier: number;
   playbackRate: number;
   playing: boolean;
   seek: number;
+  timeline: any[];
   url: string;
   volume: number;
-  timeline: any[];
 }
 
 interface DispatchProps {
@@ -84,7 +85,13 @@ class PlayerZone extends Component<PlayerProps> {
             onReady={() => console.log("Player Ready")}
             onSeek={e => console.log("Player Seek: " + e)}
             onStart={() => console.log("Player Start")}
-            playbackRate={this.props.playbackRate}
+            playbackRate={
+              this.props.playbackRate * this.props.playbackMultiplier >= 15
+                ? 14.5
+                : this.props.playbackRate * this.props.playbackMultiplier <= 0.2
+                ? 0.2
+                : this.props.playbackRate * this.props.playbackMultiplier
+            }
             playing={this.props.playing}
             progressInterval={200}
             ref={this.ref}
@@ -102,12 +109,13 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   duration: state.player.duration,
   loop: state.player.loop,
   muted: state.player.muted,
+  playbackMultiplier: state.player.playbackMultiplier,
   playbackRate: state.player.playbackRate,
   playing: state.player.playing,
   seek: state.player.seek,
+  timeline: state.annot.timeline,
   url: state.player.url,
-  volume: state.player.volume,
-  timeline: state.annot.timeline
+  volume: state.player.volume
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({

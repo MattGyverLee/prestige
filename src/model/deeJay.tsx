@@ -16,16 +16,19 @@ import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import repeat from "../assets/icons/player/repeat.png";
+import { speeds } from "../store/player/reducers";
 
 interface StateProps {
   annotMedia: any;
   currentTimeline: number;
   dispatch: DeeJayDispatch;
+  playbackMultiplier: number;
   playerDuration: number;
-  playerPlaybackRate: number;
+  playerRate: number;
   playerPlayed: number;
   playerPlaying: boolean;
   sourceMedia: any;
+  speedsIndex: number;
   timeline: any;
   timelineChanged: boolean;
   url: string;
@@ -33,11 +36,13 @@ interface StateProps {
 }
 
 interface DispatchProps {
+  changeSpeedsIndex: typeof actions.changeSpeedsIndex;
   onSeekChange: typeof actions.onSeekChange;
   onSeekMouseDown: typeof actions.onSeekMouseDown;
   onSeekMouseUp: typeof actions.onSeekMouseUp;
   resetDeeJay: typeof actions.resetDeeJay;
   setDispatch: typeof actions.setDispatch;
+  setPlaybackMultiplier: typeof actions.setPlaybackMultiplier;
   setPlaybackRate: typeof actions.setPlaybackRate;
   setSeek: typeof actions.setSeek;
   setWSDuration: typeof actions.setWSDuration;
@@ -52,24 +57,25 @@ interface DispatchProps {
 interface DeeJayProps extends StateProps, DispatchProps {}
 
 export class DeeJay extends Component<DeeJayProps> {
-  private waveSurfers: WaveSurfer[] = [];
-  private loadQueue: string[] = [];
-  private currentPlaying: string[] = [];
   private clicked: boolean[] = [];
+  private continuing: boolean = false;
   private currBlob: string = "";
-  private speeds: number[] = [0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5, 2, 3, 5];
-  private speedsIndex: number = 5;
+  private currentPlaying: string[] = [];
+  private currentSpeeds: number[] = [];
+  private idxs = [0, 1, 2];
+  private loadQueue: string[] = [];
   private regionsOn: number = 0;
   private ts: string[] = [];
-  private continuing: boolean = false;
+  private waveSurfers: WaveSurfer[] = [];
 
   componentDidMount = () => {
     let regionsPlugin = require("../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
-    [0, 1, 2].forEach((idx: number) => {
+    this.idxs.forEach((idx: number) => {
       // Build Starting Arrays
-      this.loadQueue.push("");
       this.clicked.push(false);
       this.currentPlaying.push("");
+      this.currentSpeeds.push(1);
+      this.loadQueue.push("");
       this.waveSurfers.push(
         WaveSurfer.create({
           container: "#waveform" + idx.toString(),
@@ -87,43 +93,38 @@ export class DeeJay extends Component<DeeJayProps> {
       this.waveSurfers[idx].empty();
       this.waveSurfers[idx].setVolume(+(idx === 0));
 
-      // Log and Process Region Out
+      // Process Region Out
       this.waveSurfers[idx].on("region-out", () => {
-        console.log(`${idx} Region Out`);
         if (this.waveSurfers[idx].regions.list.temp !== undefined)
           this.waveSurfers[idx].regions.list.temp.remove();
         let play = false;
-        [0, 1, 2].forEach((idx: number) => {
+        this.idxs.forEach((idx: number) => {
           if (this.waveSurfers[idx].isPlaying()) play = true;
         });
         if (!play) this.props.togglePlay(play);
       });
 
-      // Log and Process Region Hover In
+      // Process Region Hover In
       this.waveSurfers[idx].on("region-mouseenter", region => {
-        console.log(`${idx} Region Mouse In`);
         this.ts.push(region.id);
-        this.regionMouseIn(idx, region);
+        this.regionMouseIn(region);
       });
 
-      // Log and Process Region Hover Out
+      // Process Region Hover Out
       this.waveSurfers[idx].on("region-mouseleave", region => {
-        console.log(`${idx} Region Mouse out`);
         this.ts = this.ts.filter((item: string) => item !== region.id);
-        this.regionMouseOut(idx, region);
+        this.regionMouseOut(region);
       });
 
-      // Log and Process Region Click
+      // Process Region Click
       this.waveSurfers[idx].on("region-click", (region: any) => {
-        console.log(`${idx} Region Click`);
         this.waveSurfers[idx].seekTo(region.start);
       });
 
-      // Log and Process Region Created
+      // Process Region Created
       this.waveSurfers[idx].on(
         "region-created",
         (region: any, ...args: any) => {
-          console.log(`${idx} Region Created`);
           if (region.id === "temp")
             this.waveSurfers[idx].play(region.start, region.end);
         }
@@ -132,18 +133,19 @@ export class DeeJay extends Component<DeeJayProps> {
       // Log Pause and Stop Player if All are Paused
       this.waveSurfers[idx].on("pause", (...args: any) => {
         let play = false;
-        [0, 1, 2].forEach((idx: number) => {
+        this.idxs.forEach((idx: number) => {
           if (this.waveSurfers[idx].isPlaying()) play = true;
         });
         if (!play) this.props.togglePlay(play);
         console.log(`${idx} Paused`);
       });
 
+      // Process WS Finish
       this.waveSurfers[idx].on("finish", (...args: any) => {
-        console.log(`${idx} Finished Playing`);
         this.waveSurfers[idx].pause();
       });
 
+      // Process WS Error by Displaying Through Snackbar
       this.waveSurfers[idx].on("error", (err: any) => {
         this.sendSnackbar(
           `WaveSurfer ${idx} error:` +
@@ -155,21 +157,12 @@ export class DeeJay extends Component<DeeJayProps> {
         );
       });
 
-      // Log and Process WS Seeking
+      // Process WS Seeking
       this.waveSurfers[idx].on("seek", (...args: any) => {
-        // If WS Had Been Clicked => Log and Process
-        // -> Else => Log That the Seek was Not Caused by a Click
-        if (!this.clicked[idx]) console.log(`${idx} Seeking: No Click`);
-        else {
+        if (this.clicked[idx]) {
           // Log Action and Reset Clicked and Continuing
-          console.log(`${idx} Seeking: Setting Player Time`);
           this.clicked[idx] = this.continuing = false;
-
-          // Fetch Current Milestone and Calculate Relative Rate/Time
           const ws = this.waveSurfers[idx];
-          const currM = this.getCurrentMilestone(idx);
-          const playbackRate = idx === 0 ? 1 : this.calcPlaybackRate(currM);
-          const relTime = this.calcRelativeTime(idx, currM, playbackRate);
 
           // Function for Loading Next Milestone in Sequence
           let loadNext = () => {
@@ -182,13 +175,13 @@ export class DeeJay extends Component<DeeJayProps> {
             else {
               // Play Player with Specific Settings
               const playbackRate = idx === 0 ? 1 : this.calcPlaybackRate(nextM);
-              const relTime = this.calcRelativeTime(idx, currM, playbackRate);
               this.props.setPlaybackRate(playbackRate);
-              this.props.setSeek(relTime);
+              this.props.setSeek(
+                roundIt(this.calcRelativeTime(idx, nextM, playbackRate), 3)
+              );
               this.props.togglePlay(true);
               let nextMIndex = this.findNextMilestoneIndex(nextM);
               let lastMIndex = this.findLastMilestoneIndex(idx);
-
               if (nextMIndex === lastMIndex) {
                 ws.play(ws.getCurrentTime(), ws.getDuration());
                 ws.un("pause", loadNext);
@@ -202,8 +195,11 @@ export class DeeJay extends Component<DeeJayProps> {
           };
 
           // Play Player with Specific Settings and Start WS to Match It
+          const currM = this.getCurrentMilestone(idx);
+          const playbackRate = idx === 0 ? 1 : this.calcPlaybackRate(currM);
+          const relTime = this.calcRelativeTime(idx, currM, playbackRate);
           this.props.setPlaybackRate(playbackRate);
-          this.props.setSeek(relTime);
+          this.props.setSeek(roundIt(relTime, 3));
           this.props.togglePlay(true);
           ws.play(
             ws.getCurrentTime(),
@@ -220,6 +216,7 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   };
 
+  // Processes Reaction to State Updates
   componentDidUpdate() {
     const currSync: string[] =
       this.props.currentTimeline !== -1
@@ -227,7 +224,7 @@ export class DeeJay extends Component<DeeJayProps> {
         : [];
     if (this.currBlob !== this.props.url) {
       this.currBlob = this.props.url;
-      [0, 1, 2].forEach((idx: number) => {
+      this.idxs.forEach((idx: number) => {
         this.props.setWSVolume(idx, +(idx === 0));
         this.loadQueue[idx] = "";
         this.waveSurfers[idx].empty();
@@ -235,7 +232,7 @@ export class DeeJay extends Component<DeeJayProps> {
         this.currentPlaying[idx] = "";
       });
     }
-    [0, 1, 2].forEach((idx: number) => {
+    this.idxs.forEach((idx: number) => {
       const ws = this.waveSurfers[idx];
       if (currSync.filter((s: any) => s === this.currBlob).length !== 1) {
         if (this.props.currentTimeline === -1) {
@@ -243,14 +240,12 @@ export class DeeJay extends Component<DeeJayProps> {
             ws.load(this.props.url);
             this.currentPlaying[idx] = this.props.url;
           }
-          this.checkDispatch(idx);
+          if (this.currentPlaying[idx]) this.checkPlayingValues(idx);
         }
       } else {
-        if (this.currentPlaying[idx] && ws.isReady) {
-          this.checkDispatch(idx);
-          if (ws.getVolume() !== this.props.volumes[idx])
-            ws.setVolume(this.props.volumes[idx] * this.props.volumes[idx]);
-        } else if (!this.currentPlaying[idx]) {
+        if (this.currentPlaying[idx] && ws.isReady)
+          this.checkPlayingValues(idx);
+        else if (!this.currentPlaying[idx]) {
           let load = this.loadQueue[idx];
           if (!this.loadQueue[idx]) {
             const audio =
@@ -320,24 +315,34 @@ export class DeeJay extends Component<DeeJayProps> {
 
   componentWillUnmount() {
     console.log("UnMounting DeeJay Component");
-    // todo: Make sure Wavesurfers Unloaded Gently. 
+    // todo: Make sure Wavesurfers Unloaded Gently.
   }
 
-  checkDispatch = (idx: number) => {
+  // Does Necessary Playback Checks (Dispatch, Volume, Playback Rate) for a Given WS
+  checkPlayingValues = (idx: number) => {
+    const ws = this.waveSurfers[idx];
     if (
       this.props.dispatch.wsNum === idx ||
-      (this.props.dispatch.wsNum === -1 && idx === 2)
+      (this.props.dispatch.wsNum === -1 && idx === 0)
     )
       this.dispatchDJ();
+    if (ws.getVolume() !== this.props.volumes[idx])
+      ws.setVolume(this.props.volumes[idx]);
+    if (
+      ws.getPlaybackRate() !==
+      roundIt(this.currentSpeeds[idx] * this.props.playbackMultiplier, 2)
+    )
+      ws.setPlaybackRate(
+        roundIt(this.currentSpeeds[idx] * this.props.playbackMultiplier, 2)
+      );
   };
 
   // Checks for Whether or not Given Blob is wsAllowed
   fileAllowed = (blobURL: string) => {
-    if (blobURL === "") return false;
-    let tempSrc = this.props.sourceMedia.filter(
+    const tempSrc = this.props.sourceMedia.filter(
       (m: LooseObject) => m.blobURL === blobURL
     );
-    let tempAnnot = this.props.annotMedia.filter(
+    const tempAnnot = this.props.annotMedia.filter(
       (m: LooseObject) => m.blobURL === blobURL
     );
     return (
@@ -347,122 +352,110 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Resets Volumes of and Stops all but Specified WS
-  solo = (wsNum: number, noVolReset?: boolean) => {
-    [0, 1, 2].forEach((idx: number) => {
+  solo = (wsNum: number, noVolReset?: boolean) =>
+    this.idxs.forEach((idx: number) => {
       if (
         noVolReset &&
         this.waveSurfers[idx].getVolume() > 0.5 ** 0.25 &&
         idx !== wsNum
-      ) {
+      )
         this.props.setWSVolume(idx, 0);
-      } else if (!noVolReset) {
-        this.props.setWSVolume(idx, +(idx === wsNum));
-      }
+      else if (!noVolReset) this.props.setWSVolume(idx, +(idx === wsNum));
       if (idx !== wsNum) this.waveSurfers[idx].stop();
       this.waveSurfers[idx].setPlaybackRate(1);
+      this.currentSpeeds[idx] = 1;
     });
-  };
 
   // Clears All Temp WS Regions
   clearDispatchLeftovers = () => {
     this.continuing = false;
-    [0, 1, 2].forEach((idx: number) => {
+    this.idxs.forEach((idx: number) => {
       if (this.waveSurfers[idx].regions.list.temp !== undefined)
         this.waveSurfers[idx].regions.list.temp.remove();
       this.clicked[idx] = false;
     });
   };
 
-  regionMouseIn = (inIdx: number, sourceRegion: any) => {
-    [0, 1, 2].forEach((idx: number) => {
+  // Clears All WS Subscriptions to "pause"
+  clearPauseSubs = () =>
+    this.idxs.forEach((wsNum: number) => {
+      while (this.waveSurfers[wsNum].handlers.pause.length > 1)
+        this.waveSurfers[wsNum].un(
+          "pause",
+          this.waveSurfers[wsNum].handlers.pause[1]
+        );
+    });
+
+  regionMouseIn = (sourceRegion: any) =>
+    this.idxs.forEach((idx: number) => {
       if (this.waveSurfers[idx].regions.list[sourceRegion.id]) {
         const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
         thisRegion.color = thisRegion.color.replace("0.1", "0.5");
         thisRegion.element.id = "hover";
-        if (this.regionsOn === 2) {
+        if (this.regionsOn === 2)
           thisRegion.element.style.backgroundColor = "rgba(18, 117, 240, 0.1)";
-        }
         thisRegion.element.style.outlineOffset = "-3px";
-        this.forceUpdate();
       }
     });
-  };
 
-  regionMouseOut = (inIdx: number, sourceRegion: any) => {
-    [0, 1, 2].forEach((idx: number) => {
+  regionMouseOut = (sourceRegion: any) =>
+    this.idxs.forEach((idx: number) => {
       if (this.waveSurfers[idx].regions.list[sourceRegion.id]) {
         const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
         thisRegion.element.id = "";
-        if (this.regionsOn === 2) {
-          thisRegion.element.style.backgroundColor = "";
-        }
-        this.forceUpdate();
+        if (this.regionsOn === 2) thisRegion.element.style.backgroundColor = "";
       }
     });
-  };
 
+  // Toggle Between Various Representations of the Current Timeline's Regions
   toggleAllRegions = () => {
-    if (this.regionsOn === 0 || this.regionsOn === 1) {
-      // Clear Regions first
-      [0, 1, 2].forEach((idx: number) => {
-        this.waveSurfers[idx].clearRegions();
-        this.waveSurfers[idx].clearRegions();
-      });
+    // Clear Regions first
+    this.idxs.forEach((idx: number) => {
+      this.waveSurfers[idx].clearRegions();
+    });
+    if (this.props.currentTimeline !== -1 && this.regionsOn !== 2)
       // Draw Regions
-      let milestones = this.props.timeline[this.props.currentTimeline]
-        .milestones;
-      milestones.forEach((m: any) => {
-        const startId = m.startId;
-        const tempColor = this.regionsOn
-          ? this.randomColor(0.0)
-          : this.randomColor(0.1);
-        this.waveSurfers[0].addRegion({
-          id: startId,
-          start: m.startTime,
-          end: m.stopTime,
-          color: tempColor,
-          drag: false,
-          resize: false
-        });
-        m.data
-          .filter(
-            (data: any) =>
-              data.channel !== undefined && data.channel.endsWith("Merged")
-          )
-          .forEach((d: LooseObject) => {
-            this.waveSurfers[d.channel.startsWith("Careful") ? 1 : 2].addRegion(
-              {
-                id: startId,
+      this.props.timeline[this.props.currentTimeline].milestones.forEach(
+        (m: any) => {
+          const tempColor = this.regionsOn
+            ? this.randomColor(0.0)
+            : this.randomColor(0.1);
+          this.waveSurfers[0].addRegion({
+            id: m.startId,
+            start: m.startTime,
+            end: m.stopTime,
+            color: tempColor,
+            drag: false,
+            resize: false
+          });
+          m.data.forEach((d: LooseObject) => {
+            if (d.channel.endsWith("Merged"))
+              this.waveSurfers[
+                d.channel.startsWith("Careful") ? 1 : 2
+              ].addRegion({
+                id: m.startId,
                 start: d.clipStart,
                 end: d.clipStop,
                 color: tempColor,
                 drag: false,
                 resize: false
-              }
-            );
+              });
           });
-      });
-      this.regionsOn++;
-    } else {
-      [0, 1, 2].forEach((idx: number) => {
-        this.waveSurfers[idx].clearRegions();
-      });
-      this.regionsOn = 0;
-    }
+        }
+      );
+    this.regionsOn = (this.regionsOn + 1) % 3;
   };
 
-  randomColor(alpha: number) {
-    return (
-      "rgba(" +
-      [
-        ~~(Math.random() * 255),
-        ~~(Math.random() * 255),
-        ~~(Math.random() * 255),
-        alpha
-      ] +
-      ")"
-    );
-  }
+  // Produces a Random RGBA Color with Provided Alpha
+  randomColor = (alpha: number) =>
+    "rgba(" +
+    [
+      ~~(Math.random() * 255),
+      ~~(Math.random() * 255),
+      ~~(Math.random() * 255),
+      alpha
+    ] +
+    ")";
 
   // Fetches the Current Milestone of the Specified WS
   getCurrentMilestone = (
@@ -501,10 +494,44 @@ export class DeeJay extends Component<DeeJayProps> {
       })[0];
   };
 
-  calcPlaybackRate = (milestone: any) =>
-    (milestone.stopTime - milestone.startTime) /
-    (milestone.data[0].clipStop - milestone.data[0].clipStart);
+  // Returns the Milestone Containing the Given Time and Possibly a Specific Data Element
+  getInterMilestone = (time: number, wsNum?: number) =>
+    this.props.currentTimeline === -1
+      ? -1
+      : this.props.timeline[this.props.currentTimeline].milestones
+          .filter((m: any) => {
+            return m.startTime <= time && time < m.stopTime;
+          })
+          .map((m: Milestone) => {
+            return {
+              ...m,
+              data: m.data.filter(
+                (d: LooseObject) =>
+                  wsNum === 0 ||
+                  d.channel ===
+                    `${wsNum === 1 ? "Careful" : "Translation"}Merged`
+              )
+            };
+          })[0];
 
+  // Returns an Array with the Indexes of Active WSs
+  getActives = () =>
+    this.idxs.filter(
+      (idx: number) =>
+        this.waveSurfers[idx].getVolume() > 0 ||
+        this.waveSurfers[idx].isPlaying()
+    );
+
+  // Calculates PlaybackRate for Source/Video Based on Milestone or Milestone and Dispatch
+  calcPlaybackRate = (milestone: any, dispatch?: DeeJayDispatch) => {
+    const playbackRate =
+      (milestone.stopTime - milestone.startTime) /
+      (((dispatch && dispatch.clipStop) || milestone.data[0].clipStop) -
+        ((dispatch && dispatch.clipStart) || milestone.data[0].clipStart));
+    return playbackRate >= 15 ? 14.5 : playbackRate <= 0.2 ? 0.2 : playbackRate;
+  };
+
+  // Calculates Relative Time for Source/Video Based on a WS, Milestone, and PlaybackRate
   calcRelativeTime = (idx: number, milestone: any, playbackRate: number) =>
     idx === 0
       ? this.waveSurfers[idx].getCurrentTime() /
@@ -515,6 +542,7 @@ export class DeeJay extends Component<DeeJayProps> {
           milestone.startTime) /
         this.waveSurfers[0].getDuration();
 
+  // Finds the Index of the Milestone After the One Provided
   findNextMilestoneIndex = (milestone: any) =>
     this.props.timeline === -1
       ? -1
@@ -522,193 +550,110 @@ export class DeeJay extends Component<DeeJayProps> {
           (m: any) => m.startTime === milestone.startTime
         );
 
-  findLastMilestoneIndex = (idx: number) => {
+  // Finds the Index of the Last Milestone of a Particular Type
+  findLastMilestoneIndex = (wsNum: number) => {
     if (this.props.currentTimeline === -1) return 0;
     const milestones = this.props.timeline[this.props.currentTimeline]
       .milestones;
-    return idx === 0
+    return wsNum === 0
       ? milestones.length - 1
       : milestones
-          .map((m: any) =>
+          .map((m: any, idx: number) =>
             m.data.findIndex(
               (d: any) =>
-                d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
-            )
+                d.channel === `${wsNum === 1 ? "Careful" : "Translation"}Merged`
+            ) === -1
+              ? 0
+              : idx
           )
           .reduce((a: number, b: number) => (a > b ? a : b), 0);
   };
 
   // Responds to DJ Dispatches
   dispatchDJ = () => {
-    // Fetch the Necessary WSNum
-    const wsNum =
-      this.props.dispatch.wsNum !== undefined ? this.props.dispatch.wsNum : -1;
-
-    // Grab and Clear Dispatch
+    // Store Dispatch Into Local Variable and Clear It
     const dispatch = { ...this.props.dispatch };
     this.props.setDispatch({ dispatchType: "" });
-
-    // Clear Things Associated with Previous Dispatches
     this.clearDispatchLeftovers();
 
-    // Declare Necessary Switch Variables
-    const actives: number[] = [];
+    // Necessary Switch Variables for WS, Active WSs, Milestone, and PlaybackRate
+    const wsNum =
+      this.props.dispatch.wsNum !== undefined ? this.props.dispatch.wsNum : -1;
+    let actives: number[] = [];
     let currM: any = {};
     let playbackRate: number = 1;
-    let relativeTime: number = 0;
+    // Process Dispatch Based on its Type
     switch (dispatch.dispatchType) {
-      // Processes the Seek Bar
       case "PlayerSeek":
-        // Solve Undefined Issues
+        // Un-"Undefined" Dispatch
         dispatch.refStart = dispatch.refStart || 0;
 
-        // Grab the One Milestone with Data that Matches the Video's Time
-        currM =
-          this.props.currentTimeline === -1
-            ? -1
-            : this.props.timeline[this.props.currentTimeline].milestones.filter(
-                (m: any) => {
-                  dispatch.refStart = dispatch.refStart || 0;
-                  return (
-                    m.startTime <= dispatch.refStart &&
-                    dispatch.refStart < m.stopTime
-                  );
-                }
-              )[0];
-
-        // Determine Which WSs are Active
-        [0, 1, 2].forEach((idx: number) => {
-          if (
-            this.waveSurfers[idx].getVolume() > 0 ||
-            this.waveSurfers[idx].isPlaying()
-          )
-            actives.push(idx);
-        });
-
-        // If Only One Active Player
-        // -> Else If Two
-        // -> Else Three
+        // Fetch the Active WSs and Processes Based on How Many
+        actives = this.getActives();
         if (actives.length === 1) {
-          actives.forEach((idx: number) => {
-            if (idx === 0) this.waveSurfers[0].play(dispatch.refStart);
-            else {
-              dispatch.refStart = dispatch.refStart || 0;
-              const currMData = currM.data.filter(
-                (d: any) =>
-                  d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
-              );
-              if (currMData.length === 1) {
-                playbackRate = this.calcPlaybackRate(currM);
-                this.props.setPlaybackRate(playbackRate);
-                this.waveSurfers[idx].play(
-                  (dispatch.refStart - currM.startTime) / playbackRate +
-                    currMData[0].clipStart
-                );
-              }
-            }
-          });
-        } else if (actives.length === 2) {
-          if (actives.includes(0)) {
-            this.waveSurfers[0].play(dispatch.refStart);
-          }
-          if (actives.includes(1)) {
-            const currMData = currM.data.filter(
-              (d: any) => d.channel === "CarefulMerged"
+          // "Click" WS So That it can Automatically Seek Beyond Beginning Milestone
+          this.clicked[actives[0]] = true;
+
+          // If WS 0 => Seek To Ref
+          // -> Else If Milestone Data Exists => Seek To Relative Ref
+          currM = this.getInterMilestone(dispatch.refStart, actives[0]);
+          if (actives[0] === 0)
+            this.waveSurfers[0].seekTo(
+              dispatch.refStart / this.waveSurfers[actives[0]].getDuration()
             );
-            if (currMData.length === 1) {
-              // Calculate and Set Playback Rate Based on Milestone Times
-              playbackRate = this.calcPlaybackRate(currM);
-              this.waveSurfers[0].setPlaybackRate(
-                playbackRate >= 15
-                  ? 14.5
-                  : playbackRate <= 0.2
-                  ? 0.2
-                  : playbackRate
-              );
-              this.props.setPlaybackRate(playbackRate);
-              this.waveSurfers[1].play(
-                (dispatch.refStart - currM.startTime) / playbackRate +
-                  currMData.clipStart
-              );
-            }
-          }
+          else if (currM.data.length === 1)
+            this.waveSurfers[actives[0]].seekTo(
+              ((dispatch.refStart - currM.startTime) / playbackRate +
+                currM.data[0].clipStart) /
+                this.waveSurfers[actives[0]].getDuration()
+            );
         }
         break;
       case "PlayPause":
-        // 1. Stop Playing those that are Playing
-        // 2. Playing those with Volume that are not Playing and Push to Actives
-        [0, 1, 2].forEach((idx: number) => {
-          if (this.waveSurfers[idx].isPlaying()) {
+        // If Playing => Stop All
+        // -> If Not Playing, Fetch all the "Actives"
+        this.idxs.forEach((idx: number) => {
+          if (this.waveSurfers[idx].isPlaying() && this.props.playerPlaying)
             this.waveSurfers[idx].playPause();
-          } else if (
-            this.props.volumes[idx] &&
-            !this.waveSurfers[idx].isPlaying()
-          ) {
-            this.waveSurfers[idx].playPause();
+          else if (this.props.volumes[idx] && !this.props.playerPlaying)
             actives.push(idx);
-          }
         });
 
-        // If Exactly Two WSs are Active
-        if (actives.length === 2) {
-          // If One of the Two Active is the Source
-          if (actives.includes(0)) {
-            // Pop Off the Source Audio
-            actives.indexOf(0) ? actives.pop() : actives.shift();
+        // Process Based on Number of Active WSs
+        console.log(actives.toString());
+        if (actives.length === 1) {
+          // "Click" WS So That it can Automatically Seek Beyond Beginning Milestone
+          this.clicked[actives[0]] = true;
 
-            // Grab the One Milestone with Data that Matches Remaining Active
-            currM = this.getCurrentMilestone(actives[0]);
-
-            // Calculate and Set Playback Rate Based on Milestone Times
-            playbackRate = this.calcPlaybackRate(currM);
-            this.waveSurfers[0].setPlaybackRate(
-              playbackRate >= 15
-                ? 14.5
-                : playbackRate <= 0.2
-                ? 0.2
-                : playbackRate
-            );
-            this.props.setPlaybackRate(playbackRate);
-
-            // Calculate and Set Relative Time in Seconds of Source Audio
-            relativeTime =
-              ((this.waveSurfers[actives[0]].getCurrentTime() -
-                currM.data[0].clipStart) *
-                playbackRate +
-                currM.startTime) /
-              this.waveSurfers[0].getDuration();
-            this.waveSurfers[0].seekTo(relativeTime);
-            this.props.setSeek(relativeTime);
-          }
+          // Seek the Provided WS with a Relative Time Based on Player's Current
+          const elapsed = this.props.playerPlayed * this.props.playerDuration;
+          currM = this.getInterMilestone(elapsed, actives[0]);
+          this.waveSurfers[actives[0]].seekTo(
+            actives[0] === 0
+              ? this.props.playerPlayed
+              : (((elapsed - currM.startTime) /
+                  (currM.stopTime - currM.startTime)) *
+                  (currM.data[0].clipStop - currM.data[0].clipStart) +
+                  currM.data[0].clipStart) /
+                  this.waveSurfers[actives[0]].getDuration()
+          );
         }
         break;
       case "Clip":
-        // Grab the One Milestone with Data that Matches Dispatch
+        // Grab Current Milestone and Single Out the Given WS
         currM = this.getCurrentMilestone(wsNum, dispatch);
-
-        // Clear Any Issues with Undefined Input (There Won't Be Any)
         dispatch.clipStop = dispatch.clipStop || 0;
         dispatch.clipStart = dispatch.clipStart || 0;
-
         this.solo(wsNum, true);
-
-        // Determine Which WSs are Active
-        [0, 1, 2].forEach((idx: number) => {
-          if (
-            this.waveSurfers[idx].getVolume() > 0 ||
-            this.waveSurfers[idx].isPlaying()
-          )
-            actives.push(idx);
-        });
-
-        // Set Volume of Selected WS to Max
         this.props.setWSVolume(wsNum, 1);
 
+        // Fetch the Active WSs and Processes Based on How Many
+        actives = this.getActives();
         if (actives.length === 1) {
-          // Let the User Know Something is Playing
+          // Notify Via Snackbar
           this.sendSnackbar("Playing Clip");
 
-          // Add Watchers and Add Region
+          // Create Associated Region
           this.waveSurfers[wsNum].addRegion({
             id: "temp",
             color: "rgba(153,170,255,0.3)",
@@ -718,87 +663,16 @@ export class DeeJay extends Component<DeeJayProps> {
             resize: false
           });
 
-          // Sync Video with Audio
-          this.props.setPlaybackRate(
-            (currM.stopTime - currM.startTime) /
-              (dispatch.clipStop - dispatch.clipStart)
-          );
+          // Sync Player
+          this.props.setPlaybackRate(this.calcPlaybackRate(currM, dispatch));
           this.props.setSeek(currM.startTime || 0);
-          this.props.togglePlay(true);
-        } else if (actives.length === 2) {
-          // Determine the King
-          const king = actives.reduce((prev, current) => {
-            return this.waveSurfers[prev].getVolume() >
-              this.waveSurfers[current].getVolume()
-              ? prev
-              : current;
-          });
-
-          // Determine Sub's Start/Stop Times
-          const sub = actives[-1 * actives.indexOf(king) + 1];
-          const subM =
-            sub === 0
-              ? currM
-              : this.getCurrentMilestone(0, {
-                  dispatchType: "",
-                  wsNum: 0,
-                  clipStart: currM.startTime,
-                  clipStop: currM.stopTime
-                }).data.filter(
-                  (d: any) =>
-                    d.channel ===
-                    `${sub === 1 ? "Careful" : "Translation"}Merged`
-                )[0];
-          const subStart = sub === 0 ? subM.startTime : subM.clipStart;
-          const subStop = sub === 0 ? subM.stopTime : subM.clipStop;
-
-          // Calculate and Set Playback Rate Based on Milestone Times
-          const subPlaybackRate =
-            (subStop - subStart) / (dispatch.clipStop - dispatch.clipStart);
-          playbackRate =
-            (currM.stopTime - currM.startTime) /
-            (dispatch.clipStop - dispatch.clipStart);
-          this.waveSurfers[sub].setPlaybackRate(
-            subPlaybackRate >= 15
-              ? 14.5
-              : subPlaybackRate <= 0.2
-              ? 0.2
-              : subPlaybackRate
-          );
-          this.props.setPlaybackRate(playbackRate);
-
-          // Add Watchers and Add Region
-          this.waveSurfers[wsNum].addRegion({
-            id: "temp",
-            color: "rgba(153,170,255,0.3)",
-            start: dispatch.clipStart,
-            end: dispatch.clipStop,
-            drag: false,
-            resize: false
-          });
-
-          // Calculate and Set Relative Time in Seconds of Source and Sub Audio
-          this.waveSurfers[sub].play(subStart, subStop);
-          this.props.setSeek(currM.startTime);
           this.props.togglePlay(true);
         }
         break;
-      case "Seek":
-        console.log(`${wsNum} Entered Seeking`);
-        break;
-      case "Step":
-        this.sendSnackbar("Stepping");
-        break;
-      case "PlayThrough":
-        this.sendSnackbar("Playing Through");
-        break;
-      case "ClipPlus":
-        break;
     }
-
-    // this.props.dispatchSnackbar("🎵 DJ Activated 🎵");
   };
 
+  // Toggles the Volume Between Three Predetermined States
   toggleVol = (idx: number) => {
     if (this.waveSurfers[idx] !== undefined && this.waveSurfers[idx].isReady) {
       let name =
@@ -822,12 +696,13 @@ export class DeeJay extends Component<DeeJayProps> {
     // screenfull.request(findDOMNode(this.player))
   };
 
+  // Enqueues the Next Snackbar Mesage
   sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
     this.props.enqueueSnackbar({
       message: inMessage,
       options: {
         key: inKey || new Date().getTime() + Math.random(),
-        variant: vType ? vType : "default",
+        variant: vType || "default",
         action: (key: LooseObject) => (
           <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
         )
@@ -837,7 +712,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
   render() {
     // Forms the Rows for Each WS
-    const waveTableRows = [0, 1, 2].map((idx: number) => {
+    const waveTableRows = this.idxs.map((idx: number) => {
       return (
         <tr key={idx.toString()}>
           <td className="wave-table-enable">
@@ -906,17 +781,10 @@ export class DeeJay extends Component<DeeJayProps> {
             className="waveform"
             id={"waveform" + idx.toString()}
             onClick={() => {
-              [0, 1, 2].forEach((wsNum: number) => {
-                while (this.waveSurfers[wsNum].handlers.pause.length > 1)
-                  this.waveSurfers[wsNum].un(
-                    "pause",
-                    this.waveSurfers[wsNum].handlers.pause[1]
-                  );
-              });
+              this.clearPauseSubs();
               this.clearDispatchLeftovers();
               this.clicked[idx] = true;
               this.solo(idx);
-              this.waveSurfers[idx].play();
             }}
           ></td>
         </tr>
@@ -931,7 +799,6 @@ export class DeeJay extends Component<DeeJayProps> {
               <button
                 className="play-pause-button"
                 onClick={() => {
-                  this.props.togglePlay();
                   this.props.setDispatch({
                     dispatchType: "PlayPause",
                     wsNum: -1
@@ -952,22 +819,20 @@ export class DeeJay extends Component<DeeJayProps> {
               </button>
               <button
                 onClick={() => {
-                  if (this.speedsIndex > 0) {
-                    this.speedsIndex--;
-                    this.props.setPlaybackRate(this.speeds[this.speedsIndex]);
+                  if (this.props.speedsIndex > 0) {
+                    this.props.changeSpeedsIndex("-");
                   }
                 }}
               >
                 -
               </button>
               <div className="playback-rate">
-                {roundIt(this.props.playerPlaybackRate, 2)}x
+                {roundIt(this.props.playbackMultiplier, 2)}x
               </div>
               <button
                 onClick={() => {
-                  if (this.speedsIndex < this.speeds.length - 1) {
-                    this.speedsIndex++;
-                    this.props.setPlaybackRate(this.speeds[this.speedsIndex]);
+                  if (this.props.speedsIndex < speeds.length - 1) {
+                    this.props.changeSpeedsIndex("+");
                   }
                 }}
               >
@@ -983,9 +848,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 onMouseDown={this.props.onSeekMouseDown}
                 onMouseUp={e => {
                   this.props.onSeekMouseUp();
-                  this.props.setSeek(
-                    parseFloat((e.target as HTMLInputElement).value)
-                  );
+                  this.clearPauseSubs();
                   this.props.setDispatch({
                     dispatchType: "PlayerSeek",
                     wsNum: -1,
@@ -1044,11 +907,13 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotMedia: state.tree.annotMedia,
   currentTimeline: state.annot.currentTimeline,
   dispatch: state.deeJay.dispatch,
+  playbackMultiplier: state.player.playbackMultiplier,
   playerDuration: state.player.duration,
-  playerPlaybackRate: state.player.playbackRate,
+  playerRate: state.player.playbackRate,
   playerPlayed: state.player.played,
   playerPlaying: state.player.playing,
   sourceMedia: state.tree.sourceMedia,
+  speedsIndex: state.player.speedsIndex,
   timeline: state.annot.timeline,
   timelineChanged: state.annot.timelineChanged,
   url: state.player.url,
@@ -1058,6 +923,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
+      changeSpeedsIndex: actions.changeSpeedsIndex,
       closeSnackbar: actions.closeSnackbar,
       enqueueSnackbar: actions.enqueueSnackbar,
       onSeekChange: actions.onSeekChange,
@@ -1065,6 +931,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onSeekMouseUp: actions.onSeekMouseUp,
       resetDeeJay: actions.resetDeeJay,
       setDispatch: actions.setDispatch,
+      setPlaybackMultiplier: actions.setPlaybackMultiplier,
       setPlaybackRate: actions.setPlaybackRate,
       setSeek: actions.setSeek,
       setWSDuration: actions.setWSDuration,

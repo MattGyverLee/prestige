@@ -5,35 +5,75 @@ export interface MediaPlayerState {
   loaded: number;
   loop: boolean;
   muted: boolean;
+  playbackMultiplier: number;
   playbackRate: number;
   played: number;
   playing: boolean;
   seek: number;
   seeking?: boolean;
+  speedsIndex: number;
   url: string;
   volume: number;
 }
 
 // Describing the different ACTION NAMES available
+export const CHANGE_SPEEDS_INDEX = "CHANGE_SPEEDS_INDEX";
+export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_ENDED = "ON_ENDED";
+export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const ON_PLAY = "ON_PLAY";
-export const TOGGLE_PLAY = "TOGGLE_PLAY";
-export const SET_URL = "SET_URL";
 export const ON_PROGRESS = "ON_PROGESS";
+export const ON_SEEK_CHANGE = "ON_SEEK_CHANGE";
+export const ON_SEEK_MOUSE_DOWN = "ON_SEEK_MOUSE_DOWN";
+export const ON_SEEK_MOUSE_UP = "ON_SEEK_MOUSE_UP";
+export const ON_VOLUME_CHANGE = "ON_VOLUME_CHANGE";
 export const SET_DURATION = "SET_DURATION";
+export const SET_PLAYBACK_MULTIPLIER = "SET_PLAYBACK_MULTIPLIER";
+export const SET_PLAYBACK_RATE = "SET_PLAYBACK_RATE";
+export const SET_SEEK = "SET_SEEK";
+export const SET_URL = "SET_URL";
 export const SET_VOLUME = "SET_VOLUME";
 export const STOP_PLAYING = "STOP_PLAYING";
 export const TOGGLE_LOOP = "TOGGLE_LOOP";
-export const UPDATE_PLAYER_SESSION = "UPDATE_PLAYER_SESSION";
-export const HARD_RESET_APP = "HARD_RESET_APP";
-export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
-export const SET_PLAYBACK_RATE = "SET_PLAYBACK_RATE";
 export const TOGGLE_MUTED = "TOGGLE_MUTED";
-export const ON_SEEK_MOUSE_DOWN = "ON_SEEK_MOUSE_DOWN";
-export const ON_SEEK_MOUSE_UP = "ON_SEEK_MOUSE_UP";
-export const ON_SEEK_CHANGE = "ON_SEEK_CHANGE";
-export const ON_VOLUME_CHANGE = "ON_VOLUME_CHANGE";
-export const SET_SEEK = "SET_SEEK";
+export const TOGGLE_PLAY = "TOGGLE_PLAY";
+export const UPDATE_PLAYER_SESSION = "UPDATE_PLAYER_SESSION";
+
+interface ChangeSpeedsIndex {
+  type: typeof CHANGE_SPEEDS_INDEX;
+  payload: string;
+}
+
+interface OnEnded {
+  type: typeof ON_ENDED;
+}
+
+interface OnPlay {
+  type: typeof ON_PLAY;
+}
+
+interface OnProgress {
+  type: typeof ON_PROGRESS;
+  payload: any;
+}
+
+interface OnSeekChange {
+  type: typeof ON_SEEK_CHANGE;
+  payload: number;
+}
+
+interface OnSeekMouseDown {
+  type: typeof ON_SEEK_MOUSE_DOWN;
+}
+
+interface OnSeekMouseUp {
+  type: typeof ON_SEEK_MOUSE_UP;
+}
+
+interface OnVolumeChange {
+  type: typeof ON_VOLUME_CHANGE;
+  payload: number;
+}
 
 interface PlayHardResetApp {
   type: typeof HARD_RESET_APP;
@@ -45,9 +85,24 @@ interface PlayOnNewFolder {
   payload: { path: string; blobURL?: string };
 }
 
-interface UpdatePlayerAction {
-  type: typeof UPDATE_PLAYER_SESSION;
-  payload: MediaPlayerState;
+interface SetDuration {
+  type: typeof SET_DURATION;
+  payload: number;
+}
+
+interface SetPlaybackMultiplier {
+  type: typeof SET_PLAYBACK_MULTIPLIER;
+  payload: number;
+}
+
+interface SetPlaybackRate {
+  type: typeof SET_PLAYBACK_RATE;
+  payload: number;
+}
+
+interface SetSeek {
+  type: typeof SET_SEEK;
+  payload: number;
 }
 
 interface SetURL {
@@ -55,77 +110,52 @@ interface SetURL {
   payload: { blobURL: string; timelineIndex: number };
 }
 
-interface TogglePlay {
-  type: typeof TOGGLE_PLAY;
-  payload?: boolean;
-}
-interface StopPlaying {
-  type: typeof STOP_PLAYING;
-}
-interface ToggleLoop {
-  type: typeof TOGGLE_LOOP;
-}
 interface SetVolume {
   type: typeof SET_VOLUME;
   payload: number;
 }
-interface OnPlay {
-  type: typeof ON_PLAY;
+
+interface StopPlaying {
+  type: typeof STOP_PLAYING;
 }
-interface OnEnded {
-  type: typeof ON_ENDED;
+
+interface ToggleLoop {
+  type: typeof TOGGLE_LOOP;
 }
-interface OnProgress {
-  type: typeof ON_PROGRESS;
-  payload: any;
-}
-interface SetDuration {
-  type: typeof SET_DURATION;
-  payload: number;
-}
-interface SetPlaybackRate {
-  type: typeof SET_PLAYBACK_RATE;
-  payload: number;
-}
+
 interface ToggleMuted {
   type: typeof TOGGLE_MUTED;
 }
-interface OnSeekMouseDown {
-  type: typeof ON_SEEK_MOUSE_DOWN;
+
+interface TogglePlay {
+  type: typeof TOGGLE_PLAY;
+  payload?: boolean;
 }
-interface OnSeekMouseUp {
-  type: typeof ON_SEEK_MOUSE_UP;
-}
-interface OnSeekChange {
-  type: typeof ON_SEEK_CHANGE;
-  payload: number;
-}
-interface OnVolumeChange {
-  type: typeof ON_VOLUME_CHANGE;
-  payload: number;
-}
-interface SetSeek {
-  type: typeof SET_SEEK;
-  payload: number;
+
+interface UpdatePlayerAction {
+  type: typeof UPDATE_PLAYER_SESSION;
+  payload: MediaPlayerState;
 }
 
 export type PlayerActionTypes =
+  | ChangeSpeedsIndex
   | OnEnded
-  | TogglePlay
-  | SetURL
   | OnPlay
-  | SetDuration
   | OnProgress
+  | OnSeekChange
+  | OnSeekMouseDown
+  | OnSeekMouseUp
+  | OnVolumeChange
+  | PlayHardResetApp
+  | PlayOnNewFolder
+  | SetDuration
+  | SetPlaybackMultiplier
+  | SetPlaybackRate
+  | SetSeek
+  | SetURL
   | SetVolume
   | StopPlaying
   | ToggleLoop
-  | UpdatePlayerAction
-  | PlayHardResetApp
-  | PlayOnNewFolder
-  | SetPlaybackRate
   | ToggleMuted
-  | OnSeekMouseDown
-  | OnSeekMouseUp
-  | OnSeekChange
-  | OnVolumeChange
-  | SetSeek;
+  | TogglePlay
+  | UpdatePlayerAction;

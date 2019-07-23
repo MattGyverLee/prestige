@@ -1,5 +1,19 @@
 import * as types from "./types";
 
+export const speeds: number[] = [
+  0.2,
+  0.33,
+  0.5,
+  0.66,
+  0.8,
+  1,
+  1.25,
+  1.5,
+  2,
+  3,
+  5
+];
+
 export const playerCleanStore: types.MediaPlayerState = {
   controls: false,
   duration: 0,
@@ -7,10 +21,12 @@ export const playerCleanStore: types.MediaPlayerState = {
   loop: false,
   muted: true,
   playbackRate: 1.0,
+  playbackMultiplier: 1.0,
   played: 0,
   playing: false,
   seek: -1,
   seeking: false,
+  speedsIndex: 5,
   url: "",
   volume: 0.8
 };
@@ -42,17 +58,7 @@ export function playerReducer(
     }
     case types.SET_URL: {
       return {
-        ...state,
-        controls: false,
-        duration: 0,
-        loaded: 0,
-        loop: false,
-        muted: true,
-        playbackRate: 1.0,
-        played: 0,
-        playing: false,
-        seeking: false,
-        volume: 0.8,
+        ...playerCleanStore,
         url: action.payload.blobURL
       };
     }
@@ -107,7 +113,18 @@ export function playerReducer(
     case types.SET_PLAYBACK_RATE: {
       return {
         ...state,
-        playbackRate: action.payload >= 16 ? 15.5 : action.payload
+        playbackRate:
+          action.payload >= 15
+            ? 14.5
+            : action.payload <= 0.2
+            ? 0.2
+            : action.payload
+      };
+    }
+    case types.SET_PLAYBACK_MULTIPLIER: {
+      return {
+        ...state,
+        playbackMultiplier: action.payload
       };
     }
     case types.TOGGLE_MUTED: {
@@ -144,6 +161,15 @@ export function playerReducer(
       return {
         ...state,
         seek: action.payload
+      };
+    }
+    case types.CHANGE_SPEEDS_INDEX: {
+      const idx =
+        action.payload === "+" ? state.speedsIndex + 1 : state.speedsIndex - 1;
+      return {
+        ...state,
+        speedsIndex: idx,
+        playbackMultiplier: speeds[idx]
       };
     }
     // this.setState({ url: null, playing: false })
