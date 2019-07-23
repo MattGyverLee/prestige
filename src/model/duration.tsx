@@ -14,7 +14,7 @@ export default function Duration({
   );
 }
 
-function format(seconds: any) {
+function format(seconds: number) {
   const date = new Date(seconds * 1000);
   const hh = date.getUTCHours();
   const mm = date.getUTCMinutes();

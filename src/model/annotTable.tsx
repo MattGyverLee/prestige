@@ -6,14 +6,17 @@ import {
   IntegratedFiltering,
   IntegratedSorting,
   SortingState,
-  TableColumnResizing
+  TableColumnResizing,
+  SearchState
 } from "@devexpress/dx-react-grid";
 import {
   Grid,
   Table,
   TableFilterRow,
   TableHeaderRow,
-  VirtualTable
+  VirtualTable,
+  Toolbar,
+  SearchPanel
 } from "@devexpress/dx-react-grid-material-ui";
 import React, { Component } from "react";
 
@@ -205,7 +208,13 @@ export class AnnotationTable extends Component<ComponentProps> {
         </button>
       </Table.Cell>
     );
-
+    var filterCell = (cellProps: any) => {
+      const { column } = cellProps;
+      if (column.name === "startTime" || column.name.startsWith("aud")) {
+        return <TableFilterRow.Cell {...cellProps}>&nbsp;</TableFilterRow.Cell>;
+      }
+      return <TableFilterRow.Cell {...cellProps} />;
+    };
     // Cells Based on Column Data
     var Cell = (cellProps: any) => {
       const { column } = cellProps;
@@ -217,6 +226,7 @@ export class AnnotationTable extends Component<ComponentProps> {
         return <HighlightedCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
       else if (column.name === "audTransl")
         return <HighlightedCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
+
       return <Table.Cell {...cellProps} />;
     };
 
@@ -224,7 +234,7 @@ export class AnnotationTable extends Component<ComponentProps> {
     const annotCols = [
       {
         name: "startTime",
-        title: "Start Time",
+        title: "Start",
         oneTwo: -1
       },
       {
@@ -235,7 +245,7 @@ export class AnnotationTable extends Component<ComponentProps> {
       },
       {
         name: "audCareful",
-        title: "Careful Speech",
+        title: "Careful Clip",
         oneTwo: 1
       },
       {
@@ -246,7 +256,7 @@ export class AnnotationTable extends Component<ComponentProps> {
       },
       {
         name: "audTransl",
-        title: "Oral Translation",
+        title: "Trans. Clip",
         oneTwo: 2
       }
     ];
@@ -255,7 +265,7 @@ export class AnnotationTable extends Component<ComponentProps> {
     const defaultColumnWidths = [
       {
         columnName: "startTime",
-        width: 100
+        width: 70
       },
       {
         columnName: "audCareful",
@@ -274,28 +284,30 @@ export class AnnotationTable extends Component<ComponentProps> {
         width: 100
       }
     ];
-
     return (
       <Paper className="annotation-table">
-        <Grid
-          rows={this.props.annotationTable}
-          columns={annotCols}
-          rootComponent={Root}
-        >
-          <FilteringState defaultFilters={[]} />
-          <IntegratedFiltering />
-          <SortingState
-            defaultSorting={[{ columnName: "startTime", direction: "asc" }]}
-          />
-          <IntegratedSorting />
-          <VirtualTable rowComponent={TableRow} cellComponent={Cell} />
-          <TableColumnResizing
-            defaultColumnWidths={defaultColumnWidths}
-            minColumnWidth={50}
-          />
-          <TableHeaderRow />
-          <TableFilterRow />
-        </Grid>
+        <div id="TranscriptionTableSpace">
+          <Grid
+            rows={this.props.annotationTable}
+            columns={annotCols}
+            rootComponent={Root}
+          >
+            <SearchState />
+            <IntegratedFiltering />
+            <SortingState
+              defaultSorting={[{ columnName: "startTime", direction: "asc" }]}
+            />
+            <IntegratedSorting />
+            <VirtualTable rowComponent={TableRow} cellComponent={Cell} />
+            <TableColumnResizing
+              defaultColumnWidths={defaultColumnWidths}
+              minColumnWidth={50}
+            />
+            <Toolbar />
+            <TableHeaderRow />
+            <SearchPanel />
+          </Grid>
+        </div>
       </Paper>
     );
   }
