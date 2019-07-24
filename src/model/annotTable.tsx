@@ -2,7 +2,6 @@ import * as actions from "../store";
 
 import { AnnotationRow, LooseObject } from "../store/annot/types";
 import {
-  FilteringState,
   IntegratedFiltering,
   IntegratedSorting,
   SortingState,
@@ -12,7 +11,6 @@ import {
 import {
   Grid,
   Table,
-  TableFilterRow,
   TableHeaderRow,
   VirtualTable,
   Toolbar,
@@ -208,13 +206,7 @@ export class AnnotationTable extends Component<ComponentProps> {
         </button>
       </Table.Cell>
     );
-    var filterCell = (cellProps: any) => {
-      const { column } = cellProps;
-      if (column.name === "startTime" || column.name.startsWith("aud")) {
-        return <TableFilterRow.Cell {...cellProps}>&nbsp;</TableFilterRow.Cell>;
-      }
-      return <TableFilterRow.Cell {...cellProps} />;
-    };
+
     // Cells Based on Column Data
     var Cell = (cellProps: any) => {
       const { column } = cellProps;
