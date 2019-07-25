@@ -58,6 +58,7 @@ interface DeeJayProps extends StateProps, DispatchProps {}
 
 export class DeeJay extends Component<DeeJayProps> {
   private clicked: boolean[] = [];
+  private clipStart: boolean = false;
   private continuing: boolean = false;
   private currBlob: string = "";
   private currentPlaying: string[] = [];
@@ -66,6 +67,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private loadQueue: string[] = [];
   private regionsOn: number = 0;
   private ts: string[] = [];
+  private voNum: number = 0;
   private waveSurfers: WaveSurfer[] = [];
 
   componentDidMount = () => {
@@ -138,6 +140,11 @@ export class DeeJay extends Component<DeeJayProps> {
         });
         if (!play) this.props.togglePlay(play);
         console.log(`${idx} Paused`);
+      });
+
+      // Process WS Play
+      this.waveSurfers[idx].on("play", (...args: any) => {
+        if (this.clipStart) this.clipStart = false;
       });
 
       // Process WS Finish
@@ -657,13 +664,7 @@ export class DeeJay extends Component<DeeJayProps> {
         }
         break;
       case "Clip":
-        /*
-         * Clip Playing Possibilities:
-         *
-         * 3:
-         *  - King-Sub1, King-Sub2 (Only One Not Implemented Yet)
-         *
-         */
+        // TODO: King-Sub1, King-Sub2 (Only One Not Implemented Yet)
 
         // Notify Via Snackbar
         this.sendSnackbar("Playing Clip");
@@ -673,10 +674,12 @@ export class DeeJay extends Component<DeeJayProps> {
         dispatch.clipStop = dispatch.clipStop || 0;
         dispatch.clipStart = dispatch.clipStart || 0;
         this.solo(wsNum, false);
+        this.waveSurfers[wsNum].setVolume(1);
         this.props.setWSVolume(wsNum, 1);
 
         // Grab High and Low Audio WSs from the Active WSs
         actives = this.getActives();
+        actives.forEach((idx: number) => this.waveSurfers[idx].pause());
         const highs = actives.filter(
           (idx: number) => this.waveSurfers[idx].getVolume() > 0.5 ** 0.25
         );
@@ -688,6 +691,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
         // For Each WS in High, Starting at End
         let recentStart = () => {};
+        let voiceOvers: ((data: string) => void)[] = [];
         for (let x = highs.length - 1; x >= 0; x--) {
           // Grab its Milestone
           const m1 = this.getCurrentMilestone(
@@ -715,9 +719,8 @@ export class DeeJay extends Component<DeeJayProps> {
               resize: false
             };
 
-            let voiceOvers: ((data: string) => void)[] = [];
             let nextVoiceOver = () => {};
-            for (let y = lows.length - 1; y >= 0; y--) {
+            for (let y = 0, l = lows.length; y < l; y++) {
               // Grab the Sub's Milestone
               let m2 = this.getCurrentMilestone(
                 0,
@@ -737,6 +740,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 const m2End = lows[y] === 0 ? m2.stopTime : m2.data[0].clipStop;
 
                 nextVoiceOver = () => {
+                  console.log(`${highs[x]} Voice Over`);
                   this.waveSurfers[lows[y]].addRegion({
                     ...region,
                     start: m2Start,
@@ -765,15 +769,18 @@ export class DeeJay extends Component<DeeJayProps> {
             }
 
             recentStart = () => {
-              this.waveSurfers[highs[x]].addRegion(region);
+              if (x === 0 || !this.clipStart) {
+                this.waveSurfers[highs[x]].addRegion(region);
 
-              nextVoiceOver();
+                if (this.voNum + x < voiceOvers.length)
+                  voiceOvers[this.voNum + x]("");
 
-              this.props.setPlaybackRate(this.calcPlaybackRate(m1, dispatch));
-              this.props.setSeek(m1.startTime || 0);
-              this.props.togglePlay(true);
-              if (x > 0)
-                this.waveSurfers[highs[x - 1]].un("pause", recentStart);
+                this.props.setPlaybackRate(this.calcPlaybackRate(m1, dispatch));
+                this.props.setSeek(m1.startTime || 0);
+                this.props.togglePlay(true);
+                if (x > 0)
+                  this.waveSurfers[highs[x - 1]].un("pause", recentStart);
+              }
             };
           }
 
@@ -781,7 +788,17 @@ export class DeeJay extends Component<DeeJayProps> {
             this.waveSurfers[highs[x - 1]].on("pause", recentStart);
           }
         }
+        this.voNum = 0;
+        this.clipStart = true;
         recentStart();
+        if (voiceOvers.length > 1 && lows.length > 1) {
+          let secondVO = () => {
+            this.voNum = 1;
+            recentStart();
+            this.waveSurfers[0].un("pause", secondVO);
+          };
+          this.waveSurfers[0].on("pause", secondVO);
+        }
         break;
     }
   };
