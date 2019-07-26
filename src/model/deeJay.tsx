@@ -65,6 +65,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private currentSpeeds: number[] = [];
   private idxs = [0, 1, 2];
   private loadQueue: string[] = [];
+  private regionColors: string[] = [];
   private regionsOn: number = 0;
   private ts: string[] = [];
   private voNum: number = 0;
@@ -143,6 +144,7 @@ export class DeeJay extends Component<DeeJayProps> {
           if (this.waveSurfers[idx].isPlaying()) play = true;
         });
         if (!play) this.props.togglePlay(play);
+        this.toggleAllRegions(true);
         console.log(`${idx} Paused`);
       });
 
@@ -234,6 +236,12 @@ export class DeeJay extends Component<DeeJayProps> {
         ? this.props.timeline[this.props.currentTimeline].syncMedia
         : [];
     if (this.currBlob !== this.props.url) {
+      if (this.props.currentTimeline !== -1) {
+        this.regionColors = [];
+        this.props.timeline[this.props.currentTimeline].milestones.forEach(() =>
+          this.regionColors.push(this.randomColor(0.0))
+        );
+      }
       this.currBlob = this.props.url;
       this.idxs.forEach((idx: number) => {
         this.props.setWSVolume(idx, +(idx === 0));
@@ -312,41 +320,45 @@ export class DeeJay extends Component<DeeJayProps> {
       this.props.setWSDuration(idx, this.waveSurfers[idx].getDuration());
 
       // Draw Regions
-      if (this.props.currentTimeline !== -1)
+      if (this.props.currentTimeline !== -1) {
         this.props.timeline[this.props.currentTimeline].milestones.forEach(
-          (m: any) => {
-            const tempColor = this.randomColor(0.0);
-            if (idx === 0)
+          (m: any, mileNum: number) => {
+            if (idx === 0) {
               this.waveSurfers[idx].addRegion({
                 id: m.startId,
                 start: m.startTime,
                 end: m.stopTime,
-                color: tempColor,
+                color: this.regionColors[mileNum],
                 drag: false,
                 resize: false
               });
-            else
+              this.waveSurfers[idx].regions.list[m.startId].onDrag(0);
+            } else
               m.data.forEach((d: LooseObject) => {
                 if (
                   d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
-                )
+                ) {
                   this.waveSurfers[idx].addRegion({
                     id: m.startId,
                     start: d.clipStart,
                     end: d.clipStop,
-                    color: tempColor,
+                    color: this.regionColors[mileNum],
                     drag: false,
                     resize: false
                   });
+                  this.waveSurfers[idx].regions.list[m.startId].onDrag(0);
+                }
               });
           }
         );
+      }
 
       if (idx === 0) {
         this.waveSurfers[idx].play(0);
         this.props.setSeek(0);
         this.props.togglePlay(true);
       }
+      this.toggleAllRegions(true);
       ws.un("waveform-ready", waveformReady);
     };
     ws.on("waveform-ready", waveformReady);
@@ -433,25 +445,29 @@ export class DeeJay extends Component<DeeJayProps> {
         this.waveSurfers[idx].regions.list.temp.remove();
       this.clicked[idx] = false;
     });
+    this.toggleAllRegions(true);
     this.continuing = false;
   };
 
-  regionMouseIn = (sourceRegion: any) =>
+  regionMouseIn = (sourceRegion: any) => {
     this.idxs.forEach((idx: number) => {
       if (
         this.waveSurfers[idx].regions.list[sourceRegion.id] &&
         this.regionsOn !== 0
       ) {
         const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
-        console.log(this.regionsOn);
-        thisRegion.color = thisRegion.color.replace("0.1", "0.5");
         thisRegion.element.id = "hover";
-        this.waveSurfers[idx].regions.list[sourceRegion.id].onDrag(0);
-        if (this.regionsOn === 2)
-          thisRegion.element.style.backgroundColor = "rgba(18, 117, 240, 0.1)";
+        if (this.regionsOn === 1)
+          this.updateRegionAlpha(idx, sourceRegion.id, 0.7);
+        else if (this.regionsOn === 2)
+          this.updateRegionAlpha(idx, sourceRegion.id, 0.1);
+        // thisRegion.element.style.backgroundColor = "rgba(18, 117, 240, 0.1)";
         thisRegion.element.style.outlineOffset = "-3px";
+        this.waveSurfers[idx].regions.list[sourceRegion.id].onDrag(0);
+        console.log(thisRegion);
       }
     });
+  };
 
   regionMouseOut = (sourceRegion: any) =>
     this.idxs.forEach((idx: number) => {
@@ -460,17 +476,22 @@ export class DeeJay extends Component<DeeJayProps> {
         this.regionsOn !== 0
       ) {
         const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
-        thisRegion.color = thisRegion.color.replace("0.5", "0.1");
         thisRegion.element.id = "";
-        this.waveSurfers[idx].regions.list[sourceRegion.id].onDrag(0);
+        this.updateRegionAlpha(
+          idx,
+          sourceRegion.id,
+          this.regionsOn === 1 ? 0.1 : 0.0
+        );
         if (this.regionsOn === 2) thisRegion.element.style.backgroundColor = "";
+        this.waveSurfers[idx].regions.list[sourceRegion.id].onDrag(0);
       }
     });
 
   // Toggle Between Various Representations of the Current Timeline's Regions
-  toggleAllRegions = () => {
+  toggleAllRegions = (noIncrement?: boolean) => {
+    // FIXME: Last Region in all WSs Not Drawn
     if (this.props.currentTimeline !== -1 && this.regionsOn !== 2) {
-      const alpha = this.regionsOn ? "0.0" : "0.1";
+      const alpha = this.regionsOn - +(noIncrement || 0) ? "0.0" : "0.1";
       this.props.timeline[this.props.currentTimeline].milestones.forEach(
         (m: any) => {
           const reg0 = this.findRegion(0, m.startTime, m.stopTime);
@@ -505,7 +526,7 @@ export class DeeJay extends Component<DeeJayProps> {
         }
       );
     }
-    this.regionsOn = ++this.regionsOn % 3;
+    if (!noIncrement) this.regionsOn = ++this.regionsOn % 3;
   };
 
   // Produces a Random RGBA Color with Provided Alpha
@@ -649,6 +670,16 @@ export class DeeJay extends Component<DeeJayProps> {
     return id.length === 1 ? id[0] : "";
   };
 
+  updateRegionAlpha = (wsNum: number, id: string, alpha: number) => {
+    this.waveSurfers[wsNum].regions.list[id].color = this.waveSurfers[
+      wsNum
+    ].regions.list[id].color
+      .split(",")
+      .map((v: string) => (v.endsWith(")") ? `${alpha})` : v))
+      .join(",");
+    this.waveSurfers[wsNum].regions.list[id].onDrag(0);
+  };
+
   // Responds to DJ Dispatches
   dispatchDJ = () => {
     // Store Dispatch Into Local Variable and Clear It
@@ -758,14 +789,11 @@ export class DeeJay extends Component<DeeJayProps> {
           // Process Only if it WS is 0 or M1 has Data
           if (highs[x] === 0 || m1.data.length !== 0) {
             // Craft its Region
-            const region = {
-              id: "temp",
-              color: "rgba(153,170,255,0.3)",
-              start: highs[x] === 0 ? m1.startTime : m1.data[0].clipStart,
-              end: highs[x] === 0 ? m1.stopTime : m1.data[0].clipStop,
-              drag: false,
-              resize: false
-            };
+            let region = this.findRegion(
+              highs[x],
+              highs[x] === 0 ? m1.startTime : m1.data[0].clipStart,
+              highs[x] === 0 ? m1.stopTime : m1.data[0].clipStop
+            );
 
             // For Each WS in Low
             let nextVoiceOver = () => {};
@@ -783,11 +811,19 @@ export class DeeJay extends Component<DeeJayProps> {
                 // Create and Push Next Voiceover
                 nextVoiceOver = () => {
                   // Craft its Region
-                  this.waveSurfers[lows[y]].addRegion({
-                    ...region,
-                    start: lows[y] === 0 ? m2.startTime : m2.data[0].clipStart,
-                    end: lows[y] === 0 ? m2.stopTime : m2.data[0].clipStop
-                  });
+                  this.updateRegionAlpha(
+                    lows[y],
+                    this.findRegion(
+                      lows[y],
+                      lows[y] === 0 ? m2.startTime : m2.data[0].clipStart,
+                      lows[y] === 0 ? m2.stopTime : m2.data[0].clipStop
+                    ),
+                    0.7
+                  );
+                  this.waveSurfers[lows[y]].play(
+                    lows[y] === 0 ? m2.startTime : m2.data[0].clipStart,
+                    lows[y] === 0 ? m2.stopTime : m2.data[0].clipStop
+                  );
 
                   // Determine its Playback Rate
                   const p2 = this.calcPlaybackRate(m2, m1Dispatch, m2Dispatch);
@@ -801,7 +837,11 @@ export class DeeJay extends Component<DeeJayProps> {
             // Craft RecentStart for Linking Together the Clips
             recentStart = () => {
               if (x === 0 || !this.clipStart) {
-                this.waveSurfers[highs[x]].addRegion(region);
+                this.updateRegionAlpha(highs[x], region, 0.7);
+                this.waveSurfers[highs[x]].play(
+                  highs[x] === 0 ? m1.startTime : m1.data[0].clipStart,
+                  highs[x] === 0 ? m1.stopTime : m1.data[0].clipStop
+                );
                 if (this.voNum + x < voiceOvers.length)
                   voiceOvers[this.voNum + x]("");
                 this.props.setPlaybackRate(this.calcPlaybackRate(m1, dispatch));
