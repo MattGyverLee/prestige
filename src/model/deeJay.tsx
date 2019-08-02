@@ -59,7 +59,6 @@ interface DeeJayProps extends StateProps, DispatchProps {}
 export class DeeJay extends Component<DeeJayProps> {
   private clicked: boolean[] = [];
   private clipStart: boolean = false;
-  private continuing: boolean = false;
   private currBlob: string = "";
   private currentPlaying: string[] = [];
   private currentSpeeds: number[] = [];
@@ -71,195 +70,73 @@ export class DeeJay extends Component<DeeJayProps> {
   private voNum: number = 0;
   private waveSurfers: WaveSurfer[] = [];
 
+  // Set Up DeeJay Instance Variables
   componentDidMount = () => {
-    let regionsPlugin = require("../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
+    // Build Starting Arrays and Create Wave Surfers
     this.idxs.forEach((idx: number) => {
-      // Build Starting Arrays
       this.clicked.push(false);
       this.currentPlaying.push("");
       this.currentSpeeds.push(1);
       this.loadQueue.push("");
-      this.waveSurfers.push(
-        WaveSurfer.create({
-          container: "#waveform" + idx.toString(),
-          barWidth: 1,
-          cursorWidth: 2,
-          backend: "MediaElement",
-          progressColor: "#4a74a5",
-          cursorColor: "#4a74a5",
-          responsive: true,
-          waveColor: "#ccc",
-          hideScrollbar: true,
-          plugins: [regionsPlugin.create()]
-        })
-      );
-      this.waveSurfers[idx].empty();
-      this.waveSurfers[idx].setVolume(+(idx === 0));
-
-      // Process Region Out
-      this.waveSurfers[idx].on("region-out", () => {
-        if (this.waveSurfers[idx].regions.list.temp !== undefined)
-          this.waveSurfers[idx].regions.list.temp.remove();
-        let play = false;
-        this.idxs.forEach((idx: number) => {
-          if (this.waveSurfers[idx].isPlaying()) play = true;
-        });
-        if (!play) this.props.togglePlay(play);
-      });
-
-      // Process Region Hover In
-      this.waveSurfers[idx].on("region-mouseenter", region => {
-        if (this.regionsOn !== 0) {
-          this.ts.push(region.id);
-          this.regionMouseIn(region);
-        }
-      });
-
-      // Process Region Hover Out
-      this.waveSurfers[idx].on("region-mouseleave", region => {
-        if (this.regionsOn !== 0) {
-          this.ts = this.ts.filter((item: string) => item !== region.id);
-          this.regionMouseOut(region);
-        }
-      });
-
-      // Process Region Click
-      this.waveSurfers[idx].on("region-click", (region: any) => {
-        this.waveSurfers[idx].seekTo(region.start);
-      });
-
-      // Process Region Created
-      this.waveSurfers[idx].on(
-        "region-created",
-        (region: any, ...args: any) => {
-          if (region.id === "temp")
-            this.waveSurfers[idx].play(region.start, region.end);
-        }
-      );
-
-      // Log Pause and Stop Player if All are Paused
-      this.waveSurfers[idx].on("pause", (...args: any) => {
-        let play = false;
-        this.idxs.forEach((idx: number) => {
-          if (this.waveSurfers[idx].isPlaying()) play = true;
-        });
-        if (!play) this.props.togglePlay(play);
-        this.toggleAllRegions(true);
-        console.log(`${idx} Paused`);
-      });
-
-      // Process WS Play
-      this.waveSurfers[idx].on("play", (...args: any) => {
-        if (this.clipStart) this.clipStart = false;
-      });
-
-      // Process WS Finish
-      this.waveSurfers[idx].on("finish", (...args: any) => {
-        this.waveSurfers[idx].pause();
-      });
-
-      // Process WS Error by Displaying Through Snackbar
-      this.waveSurfers[idx].on("error", (err: any) => {
-        this.sendSnackbar(
-          `WaveSurfer ${idx} error:` +
-            JSON.stringify(err) +
-            "File: " +
-            this.currentPlaying[idx],
-          undefined,
-          "error"
-        );
-      });
-
-      // Process WS Seeking
-      this.waveSurfers[idx].on("seek", (...args: any) => {
-        if (this.clicked[idx]) {
-          // Log Action and Reset Clicked and Continuing
-          this.clicked[idx] = this.continuing = false;
-          const ws = this.waveSurfers[idx];
-
-          // Function for Loading Next Milestone in Sequence
-          let loadNext = () => {
-            // Fetch Current Milestone
-            const nextM = this.getCurrentMilestone(idx);
-
-            // If There is a Next Milestone and Clip is Continuing => Load Next Clip
-            // -> Else => Unsubscribe
-            if (!nextM || !this.continuing) ws.un("pause", loadNext);
-            else {
-              // Play Player with Specific Settings
-              const playbackRate = idx === 0 ? 1 : this.calcPlaybackRate(nextM);
-              this.props.setPlaybackRate(playbackRate);
-              this.props.setSeek(
-                roundIt(this.calcRelativeTime(idx, nextM, playbackRate), 3)
-              );
-              this.props.togglePlay(true);
-              let nextMIndex = this.findNextMilestoneIndex(nextM);
-              let lastMIndex = this.findLastMilestoneIndex(idx);
-              if (nextMIndex === lastMIndex) {
-                ws.play(ws.getCurrentTime(), ws.getDuration());
-                ws.un("pause", loadNext);
-              } else {
-                ws.play(
-                  ws.getCurrentTime(),
-                  idx === 0 ? nextM.stopTime : nextM.data[0].clipStop
-                );
-              }
-            }
-          };
-
-          // Play Player with Specific Settings and Start WS to Match It
-          const currM = this.getCurrentMilestone(idx);
-          const playbackRate = idx === 0 ? 1 : this.calcPlaybackRate(currM);
-          const relTime = this.calcRelativeTime(idx, currM, playbackRate);
-          this.props.setPlaybackRate(playbackRate);
-          this.props.setSeek(roundIt(relTime, 3));
-          this.props.togglePlay(true);
-          ws.play(
-            ws.getCurrentTime(),
-            idx === 0 ? currM.stopTime : currM.data[0].clipStop
-          );
-
-          // Set Continuing So That Watcher Knows to Load
-          this.continuing = true;
-
-          // Set Watcher for Pausing (Allows for Loading Next Milestone)
-          if (this.props.currentTimeline !== -1) ws.on("pause", loadNext);
-        }
-      });
+      this.createWaveSurfer(idx);
     });
   };
 
   // Processes Reaction to State Updates
   componentDidUpdate() {
+    // Fetch Current Sync Media if Available
     const currSync: string[] =
       this.props.currentTimeline !== -1
         ? this.props.timeline[this.props.currentTimeline].syncMedia
         : [];
+
+    // If currentURL and StateURL Don't Match
     if (this.currBlob !== this.props.url) {
+      // Add Colors for Possible Regions if Necessary
       if (this.props.currentTimeline !== -1) {
         this.regionColors = [];
         this.props.timeline[this.props.currentTimeline].milestones.forEach(() =>
-          this.regionColors.push(this.randomColor(0.0))
+          this.regionColors.push(
+            "rgba(" +
+              [
+                ~~(Math.random() * 255),
+                ~~(Math.random() * 255),
+                ~~(Math.random() * 255),
+                0.0
+              ] +
+              ")"
+          )
         );
       }
+
+      // Match URLs
       this.currBlob = this.props.url;
+
+      // Reset Private Variables in Preparation
       this.idxs.forEach((idx: number) => {
         this.props.setWSVolume(idx, +(idx === 0));
         this.loadQueue[idx] = "";
-        this.waveSurfers[idx].empty();
+        this.waveSurfers[idx].destroy();
+        this.createWaveSurfer(idx);
         this.waveSurfers[idx].backend.peaks = [];
+        this.waveSurfers[idx].clearRegions();
         this.currentPlaying[idx] = "";
       });
     }
+
+    // Loop Through all WSs
     this.idxs.forEach((idx: number) => {
-      const ws = this.waveSurfers[idx];
+      // If Sync Media Does Not Contain currBlob => No Timeline Actions
+      // -> Else => Timeline Actions
       if (currSync.filter((s: any) => s === this.currBlob).length !== 1) {
-        if (idx === 0 && !this.currentPlaying[idx] && this.props.url !== "") {
-          this.loadFileWS(idx, this.props.url);
-          this.currentPlaying[idx] = this.props.url;
-        } else if (this.currentPlaying[idx]) this.checkPlayingValues(idx);
+        // If WS is Playing => Check for Playing Actions
+        // -> Else If WS0, and Not Empty URL => Load and Play URL
+        if (this.currentPlaying[idx]) this.checkPlayingValues(idx);
+        else if (!idx && this.props.url) this.loadFileWS(idx, this.props.url);
       } else {
-        if (this.currentPlaying[idx] && ws.isReady)
+        // If WS is Ready and Playing => Check for Playing Actions
+        // -> Else => Search and Load
+        if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady)
           this.checkPlayingValues(idx);
         else if (!this.currentPlaying[idx]) {
           let load = this.loadQueue[idx];
@@ -289,6 +166,7 @@ export class DeeJay extends Component<DeeJayProps> {
             load = audio.length === 1 ? audio[0].blobURL : "";
           }
 
+          // Load File if Possible, Otherwise Put Into LoadQueue
           if (!this.fileAllowed(load)) this.loadQueue[idx] = load;
           else this.loadFileWS(idx, load);
         }
@@ -296,31 +174,366 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   }
 
+  createWaveSurfer = (idx: number) => {
+    const regionsPlugin = require("../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
+    this.waveSurfers[idx] = WaveSurfer.create({
+      container: "#waveform" + idx.toString(),
+      barWidth: 1,
+      cursorWidth: 2,
+      backend: "MediaElement",
+      progressColor: "#4a74a5",
+      cursorColor: "#4a74a5",
+      responsive: true,
+      waveColor: "#ccc",
+      hideScrollbar: true,
+      plugins: [regionsPlugin.create()]
+    });
+    this.waveSurfers[idx].empty();
+    this.waveSurfers[idx].setVolume(+(idx === 0));
+
+    // Process Region Hover In
+    this.waveSurfers[idx].on("region-mouseenter", (region: any) => {
+      if (this.regionsOn !== 0) {
+        this.ts.push(region.id);
+        this.idxs.forEach((idx: number) => {
+          if (
+            this.waveSurfers[idx].regions.list[region.id] &&
+            this.regionsOn !== 0
+          ) {
+            const thisRegion = this.waveSurfers[idx].regions.list[region.id];
+            thisRegion.element.id = "hover";
+            this.updateRegionAlpha(
+              idx,
+              region.id,
+              this.regionsOn === 1 ? 0.7 : 0.1
+            );
+            // thisRegion.element.style.backgroundColor = "rgba(18, 117, 240, 0.1)";
+            thisRegion.element.style.outlineOffset = "-3px";
+            thisRegion.onDrag(0);
+          }
+        });
+      }
+    });
+
+    // Process Region Hover Out
+    this.waveSurfers[idx].on("region-mouseleave", (region: any) => {
+      if (this.regionsOn !== 0) {
+        this.ts = this.ts.filter((item: string) => item !== region.id);
+        this.idxs.forEach((idx: number) => {
+          if (
+            this.waveSurfers[idx].regions.list[region.id] &&
+            this.regionsOn !== 0
+          ) {
+            const thisRegion = this.waveSurfers[idx].regions.list[region.id];
+            thisRegion.element.id = "";
+            this.updateRegionAlpha(
+              idx,
+              region.id,
+              this.regionsOn === 1 ? 0.1 : 0.0
+            );
+            if (this.regionsOn === 2)
+              thisRegion.element.style.backgroundColor = "";
+            thisRegion.onDrag(0);
+          }
+        });
+      }
+    });
+
+    // Log Pause and Stop Player if All are Paused
+    this.waveSurfers[idx].on("pause", () => {
+      console.log(`${idx} Paused`);
+      let play = false;
+      this.idxs.forEach((idx: number) => {
+        if (this.waveSurfers[idx].isPlaying()) play = true;
+      });
+      if (!play) this.props.togglePlay(play);
+      // this.toggleAllRegions(true);
+    });
+
+    // Process WS Play
+    this.waveSurfers[idx].on("play", () => {
+      if (this.clipStart) this.clipStart = false;
+    });
+
+    // Process WS Finish
+    this.waveSurfers[idx].on("finish", () => {
+      this.waveSurfers[idx].pause();
+    });
+
+    // Process WS Error by Displaying Through Snackbar
+    this.waveSurfers[idx].on("error", (err: any) => {
+      console.log(err);
+      this.sendSnackbar(
+        `WaveSurfer ${idx} error:` +
+          JSON.stringify(err) +
+          "File: " +
+          this.currentPlaying[idx],
+        undefined,
+        "error"
+      );
+    });
+
+    // Process WS Seeking
+    this.waveSurfers[idx].on("seek", () => {
+      if (!this.clicked[idx]) console.log(`${idx} No Click Seeking`);
+      else {
+        // Log Action and Reset Clicked
+        console.log(`${idx} Click Seeking`);
+        this.clicked[idx] = false;
+        const ws = this.waveSurfers[idx];
+        const currMiles = this.props.timeline[this.props.currentTimeline]
+          .milestones;
+
+        // Grab Current Milestone and Set Volum of Given WS
+        const currM = this.getCurrentMilestone(idx);
+        this.waveSurfers[idx].setVolume(1);
+        this.props.setWSVolume(idx, 1);
+
+        // Grab High and Low Audio WSs from the Active WSs
+        const actives = this.getActives();
+        const highs = actives.filter(
+          (a: number) => this.waveSurfers[a].getVolume() > 0.5 ** 0.25
+        );
+        const lows = actives.filter(
+          (a: number) =>
+            this.waveSurfers[a].getVolume() &&
+            this.waveSurfers[a].getVolume() <= 0.5 ** 0.25
+        );
+
+        // Find Lowest Element of High that Can Play the Seeked Milestone
+        const currMD = {
+          dispatchType: "WSSeek",
+          clipStart: currM.startTime,
+          clipStop: currM.stopTime
+        };
+        const lowestValidHigh = highs.reduce(
+          (a: number, b: number) =>
+            (!b || this.getCurrentMilestone(0, currMD, b).data.length) &&
+            (b < a || a === -1)
+              ? b
+              : a,
+          -1
+        );
+
+        // If LowestValidHigh is not this WS => Set Clicked and Relative Time for What Is
+        // -> Else => Set Up Subscriptions and Start Playing
+        if (lowestValidHigh !== idx) {
+          // Allow LowestValidHigh to Be Processed in Seek, and Then Seek It
+          this.clicked[lowestValidHigh] = true;
+          this.setRelativeTime(
+            idx,
+            lowestValidHigh,
+            currM,
+            this.getCurrentMilestone(0, currMD, lowestValidHigh)
+          );
+        } else {
+          lows.forEach((low: number) => {
+            const lowM = this.getCurrentMilestone(0, currMD, low);
+            if (!low || lowM.data.length)
+              this.setRelativeTime(idx, low, currM, lowM);
+          });
+
+          // Subscribe Highs to Function for Loading Next Milestone in Sequence
+          highs.forEach((high: number, hIdx: number) => {
+            const highWS = this.waveSurfers[high];
+
+            // Function for Loading Next Clip on Pause
+            const loadNext = () => {
+              // If No Highs are Playing => Load Next
+              if (!this.voNum) {
+                // Cycle Through All Highs (from First After Current, Ending on Current)
+                for (let i = 1, l = highs.length + 1; i < l; i++) {
+                  // Grab Index of Next WS and the WS Itself
+                  const nextIdx = highs[(hIdx + i) % highs.length];
+
+                  // Calculate Timeline Index of the Coming Milestone:
+                  // - 1. FindMilestoneIndex of High's Current Time
+                  // - 2. + (0 If Next WS <= High Else -1)
+                  let nextM: any;
+                  if (this.getCurrentMilestone(high)) {
+                    const comingMIdx =
+                      this.findNextMilestoneIndex(
+                        this.getCurrentMilestone(high)
+                      ) +
+                      +(highWS.getDuration() - highWS.getCurrentTime() < 0.05) +
+                      +(nextIdx <= high) +
+                      -1;
+
+                    if (comingMIdx === currMiles.length)
+                      highWS.un("pause", loadNext);
+                    else {
+                      // Grab currComingM
+                      const currComingM = currMiles[comingMIdx];
+                      nextM = this.getCurrentMilestone(
+                        0,
+                        {
+                          dispatchType: "WSSeek",
+                          clipStart: currComingM.startTime,
+                          clipStop: currComingM.stopTime
+                        },
+                        nextIdx
+                      );
+                      // If NextM Exists and NextM Has Data if Necessary => Load Next Clip
+                      if (nextM && (!nextIdx || nextM.data.length)) {
+                        // Force Exit Loop Now
+                        i = l;
+                        this.checkVOAndPlay(nextIdx, lows, nextM);
+                      }
+                    }
+                  }
+                }
+              } else {
+                const currComingM =
+                  currMiles[
+                    this.findNextMilestoneIndex(this.getCurrentMilestone(idx)) -
+                      1
+                  ];
+                this.checkVOAndPlay(
+                  idx,
+                  lows,
+                  this.getCurrentMilestone(
+                    0,
+                    {
+                      dispatchType: "WSSeek",
+                      clipStart: currComingM.startTime,
+                      clipStop: currComingM.stopTime
+                    },
+                    idx
+                  )
+                );
+              }
+            };
+
+            // If Current Milestone Has What it Needs => Set Relative Time
+            const highM = this.getCurrentMilestone(0, currMD, high);
+            if (!high || highM.data.length)
+              this.setRelativeTime(idx, high, currM, highM);
+
+            // Subscribe High for Pausing (Allows for Loading Next Milestone)
+            if (this.props.currentTimeline !== -1) highWS.on("pause", loadNext);
+          });
+
+          // If Current Timeline is not Empty => Play According to Milestones
+          // -> Else => Play as Normal
+          if (this.props.currentTimeline !== -1)
+            this.checkVOAndPlay(idx, lows, currM);
+          else {
+            // Sync Player and Play WS From Now Until End of Clip
+            this.props.setSeek(ws.getCurrentTime() / ws.getDuration());
+            this.props.togglePlay(true);
+            ws.play(ws.getCurrentTime(), ws.getDuration());
+          }
+        }
+      }
+    });
+  };
+
+  checkVOAndPlay = (idx: number, lows: number[], m: Milestone) => {
+    const mD = {
+      dispatchType: "WSSeek",
+      clipStart: m.startTime,
+      clipStop: m.stopTime
+    };
+    const validLows = lows.filter(
+      (l: any) => !l || this.getCurrentMilestone(0, mD, l).data.length
+    );
+    let voM;
+    if (
+      validLows.length &&
+      ((voM = this.getCurrentMilestone(0, mD, validLows[this.voNum])).data
+        .length ||
+        !validLows[this.voNum])
+    ) {
+      if (this.voNum) this.setRelativeTime(validLows[this.voNum], idx, voM, m);
+      this.setRelativePlay(idx, validLows[this.voNum], m, voM);
+      this.voNum = (this.voNum + 1) % validLows.length;
+    }
+    this.seekSyncAndPlay(idx, m);
+  };
+
+  seekSyncAndPlay = (idx: number, m: Milestone) => {
+    // Sync Player
+    const playbackRate = idx === 0 ? 1 : this.calcPlaybackRate(m);
+    this.props.setPlaybackRate(playbackRate);
+    this.props.setSeek(this.calcRelativeTime(idx, m, playbackRate));
+    this.props.togglePlay(true);
+
+    // Play From Now Until End of Clip
+    this.waveSurfers[idx].play(
+      this.waveSurfers[idx].getCurrentTime(),
+      this.findNextMilestoneIndex(m) === this.findLastMilestoneIndex(idx)
+        ? this.waveSurfers[idx].getDuration()
+        : this.clipTime(idx, m, false)
+    );
+  };
+
+  // Gets the Desired StarTime, StopTime, ClipStart, or ClipStop of the Milestone According to WS Idx
+  clipTime = (idx: number, milestone: any, startOrStop: boolean) =>
+    idx === 0
+      ? startOrStop
+        ? milestone.startTime
+        : milestone.stopTime
+      : startOrStop
+      ? milestone.data[0].clipStart
+      : milestone.data[0].clipStop;
+
+  // Sets WS Idx2 to the Time Relative to WS Idx1
+  // -> Returns Playback Rate
+  setRelativeTime = (idx1: number, idx2: number, mile1: any, mile2: any) => {
+    // Grab Filtered Milestone of the First High
+    const playbackRate = this.calcPlaybackRate(
+      mile2,
+      {
+        dispatchType: "WSSeek",
+        clipStart: this.clipTime(idx1, mile1, true),
+        clipStop: this.clipTime(idx1, mile1, false)
+      },
+      {
+        dispatchType: "WSSeek",
+        clipStart: this.clipTime(idx2, mile2, true),
+        clipStop: this.clipTime(idx2, mile2, false)
+      }
+    );
+
+    // Set High Clicked and Seek it to the Relative Time
+    // This Makes First High First One to Play
+    this.waveSurfers[idx2].seekTo(
+      this.calcRelativeTime(idx1, mile1, playbackRate, idx2, mile2)
+    );
+    return playbackRate;
+  };
+
+  setRelativePlay = (idx1: number, idx2: number, mile1: any, mile2: any) => {
+    this.currentSpeeds[idx2] = this.setRelativeTime(idx1, idx2, mile1, mile2);
+    this.waveSurfers[idx2].setPlaybackRate(this.currentSpeeds[idx2]);
+    this.waveSurfers[idx2].play(
+      this.waveSurfers[idx2].getCurrentTime(),
+      this.clipTime(idx2, mile2, false)
+    );
+  };
+
   // Loads a WS and Subscribes it to an "onReady" Function
   loadFileWS = (idx: number, load: string) => {
+    // Grab WS, Its WF (if it exists), and Subscription Function (based on if WF exists or not)
     const ws = this.waveSurfers[idx];
     const wave = (idx === 0
       ? this.props.sourceMedia.filter((f: any) => f.blobURL === load)
       : this.props.annotMedia.filter((f: any) => f.blobURL === load))[0]
       .waveform;
-    this.currentPlaying[idx] = load;
-    if (wave) ws.load(load, JSON.parse(wave));
-    else ws.load(load);
-    this.loadQueue[idx] = "";
+    const sub = (wave ? "" : "waveform-") + "ready";
 
+    // Subscription Function to Act Whenever WS is Ready or WFReady
     const waveformReady = () => {
-      console.log(`${idx} Waveform Ready`);
-      const waveIn = {
+      // Add WF and Set WS Duration
+      this.props.waveformAdded({
         ref: this.currentPlaying[idx],
         sourceAnnot: idx === 0,
         wavedata: this.waveSurfers[idx].exportPCM(1024, 10000, true)
-      };
-      this.props.waveformAdded(waveIn);
-
+      });
       this.props.setWSDuration(idx, this.waveSurfers[idx].getDuration());
 
-      // Draw Regions
-      if (this.props.currentTimeline !== -1) {
+      // Draw All Regions currentTimeline Has
+      if (this.props.currentTimeline !== -1)
         this.props.timeline[this.props.currentTimeline].milestones.forEach(
           (m: any, mileNum: number) => {
             if (idx === 0) {
@@ -351,17 +564,25 @@ export class DeeJay extends Component<DeeJayProps> {
               });
           }
         );
-      }
 
+      // Start Up if WS0, Reload All Regions, and unsubscribe
       if (idx === 0) {
         this.waveSurfers[idx].play(0);
         this.props.setSeek(0);
         this.props.togglePlay(true);
       }
       this.toggleAllRegions(true);
-      ws.un("waveform-ready", waveformReady);
+      ws.un(sub, waveformReady);
     };
-    ws.on("waveform-ready", waveformReady);
+
+    // Subscribe to Appropriate Ready Function
+    ws.on(sub, waveformReady);
+
+    // Load WS (with/without Wave) and Update LoadQueue and CurrentPlaying
+    this.currentPlaying[idx] = load;
+    if (wave) ws.load(load, JSON.parse(wave));
+    else ws.load(load);
+    this.loadQueue[idx] = "";
   };
 
   componentWillUnmount() {
@@ -379,13 +600,15 @@ export class DeeJay extends Component<DeeJayProps> {
       this.dispatchDJ();
     if (ws.getVolume() !== this.props.volumes[idx])
       ws.setVolume(this.props.volumes[idx]);
-    if (
-      ws.getPlaybackRate() !==
-      roundIt(this.currentSpeeds[idx] * this.props.playbackMultiplier, 2)
-    )
-      ws.setPlaybackRate(
-        roundIt(this.currentSpeeds[idx] * this.props.playbackMultiplier, 2)
-      );
+    const expVolume = roundIt(
+      this.currentSpeeds[idx] * this.props.playbackMultiplier >= 15
+        ? 14.5
+        : this.currentSpeeds[idx] * this.props.playbackMultiplier <= 0.2
+        ? 0.2
+        : this.currentSpeeds[idx] * this.props.playbackMultiplier,
+      2
+    );
+    if (ws.getPlaybackRate() !== expVolume) ws.setPlaybackRate(expVolume);
   };
 
   // Checks for Whether or not Given Blob is wsAllowed
@@ -397,148 +620,78 @@ export class DeeJay extends Component<DeeJayProps> {
       (m: LooseObject) => m.blobURL === blobURL
     );
     return (
-      (tempSrc.length === 1 && tempSrc[0].wsAllowed) ||
-      (tempAnnot.length === 1 && tempAnnot[0].wsAllowed)
+      (tempSrc.length && tempSrc[0].wsAllowed) ||
+      (tempAnnot.length && tempAnnot[0].wsAllowed)
     );
   };
 
   // Resets Volumes of and Stops all but Specified WS
   solo = (wsNum: number, resetAll: boolean) => {
-    // If #On = #Low => Set Only wsNum On
+    // If Reset All or Any High => Set Only wsNum On
     if (
       resetAll ||
-      this.idxs.filter((idx: number) => this.waveSurfers[idx].getVolume() > 0)
-        .length ===
-        this.idxs.filter(
-          (idx: number) =>
-            this.waveSurfers[idx].getVolume() <= 0.5 ** 0.25 &&
-            this.waveSurfers[idx].getVolume() > 0
-        ).length
-    ) {
+      !this.idxs.reduce(
+        (a: number, b: number) =>
+          +(a || this.waveSurfers[b].getVolume() > 0.5 ** 0.25),
+        0
+      )
+    )
       this.idxs.forEach((idx: number) => {
-        if (idx !== wsNum) {
-          this.waveSurfers[idx].setVolume(0);
-          this.props.setWSVolume(idx, 0);
-        }
+        this.waveSurfers[idx].setVolume(+(idx === wsNum));
+        this.props.setWSVolume(idx, +(idx === wsNum));
       });
-      this.waveSurfers[wsNum].setVolume(1);
-      this.props.setWSVolume(wsNum, 1);
-    }
 
     // Stop All Not wsNum and Reset Playback Rates
     this.idxs.forEach((idx: number) => {
       if (idx !== wsNum) this.waveSurfers[idx].stop();
-      this.waveSurfers[idx].setPlaybackRate(1);
       this.currentSpeeds[idx] = 1;
+      this.waveSurfers[idx].setPlaybackRate(this.currentSpeeds[idx]);
     });
   };
 
   // Clears All Temp WS Regions and "pause" Subscriptions
   clearDispatchLeftovers = () => {
     this.idxs.forEach((idx: number) => {
-      while (this.waveSurfers[idx].handlers.pause.length > 1)
-        this.waveSurfers[idx].un(
-          "pause",
-          this.waveSurfers[idx].handlers.pause[1]
-        );
-      if (this.waveSurfers[idx].regions.list.temp !== undefined)
-        this.waveSurfers[idx].regions.list.temp.remove();
+      this.clearHandler(idx, "pause");
+      this.clearHandler(idx, "play");
       this.clicked[idx] = false;
     });
-    this.toggleAllRegions(true);
-    this.continuing = false;
+    this.voNum = 0;
   };
 
-  regionMouseIn = (sourceRegion: any) => {
-    this.idxs.forEach((idx: number) => {
-      if (
-        this.waveSurfers[idx].regions.list[sourceRegion.id] &&
-        this.regionsOn !== 0
-      ) {
-        const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
-        thisRegion.element.id = "hover";
-        if (this.regionsOn === 1)
-          this.updateRegionAlpha(idx, sourceRegion.id, 0.7);
-        else if (this.regionsOn === 2)
-          this.updateRegionAlpha(idx, sourceRegion.id, 0.1);
-        // thisRegion.element.style.backgroundColor = "rgba(18, 117, 240, 0.1)";
-        thisRegion.element.style.outlineOffset = "-3px";
-        this.waveSurfers[idx].regions.list[sourceRegion.id].onDrag(0);
-        console.log(thisRegion);
-      }
-    });
+  clearHandler = (idx: number, handler: string) => {
+    while (this.waveSurfers[idx].handlers[handler].length > 1)
+      this.waveSurfers[idx].un(
+        handler,
+        this.waveSurfers[idx].handlers[handler][1]
+      );
   };
-
-  regionMouseOut = (sourceRegion: any) =>
-    this.idxs.forEach((idx: number) => {
-      if (
-        this.waveSurfers[idx].regions.list[sourceRegion.id] &&
-        this.regionsOn !== 0
-      ) {
-        const thisRegion = this.waveSurfers[idx].regions.list[sourceRegion.id];
-        thisRegion.element.id = "";
-        this.updateRegionAlpha(
-          idx,
-          sourceRegion.id,
-          this.regionsOn === 1 ? 0.1 : 0.0
-        );
-        if (this.regionsOn === 2) thisRegion.element.style.backgroundColor = "";
-        this.waveSurfers[idx].regions.list[sourceRegion.id].onDrag(0);
-      }
-    });
 
   // Toggle Between Various Representations of the Current Timeline's Regions
   toggleAllRegions = (noIncrement?: boolean) => {
     // FIXME: Last Region in all WSs Not Drawn
     if (this.props.currentTimeline !== -1 && this.regionsOn !== 2) {
-      const alpha = this.regionsOn - +(noIncrement || 0) ? "0.0" : "0.1";
+      const alpha = this.regionsOn - +(noIncrement || 0) ? 0.0 : 0.1;
       this.props.timeline[this.props.currentTimeline].milestones.forEach(
         (m: any) => {
           const reg0 = this.findRegion(0, m.startTime, m.stopTime);
-          if (reg0) {
-            this.waveSurfers[0].regions.list[
-              reg0
-            ].color = this.waveSurfers[0].regions.list[reg0].color
-              .split(",")
-              .map((v: string) => (v.endsWith(")") ? `${alpha})` : v))
-              .join(",");
-            this.waveSurfers[0].regions.list[reg0].onDrag(0);
-          }
+          if (reg0) this.updateRegionAlpha(0, reg0, alpha);
           m.data.forEach((d: LooseObject) => {
-            const wsNum = d.channel.endsWith("Merged")
-              ? d.channel.startsWith("Careful")
-                ? 1
-                : 2
-              : 0;
-            if (wsNum) {
-              const reg = this.findRegion(wsNum, d.clipStart, d.clipStop);
-              if (reg) {
-                this.waveSurfers[wsNum].regions.list[
-                  reg
-                ].color = this.waveSurfers[wsNum].regions.list[reg].color
-                  .split(",")
-                  .map((v: string) => (v.endsWith(")") ? `${alpha})` : v))
-                  .join(",");
-                this.waveSurfers[wsNum].regions.list[reg].onDrag(0);
-              }
-            }
+            const wsNum =
+              +d.channel.endsWith("Merged") *
+              (1 + +d.channel.startsWith("Translation"));
+            let reg;
+            if (
+              wsNum &&
+              (reg = this.findRegion(wsNum, d.clipStart, d.clipStop))
+            )
+              this.updateRegionAlpha(wsNum, reg, alpha);
           });
         }
       );
     }
     if (!noIncrement) this.regionsOn = ++this.regionsOn % 3;
   };
-
-  // Produces a Random RGBA Color with Provided Alpha
-  randomColor = (alpha: number) =>
-    "rgba(" +
-    [
-      ~~(Math.random() * 255),
-      ~~(Math.random() * 255),
-      ~~(Math.random() * 255),
-      alpha
-    ] +
-    ")";
 
   // Fetches the Current Milestone of the Specified WS
   getCurrentMilestone = (
@@ -623,15 +776,21 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Calculates Relative Time for Source/Video Based on a WS, Milestone, and PlaybackRate
-  calcRelativeTime = (idx: number, milestone: any, playbackRate: number) =>
-    idx === 0
-      ? this.waveSurfers[idx].getCurrentTime() /
-        this.waveSurfers[idx].getDuration()
-      : ((this.waveSurfers[idx].getCurrentTime() -
-          milestone.data[0].clipStart) *
-          playbackRate +
-          milestone.startTime) /
-        this.waveSurfers[0].getDuration();
+  calcRelativeTime = (
+    idx: number,
+    milestone: any,
+    playbackRate: number,
+    idx2?: number,
+    milestone2?: any
+  ) =>
+    roundIt(
+      ((this.waveSurfers[idx].getCurrentTime() -
+        (idx === 0 ? milestone.startTime : milestone.data[0].clipStart)) *
+        playbackRate +
+        (!idx2 ? milestone.startTime : milestone2.data[0].clipStart)) /
+        this.waveSurfers[idx2 || 0].getDuration(),
+      3
+    );
 
   // Finds the Index of the Milestone After the One Provided
   findNextMilestoneIndex = (milestone: any) =>
@@ -695,8 +854,27 @@ export class DeeJay extends Component<DeeJayProps> {
     let playbackRate: number = 1;
     // Process Dispatch Based on its Type
     switch (dispatch.dispatchType) {
-      case "PlayerSeek":
-        // Un-"Undefined" Dispatch
+      case "PlayerSeek": {
+        /*
+        // Grab Current Milestone and "Solo" the Given WS
+        currM = this.getCurrentMilestone(wsNum, dispatch);
+        this.solo(wsNum, false);
+        this.waveSurfers[wsNum].setVolume(1);
+        this.props.setWSVolume(wsNum, 1);
+
+        // Grab High and Low Audio WSs from the Active WSs
+        actives = this.getActives();
+        actives.forEach((idx: number) => this.waveSurfers[idx].pause());
+        const highs = actives.filter(
+          (idx: number) => this.waveSurfers[idx].getVolume() > 0.5 ** 0.25
+        );
+        const lows = actives.filter(
+          (idx: number) =>
+            this.waveSurfers[idx].getVolume() > 0 &&
+            this.waveSurfers[idx].getVolume() < 0.5 ** 0.25
+        );
+        */
+
         dispatch.refStart = dispatch.refStart || 0;
 
         // Fetch the Active WSs and Processes Based on How Many
@@ -720,7 +898,8 @@ export class DeeJay extends Component<DeeJayProps> {
             );
         }
         break;
-      case "PlayPause":
+      }
+      case "PlayPause": {
         // If Playing => Stop All
         // -> If Not Playing, Fetch all the "Actives"
         this.idxs.forEach((idx: number) => {
@@ -731,7 +910,6 @@ export class DeeJay extends Component<DeeJayProps> {
         });
 
         // Process Based on Number of Active WSs
-        console.log(actives.toString());
         if (actives.length === 1) {
           // "Click" WS So That it can Automatically Seek Beyond Beginning Milestone
           this.clicked[actives[0]] = true;
@@ -750,14 +928,13 @@ export class DeeJay extends Component<DeeJayProps> {
           );
         }
         break;
-      case "Clip":
+      }
+      case "Clip": {
         // Notify Via Snackbar
         this.sendSnackbar("Playing Clip");
 
         // Grab Current Milestone and "Solo" the Given WS
         currM = this.getCurrentMilestone(wsNum, dispatch);
-        dispatch.clipStop = dispatch.clipStop || 0;
-        dispatch.clipStart = dispatch.clipStart || 0;
         this.solo(wsNum, false);
         this.waveSurfers[wsNum].setVolume(1);
         this.props.setWSVolume(wsNum, 1);
@@ -787,16 +964,11 @@ export class DeeJay extends Component<DeeJayProps> {
           const m1 = this.getCurrentMilestone(0, m1Dispatch, highs[x]);
 
           // Process Only if it WS is 0 or M1 has Data
-          if (highs[x] === 0 || m1.data.length !== 0) {
-            // Craft its Region
-            let region = this.findRegion(
-              highs[x],
-              highs[x] === 0 ? m1.startTime : m1.data[0].clipStart,
-              highs[x] === 0 ? m1.stopTime : m1.data[0].clipStop
-            );
+          if (!highs[x] || m1.data.length) {
+            const m1Start = this.clipTime(highs[x], m1, true);
+            const m1Stop = this.clipTime(highs[x], m1, false);
 
             // For Each WS in Low
-            let nextVoiceOver = () => {};
             for (let y = 0, l = lows.length; y < l; y++) {
               // Grab the Sub's Milestone
               const m2Dispatch = {
@@ -807,41 +979,44 @@ export class DeeJay extends Component<DeeJayProps> {
               const m2 = this.getCurrentMilestone(0, m2Dispatch, lows[y]);
 
               // Process Only if it Has Data
-              if (lows[y] === 0 || m2.data.length !== 0) {
+              if (!lows[y] || m2.data.length) {
+                const m2Start = this.clipTime(lows[y], m2, true);
+                const m2Stop = this.clipTime(lows[y], m2, false);
+
                 // Create and Push Next Voiceover
-                nextVoiceOver = () => {
+                voiceOvers.push(() => {
                   // Craft its Region
                   this.updateRegionAlpha(
                     lows[y],
-                    this.findRegion(
-                      lows[y],
-                      lows[y] === 0 ? m2.startTime : m2.data[0].clipStart,
-                      lows[y] === 0 ? m2.stopTime : m2.data[0].clipStop
-                    ),
+                    this.findRegion(lows[y], m2Start, m2Stop),
                     0.7
                   );
-                  this.waveSurfers[lows[y]].play(
-                    lows[y] === 0 ? m2.startTime : m2.data[0].clipStart,
-                    lows[y] === 0 ? m2.stopTime : m2.data[0].clipStop
-                  );
+                  this.waveSurfers[lows[y]].play(m2Start, m2Stop);
 
                   // Determine its Playback Rate
-                  const p2 = this.calcPlaybackRate(m2, m1Dispatch, m2Dispatch);
-                  this.waveSurfers[lows[y]].setPlaybackRate(p2);
-                  this.currentSpeeds[lows[y]] = p2;
-                };
-                voiceOvers.push(nextVoiceOver);
+                  this.currentSpeeds[lows[y]] = this.calcPlaybackRate(
+                    m2,
+                    m1Dispatch,
+                    m2Dispatch
+                  );
+                  this.waveSurfers[lows[y]].setPlaybackRate(
+                    this.currentSpeeds[lows[y]]
+                  );
+                });
               }
             }
 
             // Craft RecentStart for Linking Together the Clips
             recentStart = () => {
               if (x === 0 || !this.clipStart) {
-                this.updateRegionAlpha(highs[x], region, 0.7);
-                this.waveSurfers[highs[x]].play(
-                  highs[x] === 0 ? m1.startTime : m1.data[0].clipStart,
-                  highs[x] === 0 ? m1.stopTime : m1.data[0].clipStop
+                // Reset Highlights
+                this.toggleAllRegions(true);
+                this.updateRegionAlpha(
+                  highs[x],
+                  this.findRegion(highs[x], m1Start, m1Stop),
+                  0.7
                 );
+                this.waveSurfers[highs[x]].play(m1Start, m1Stop);
                 if (this.voNum + x < voiceOvers.length)
                   voiceOvers[this.voNum + x]("");
                 this.props.setPlaybackRate(this.calcPlaybackRate(m1, dispatch));
@@ -874,16 +1049,16 @@ export class DeeJay extends Component<DeeJayProps> {
           this.waveSurfers[0].on("pause", secondVO);
         }
         break;
+      }
     }
   };
 
   // Toggles the Volume Between Three Predetermined States
   toggleVol = (idx: number) => {
-    if (this.waveSurfers[idx] !== undefined && this.waveSurfers[idx].isReady) {
-      let name =
-        (idx === 0 && "Original Audio set to ") ||
-        (idx === 1 && "Careful Audio set to ") ||
-        (idx === 2 && "Translation Audio set to ");
+    if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady) {
+      let name = `${
+        !idx ? "Original" : idx === 1 ? "Careful" : "Translation"
+      } Audio Set to `;
       if (this.props.volumes[idx] > 0.5 ** 0.25) {
         this.sendSnackbar(name + "50% (Background)", "vol" + idx.toString());
         this.props.setWSVolume(idx, 0.5 ** 0.25);
@@ -902,7 +1077,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Enqueues the Next Snackbar Mesage
-  sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
+  sendSnackbar = (inMessage: string, inKey?: string, vType?: string) =>
     this.props.enqueueSnackbar({
       message: inMessage,
       options: {
@@ -913,7 +1088,6 @@ export class DeeJay extends Component<DeeJayProps> {
         )
       }
     });
-  };
 
   render() {
     // Forms the Rows for Each WS
@@ -986,9 +1160,12 @@ export class DeeJay extends Component<DeeJayProps> {
             className="waveform"
             id={"waveform" + idx.toString()}
             onClick={() => {
-              this.clearDispatchLeftovers();
-              this.clicked[idx] = true;
-              this.solo(idx, true);
+              if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady) {
+                this.clearDispatchLeftovers();
+                this.clicked[idx] = true;
+                this.solo(idx, false);
+                this.waveSurfers[idx].pause();
+              }
             }}
           ></td>
         </tr>
@@ -1148,8 +1325,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   )
 });
 
-const withSnackbar = require("notistack").withSnackbar;
-export default withSnackbar(
+export default require("notistack").withSnackbar(
   connect(
     mapStateToProps,
     mapDispatchToProps
