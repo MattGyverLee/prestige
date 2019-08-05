@@ -57,6 +57,7 @@ interface DispatchProps {
 interface DeeJayProps extends StateProps, DispatchProps {}
 
 export class DeeJay extends Component<DeeJayProps> {
+  private actingDispatch: DeeJayDispatch = { dispatchType: "" };
   private clicked: boolean[] = [];
   private clipStart: boolean = false;
   private currBlob: string = "";
@@ -121,6 +122,7 @@ export class DeeJay extends Component<DeeJayProps> {
         this.waveSurfers[idx].backend.peaks = [];
         this.waveSurfers[idx].clearRegions();
         this.currentPlaying[idx] = "";
+        this.actingDispatch = { dispatchType: "" };
       });
     }
 
@@ -281,8 +283,10 @@ export class DeeJay extends Component<DeeJayProps> {
         console.log(`${idx} Click Seeking`);
         this.clicked[idx] = false;
         const ws = this.waveSurfers[idx];
-        const currMiles = this.props.timeline[this.props.currentTimeline]
-          .milestones;
+        const currMiles =
+          this.props.currentTimeline === -1
+            ? []
+            : this.props.timeline[this.props.currentTimeline].milestones;
 
         // Grab Current Milestone and Set Volum of Given WS
         const currM = this.getCurrentMilestone(idx);
@@ -711,13 +715,11 @@ export class DeeJay extends Component<DeeJayProps> {
             : m.startTime <= this.waveSurfers[wsNum].getCurrentTime() &&
               this.waveSurfers[wsNum].getCurrentTime() < m.stopTime
           : m.data.filter((d: LooseObject) => {
-              return dispatch.dispatchType !== ""
+              return d.channel === channel && dispatch.dispatchType !== ""
                 ? d.clipStart === dispatch.clipStart &&
-                    d.clipStop === dispatch.clipStop &&
-                    d.channel === channel
+                    d.clipStop === dispatch.clipStop
                 : d.clipStart <= this.waveSurfers[wsNum].getCurrentTime() &&
-                    this.waveSurfers[wsNum].getCurrentTime() < d.clipStop &&
-                    d.channel === channel;
+                    this.waveSurfers[wsNum].getCurrentTime() < d.clipStop;
             }).length === 1;
       })
       .map((m: Milestone) => {
@@ -842,6 +844,8 @@ export class DeeJay extends Component<DeeJayProps> {
   // Responds to DJ Dispatches
   dispatchDJ = () => {
     // Store Dispatch Into Local Variable and Clear It
+    if (this.props.dispatch.dispatchType !== "PlayPause")
+      this.actingDispatch = { ...this.props.dispatch };
     const dispatch = { ...this.props.dispatch };
     this.props.setDispatch({ dispatchType: "" });
     this.clearDispatchLeftovers();
@@ -855,48 +859,27 @@ export class DeeJay extends Component<DeeJayProps> {
     // Process Dispatch Based on its Type
     switch (dispatch.dispatchType) {
       case "PlayerSeek": {
-        /*
-        // Grab Current Milestone and "Solo" the Given WS
-        currM = this.getCurrentMilestone(wsNum, dispatch);
-        this.solo(wsNum, false);
-        this.waveSurfers[wsNum].setVolume(1);
-        this.props.setWSVolume(wsNum, 1);
-
-        // Grab High and Low Audio WSs from the Active WSs
-        actives = this.getActives();
-        actives.forEach((idx: number) => this.waveSurfers[idx].pause());
-        const highs = actives.filter(
-          (idx: number) => this.waveSurfers[idx].getVolume() > 0.5 ** 0.25
-        );
-        const lows = actives.filter(
-          (idx: number) =>
-            this.waveSurfers[idx].getVolume() > 0 &&
-            this.waveSurfers[idx].getVolume() < 0.5 ** 0.25
-        );
-        */
-
         dispatch.refStart = dispatch.refStart || 0;
 
         // Fetch the Active WSs and Processes Based on How Many
         actives = this.getActives();
-        if (actives.length === 1) {
-          // "Click" WS So That it can Automatically Seek Beyond Beginning Milestone
-          this.clicked[actives[0]] = true;
 
-          // If WS 0 => Seek To Ref
-          // -> Else If Milestone Data Exists => Seek To Relative Ref
-          currM = this.getInterMilestone(dispatch.refStart, actives[0]);
-          if (actives[0] === 0)
-            this.waveSurfers[0].seekTo(
-              dispatch.refStart / this.waveSurfers[actives[0]].getDuration()
-            );
-          else if (currM.data.length === 1)
-            this.waveSurfers[actives[0]].seekTo(
-              ((dispatch.refStart - currM.startTime) / playbackRate +
-                currM.data[0].clipStart) /
-                this.waveSurfers[actives[0]].getDuration()
-            );
-        }
+        // "Click" WS So That it can Automatically Seek Beyond Beginning Milestone
+        this.clicked[actives[0]] = true;
+
+        // If WS 0 => Seek To Ref
+        // -> Else If Milestone Data Exists => Seek To Relative Ref
+        currM = this.getInterMilestone(dispatch.refStart, actives[0]);
+        if (actives[0] === 0)
+          this.waveSurfers[0].seekTo(
+            dispatch.refStart / this.waveSurfers[actives[0]].getDuration()
+          );
+        else if (currM.data.length === 1)
+          this.waveSurfers[actives[0]].seekTo(
+            ((dispatch.refStart - currM.startTime) / playbackRate +
+              currM.data[0].clipStart) /
+              this.waveSurfers[actives[0]].getDuration()
+          );
         break;
       }
       case "PlayPause": {
@@ -910,23 +893,12 @@ export class DeeJay extends Component<DeeJayProps> {
         });
 
         // Process Based on Number of Active WSs
-        if (actives.length === 1) {
-          // "Click" WS So That it can Automatically Seek Beyond Beginning Milestone
-          this.clicked[actives[0]] = true;
+        if (actives.length)
+          this.props.setDispatch({
+            ...this.actingDispatch,
+            refStart: this.waveSurfers[actives[0]].getCurrentTime()
+          });
 
-          // Seek the Provided WS with a Relative Time Based on Player's Current
-          const elapsed = this.props.playerPlayed * this.props.playerDuration;
-          currM = this.getInterMilestone(elapsed, actives[0]);
-          this.waveSurfers[actives[0]].seekTo(
-            actives[0] === 0
-              ? this.props.playerPlayed
-              : (((elapsed - currM.startTime) /
-                  (currM.stopTime - currM.startTime)) *
-                  (currM.data[0].clipStop - currM.data[0].clipStart) +
-                  currM.data[0].clipStart) /
-                  this.waveSurfers[actives[0]].getDuration()
-          );
-        }
         break;
       }
       case "Clip": {
