@@ -421,12 +421,13 @@ export class DeeJay extends Component<DeeJayProps> {
           // -> Else => Play as Normal
           if (this.props.currentTimeline !== -1)
             this.checkVOAndPlay(idx, lows, currM);
-          else {
-            // Sync Player and Play WS From Now Until End of Clip
-            this.props.setSeek(ws.getCurrentTime() / ws.getDuration());
-            this.props.togglePlay(true);
-            ws.play(ws.getCurrentTime(), ws.getDuration());
-          }
+          else
+            this.seekSyncAndPlay(0, {
+              annotationID: "",
+              startTime: 0,
+              stopTime: ws.getDuration(),
+              data: []
+            });
         }
       }
     });
@@ -471,7 +472,7 @@ export class DeeJay extends Component<DeeJayProps> {
     );
   };
 
-  // Gets the Desired StarTime, StopTime, ClipStart, or ClipStop of the Milestone According to WS Idx
+  // Gets the Desired StartTime, StopTime, ClipStart, or ClipStop of the Milestone According to WS Idx
   clipTime = (idx: number, milestone: any, startOrStop: boolean) =>
     idx === 0
       ? startOrStop
@@ -715,11 +716,14 @@ export class DeeJay extends Component<DeeJayProps> {
             : m.startTime <= this.waveSurfers[wsNum].getCurrentTime() &&
               this.waveSurfers[wsNum].getCurrentTime() < m.stopTime
           : m.data.filter((d: LooseObject) => {
-              return d.channel === channel && dispatch.dispatchType !== ""
-                ? d.clipStart === dispatch.clipStart &&
+              return (
+                d.channel === channel &&
+                (dispatch.dispatchType !== ""
+                  ? d.clipStart === dispatch.clipStart &&
                     d.clipStop === dispatch.clipStop
-                : d.clipStart <= this.waveSurfers[wsNum].getCurrentTime() &&
-                    this.waveSurfers[wsNum].getCurrentTime() < d.clipStop;
+                  : d.clipStart <= this.waveSurfers[wsNum].getCurrentTime() &&
+                    this.waveSurfers[wsNum].getCurrentTime() < d.clipStop)
+              );
             }).length === 1;
       })
       .map((m: Milestone) => {
@@ -787,7 +791,7 @@ export class DeeJay extends Component<DeeJayProps> {
   ) =>
     roundIt(
       ((this.waveSurfers[idx].getCurrentTime() -
-        (idx === 0 ? milestone.startTime : milestone.data[0].clipStart)) *
+        this.clipTime(idx, milestone, true)) *
         playbackRate +
         (!idx2 ? milestone.startTime : milestone2.data[0].clipStart)) /
         this.waveSurfers[idx2 || 0].getDuration(),
@@ -796,7 +800,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
   // Finds the Index of the Milestone After the One Provided
   findNextMilestoneIndex = (milestone: any) =>
-    this.props.timeline === -1
+    this.props.currentTimeline === -1
       ? -1
       : this.props.timeline[this.props.currentTimeline].milestones.findIndex(
           (m: any) => m.startTime === milestone.startTime
@@ -804,7 +808,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
   // Finds the Index of the Last Milestone of a Particular Type
   findLastMilestoneIndex = (wsNum: number) => {
-    if (this.props.currentTimeline === -1) return 0;
+    if (this.props.currentTimeline === -1) return -1;
     const milestones = this.props.timeline[this.props.currentTimeline]
       .milestones;
     return wsNum === 0
