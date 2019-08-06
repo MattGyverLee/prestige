@@ -14,6 +14,7 @@ import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
 import Notifier from "./model/notifier";
+import ResizableDiv from "./model/resizableDiv";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
@@ -67,7 +68,12 @@ export class App extends React.Component<AppProps> {
       session: "my_session",
       userName: "Blaine",
       clicks: 0,
-      notifications: []
+      notifications: [],
+      dimensions: {
+        AppDetails: { width: -1, height: -1 },
+        AppPlayer: { width: -1, height: -1 },
+        AppDeeJay: { width: -1, height: -1 }
+      }
     });
 
     this.props.onNewFolder("");
@@ -101,34 +107,32 @@ export class App extends React.Component<AppProps> {
   render() {
     return (
       <div className="App">
-        <header className="App-header">
+        <header className="AppHeader">
+          <Notifier />
           <p>
-            <img src={logo} className="App-logo" alt="logo" /> Hi{" "}
+            <img src={logo} className="AppLogo" alt="logo" /> Hi{" "}
             {this.props.userName}. Welcome to <code>Prestige</code>.
           </p>
         </header>
-        <div className="App-body">
-          <div className="App-sidebar">
+        <div className="AppBody">
+          <div className="AppSidebar">
             <PlayerZone />
-            <DeeJay />
+            <ResizableDiv className="AppDeeJay">
+              <DeeJay />
+            </ResizableDiv>
           </div>
-          <div className="DetailsZone">
+          <ResizableDiv className="AppDetails">
             <AnnotationTable />
             <FileList />
-          </div>
+          </ResizableDiv>
         </div>
         <p>{this.props.loaded}</p>
-        <div className="App-footer">
-          <Notifier />
+        <div className="AppFooter">
           <SelectFolderZone />
-          <div className="SnackBar">
-            <button onClick={this.clearLocalStorage}>
-              Click To Clear Local Storage
-            </button>
-          </div>
-          <p>
-            updated {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
-          </p>
+          <button onClick={this.clearLocalStorage}>
+            Click To Clear Local Storage
+          </button>{" "}
+          {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
         </div>
       </div>
     );

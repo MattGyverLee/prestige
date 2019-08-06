@@ -8,6 +8,7 @@ import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { getTimelineIndex } from "./globalFunctions";
+import ResizableDiv from "./resizableDiv";
 
 interface StateProps {
   duration: any;
@@ -68,7 +69,7 @@ class PlayerZone extends Component<PlayerProps> {
 
   render() {
     return (
-      <div>
+      <ResizableDiv className="AppPlayer">
         <div className="player-wrapper">
           <ReactPlayer
             className="react-player"
@@ -100,7 +101,7 @@ class PlayerZone extends Component<PlayerProps> {
             width="100%"
           />
         </div>
-      </div>
+      </ResizableDiv>
     );
   }
 }

@@ -1,3 +1,94 @@
+/* ===== Structural Elements ===== */
+
+.App {
+  text-align: center;
+}
+
+.AppHeader {
+  background-color: #282c34;
+  height: 9vh;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+.AppBody {
+  background-color: #525252;
+  min-height: 75vh;
+  height: 80vh;
+  min-width: 95vw;
+  display: flex;
+  flex-direction: row;
+  align-content: stretch;
+  justify-content: space-between;
+  font-size: calc(10px + 0.5vmin);
+  color: white;
+  padding: 10px;
+}
+
+.AppFooter {
+  min-height: 5vh;
+}
+
+.AppSidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 250px;
+  width: 40vw;
+  /*min-width: 40vw;*/
+  max-width: 70vw;
+  border-right-style: dotted;
+  border-right-width: 2px;
+  border-color: rgb(164, 170, 175);
+  resize: horizontal;
+  overflow: auto;
+  align-content: stretch;
+  justify-content: flex-start;
+}
+
+.AppDetails {
+  flex-direction: column;
+  display: flex;
+  flex-grow: 1;
+  flex: 3;
+  overflow-x: hidden;
+}
+
+.AppDeeJay {
+  display: flex;
+  flex-direction: column;
+  position: top;
+  min-height: 20vh;
+  padding-left: 10px;
+  padding-right: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.AppPlayer {
+  display: flex;
+  flex-direction: column;
+  position: top;
+  min-height: 20vh;
+  padding: 5px;
+  resize: vertical;
+  overflow-x: hidden;
+  border-color: rgb(164, 170, 175);
+  border-bottom-style: dashed;
+  border-bottom-width: 1px;
+  overflow: auto;
+}
+
+/* ===== Links ===== */
+
+.AppLink {
+  color: #61dafb;
+}
+
+/* ===== Big Friendly Buttons ===== */
+
 img.green {
   position: absolute;
   top: -54px;
@@ -8,6 +99,49 @@ img.black {
   top: 0;
   left: 0;
 }
+
+.buttonWrapper {
+  width: 50px;
+  padding-bottom: 2px;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: -5px;
+}
+.ThreeDimButton {
+  position: relative;
+  padding: 3px 3px;
+  text-align: center;
+  height: 50px;
+  width: 50px;
+  cursor: pointer;
+  outline: none;
+  color: #fff;
+  background-color: #555;
+  border: ridge;
+  display: inline-block;
+  border-width: 5px;
+  border-color: #222;
+  box-shadow: 0px 4px #000;
+}
+
+.ThreeDimButton:hover {
+  background-color: #333;
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+.ThreeDimButton:active {
+  background-color: #444;
+  box-shadow: 0px 1px #000;
+  transform: translateY(3px);
+}
+
+.overlay {
+  position: absolute;
+  text-align: center;
+}
+
+/* ===== Wavesurfer Regions ===== */
 
 .wavesurfer-region {
   overflow: hidden;
@@ -58,49 +192,7 @@ img.black {
   opacity: 0;
 }
 
-.overlay {
-  position: absolute;
-  text-align: center;
-}
-
-.App {
-  text-align: center;
-}
-.buttonWrapper {
-  width: 50px;
-  padding-bottom: 2px;
-  padding-left: 0;
-  padding-right: 0;
-  margin-left: -5px;
-}
-.ThreeDimButton {
-  position: relative;
-  padding: 3px 3px;
-  text-align: center;
-  height: 50px;
-  width: 50px;
-  cursor: pointer;
-  outline: none;
-  color: #fff;
-  background-color: #555;
-  border: ridge;
-  display: inline-block;
-  border-width: 5px;
-  border-color: #222;
-  box-shadow: 0px 4px #000;
-}
-
-.ThreeDimButton:hover {
-  background-color: #333;
-  -webkit-transform: scaleX(-1);
-  transform: scaleX(-1);
-}
-
-.ThreeDimButton:active {
-  background-color: #444;
-  box-shadow: 0px 1px #000;
-  transform: translateY(3px);
-}
+/* # ===== Icon Animation ===== */
 
 @keyframes rock {
   0% {
@@ -120,137 +212,36 @@ img.black {
   }
 }
 
-.App-logo {
+.AppLogo {
   animation: rock infinite 3s linear;
   height: 50px;
   pointer-events: none;
   vertical-align: middle;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 5vh;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-.App-body {
-  background-color: #525252;
-  min-height: 75vh;
-  height: 75vh;
-  min-width: 95vw;
-  display: flex;
-  flex-direction: row;
-  align-content: stretch;
-  justify-content: space-between;
-  font-size: calc(10px + 0.5vmin);
-  color: white;
-  padding: 10px;
-}
-
-.App-sidebar {
-  display: flex;
-  flex-direction: column;
-  min-width: 250px;
-  width: 40vw;
-  /*min-width: 40vw;*/
-  max-width: 70vw;
-  border-right-style: dotted;
-  border-right-width: 2px;
-  border-color: rgb(164, 170, 175);
-  resize: horizontal;
-  overflow: auto;
-  align-content: stretch;
-  justify-content: flex-start;
-}
+/* ===== React-Player ===== */
 
 .player-wrapper {
   display: flex;
   flex-direction: column;
   position: top;
-  width: inherit;
-  padding: 10px;
-  height: 300px;
-  min-height: 285px;
-  resize: vertical;
-  overflow: auto;
-  border-color: rgb(164, 170, 175);
-  border-bottom-style: dashed;
-  border-bottom-width: 1px;
-  overflow: none;
-}
-.audio-Layers {
-  width: inherit;
-  padding: 10px;
-  min-height: 3vh;
-  height: auto;
-  display: flex;
-  flex-direction: row;
-  align-content: stretch;
-  justify-content: space-around;
-  overflow: auto;
-  border-color: rgb(164, 170, 175);
-  border-bottom-style: dashed;
-  border-bottom-width: 1px;
-}
-
-.mediaControls {
-  width: inherit;
-  display: none;
-}
-
-.mediaControls table {
-  width: 250px;
+  height: 100%;
+  overflow-x: hidden;
+  min-height: 18vh;
+  max-height: 79vh;
+  overflow: hidden;
 }
 
 .react-player__preview {
   min-height: 40vh;
 }
 
-.DetailsZone {
-  flex-direction: column;
-  display: flex;
+.react-player {
+  background-color: black;
   flex-grow: 1;
-  flex: 3;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-.list-group {
-  display: -ms-flexbox;
-  display: flex;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  padding-left: 0;
-  margin-bottom: 0;
-}
-.list-group-item {
-  position: relative;
-  display: block;
-  padding: 0.75rem 1.25rem;
-  margin-bottom: -1px;
-  background-color: #fff;
-  color: #000;
-  border: 1px solid rgba(0, 0, 0, 0.125);
-}
-.list-group-flush .list-group-item {
-  border-right: 0;
-  border-left: 0;
-  border-radius: 0;
-}
-.list-group-flush:first-child .list-group-item:first-child {
-  border-top: 0;
-}
-
-.flex-container {
-  display: flex;
-  align-items: center;
-}
+/* ===== Main Controls ===== */
 
 .control-row {
   width: 100%;
@@ -301,11 +292,6 @@ img.black {
   border: 2px solid black;
 }
 
-.react-player {
-  background-color: black;
-  flex-grow: 1;
-}
-
 .duration-elapsed,
 .total-duration {
   display: inline-block;
@@ -324,27 +310,132 @@ img.black {
   width: 35px;
 }
 
+.durations {
+  overflow: hidden;
+}
+
+/* ===== File Listing ===== */
+
+.list-group {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+.list-group-item {
+  position: relative;
+  display: block;
+  padding: 0.5rem 0.5rem;
+  margin-bottom: 0px;
+  background-color: #fff;
+  color: #000;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  cursor: pointer;
+}
+/* .list-group-item:before {
+  content: "🎬 — ";
+}
+
+.list-group-item:before {
+  content: "🔊 — ";
+} */
+
+.list-group-flush .list-group-item {
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+.list-group-flush:first-child .list-group-item:first-child {
+  border-top: 0;
+}
+
+.flex-container {
+  display: flex;
+  align-items: center;
+}
+
+/* ===== Current Transcription ===== */
+
 .current-transcription {
   background-color: white;
   height: 15%;
   min-height: 50px;
 }
 
-.durations {
-  overflow: hidden;
-}
+/* ===== Annotation Table ===== */
 
 .annotation-table {
   flex-grow: 1;
-  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 td {
-  overflow: none;
+  /* Todo: Should this be wrap? */
+  overflow: wrap;
 }
 
+div #TranscriptionTableSpace thead tr {
+  cursor: default;
+  background-color: #eee;
+  max-height: 15px;
+  height: 15px;
+  overflow: hidden;
+}
+/* div #TranscriptionTableSpace thead tr div[class^="ResizingControl"] {
+  display: inline-block;
+} */
+
+div #TranscriptionTableSpace {
+  display: flex;
+  flex-flow: column;
+}
+div #TranscriptionTableSpace div[class^="TableContainer-root"] {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* div #TranscriptionTableSpace tbody tr {
+  background-color: #abe8f8;
+}
+
+div #TranscriptionTableSpace tbody tr td:nth-child(5) {
+  background-color: coral;
+}
+div #TranscriptionTableSpace tbody tr td:last-child {
+  background-color: rgb(56, 143, 107);
+} */
+
+div
+  #TranscriptionTableSpace
+  thead
+  th
+  div[class^="ResizingControl-resizeHandle-"] {
+  display: none;
+}
+
+div
+  #TranscriptionTableSpace
+  thead
+  th:nth-child(3)
+  div[class^="ResizingControl-resizeHandle-"] {
+  display: inline;
+}
+
+div[class^="TableHeaderCell-resizeHandleLine"] {
+  opacity: 1;
+}
+
+div #TranscriptionTableSpace tbody td:nth-child(3) {
+  border-right: 1px solid grey;
+}
+
+/* ===== Wavesurfer Table ===== */
+
 .wave-table-container {
-  padding: 10px;
+  padding: 5px;
 }
 
 .wave-table {
@@ -368,11 +459,11 @@ td {
   width: 15px;
 }
 
-.waveform {
+/* .waveform {
   min-height: 50px;
-}
+} */
 
 .wave-table-volume input[type="range"] {
-  width: 100px;
+  width: 80px;
   transform: rotate(-90deg);
 }

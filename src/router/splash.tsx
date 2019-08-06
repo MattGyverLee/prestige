@@ -6,8 +6,8 @@ import logo from "./assets/icons/png/512x512.png";
 const splash: React.FC = () => {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+      <header className="AppHeader">
+        <img src={logo} className="AppLogo" alt="logo" />
         <p>
           Welcome to <code>Prestige</code>.
         </p>

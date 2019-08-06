@@ -7,7 +7,12 @@ export const systemCleanStore: types.SystemState = {
   loggedIn: false,
   session: "",
   userName: "",
-  notifications: []
+  notifications: [],
+  dimensions: {
+    AppDetails: { width: -1, height: -1 },
+    AppPlayer: { width: -1, height: -1 },
+    AppDeeJay: { width: -1, height: -1 }
+  }
 };
 
 export function systemReducer(
@@ -50,6 +55,46 @@ export function systemReducer(
           notification => notification.key !== action.key
         )
       };
+    }
+    case types.UPDATE_DIMENSIONS: {
+      // TODO: Finish This
+      switch (action.payload.target) {
+        case "AppDetails":
+          return {
+            ...state,
+            dimensions: {
+              ...state.dimensions,
+              AppDetails: {
+                width: action.payload.width,
+                height: action.payload.height
+              }
+            }
+          };
+        case "AppPlayer":
+          return {
+            ...state,
+            dimensions: {
+              ...state.dimensions,
+              AppPlayer: {
+                width: action.payload.width,
+                height: action.payload.height
+              }
+            }
+          };
+        case "AppDeeJay":
+          return {
+            ...state,
+            dimensions: {
+              ...state.dimensions,
+              AppDeeJay: {
+                width: action.payload.width,
+                height: action.payload.height
+              }
+            }
+          };
+        default:
+          return state;
+      }
     }
     case types.UPDATE_SNACKBAR: {
       // TODO: Finish This

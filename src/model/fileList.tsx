@@ -39,10 +39,12 @@ export class FileList extends Component<FileListProps> {
             {getSourceMedia(this.props.sourceMedia, false).map(d => (
               <li
                 key={d.blobURL}
-                className="list-group-item flex-container"
+                className={"list-group-item flex-container"}
                 onClick={() => this.loadNewFile(d.blobURL)}
               >
-                <div> {d.name} </div>
+                <div>
+                  {d.mimeType.startsWith("audio") ? "🔊 — " : "🎬 — "} {d.name}
+                </div>
               </li>
             ))}{" "}
           </ul>

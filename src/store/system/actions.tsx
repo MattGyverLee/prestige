@@ -22,6 +22,11 @@ export const removeSnackbar = (key: any) => ({
   key
 });
 
+export const updateDimensions = (payload: types.DimensionObject) => ({
+  type: types.UPDATE_DIMENSIONS,
+  payload
+});
+
 export const updateSnackbar = (key: any, message: string) => ({
   type: types.UPDATE_SNACKBAR,
   key,

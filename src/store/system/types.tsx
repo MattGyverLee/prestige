@@ -8,12 +8,19 @@ export interface SystemState {
   session: string;
   userName: string;
   notifications: LooseObject[];
+  dimensions: LooseObject;
 }
 
 export interface SnackbarObject {
   key?: string;
   message: string;
   options?: LooseObject;
+}
+
+export interface DimensionObject {
+  width: number;
+  height: number;
+  target: string;
 }
 
 // Describing the different ACTION NAMES available
@@ -23,6 +30,7 @@ export const UPDATE_SESSION = "UPDATE_SESSION";
 export const ENQUEUE_SNACKBAR = "ENQUEUE_SNACKBAR";
 export const CLOSE_SNACKBAR = "CLOSE_SNACKBAR";
 export const REMOVE_SNACKBAR = "REMOVE_SNACKBAR";
+export const UPDATE_DIMENSIONS = "UPDATE_DIMENSIONS";
 export const UPDATE_SNACKBAR = "UPDATE_SNACKBAR";
 
 interface SysHardResetApp {
@@ -53,6 +61,11 @@ interface UpdateSnackbar {
   message: string;
 }
 
+interface UpdateDimensions {
+  type: typeof UPDATE_DIMENSIONS;
+  payload: DimensionObject;
+}
+
 interface SysOnNewFolder {
   type: typeof ON_NEW_FOLDER;
   payload: string;
@@ -68,5 +81,6 @@ export type SystemActionTypes =
   | SysOnNewFolder
   | EnqueueSnackbar
   | CloseSnackbar
+  | UpdateDimensions
   | UpdateSnackbar
   | RemoveSnackbar;

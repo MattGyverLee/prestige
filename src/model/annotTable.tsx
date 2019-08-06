@@ -24,7 +24,11 @@ import { connect } from "react-redux";
 import { getTimelineIndex } from "./globalFunctions";
 
 const Root = (props: any) => (
-  <Grid.Root {...props} style={{ height: "100%" }} />
+  <Grid.Root
+    {...props}
+    style={{ minHeight: "50vh", height: "70vh", flexGrow: 1 }}
+  />
+  // 100
 );
 
 interface StateProps {
@@ -32,6 +36,7 @@ interface StateProps {
   currentTimeline: number;
   prevTimeline: number;
   categories: string[];
+  dimensions: LooseObject;
   annotationTable: AnnotationRow[];
   sourceMedia: LooseObject[];
   timelineChanged: boolean;
@@ -52,6 +57,28 @@ interface ComponentProps extends StateProps, DispatchProps {}
 
 export class AnnotationTable extends Component<ComponentProps> {
   private redrawCount = 0;
+  private defaultColumnWidths = [
+    {
+      columnName: "startTime",
+      width: 90
+    },
+    {
+      columnName: "audCareful",
+      width: 55
+    },
+    {
+      columnName: "txtTransl",
+      width: 200
+    },
+    {
+      columnName: "txtTransc",
+      width: 200
+    },
+    {
+      columnName: "audTransl",
+      width: 55
+    }
+  ];
 
   componentWillUnmount() {
     console.log("UnMounting Annot");
@@ -66,6 +93,7 @@ export class AnnotationTable extends Component<ComponentProps> {
     ) {
       this.formatTimeline(this.props.timelines[newIndex]);
       this.props.updatePrevTimeline(newIndex);
+      this.setColumnWidths();
     }
   }
 
@@ -125,6 +153,20 @@ export class AnnotationTable extends Component<ComponentProps> {
       console.log("Error: Timeline not different.");
       this.props.setTimelineChanged(false);
     }
+  };
+  setColumnWidths = (
+    columnWidths: LooseObject[] = this.defaultColumnWidths
+  ) => {
+    // this.props.getSize();
+    const lastCol =
+      this.props.dimensions.AppDetails.width -
+      columnWidths[0].width -
+      columnWidths[1].width -
+      columnWidths[3].width -
+      columnWidths[4].width -
+      5;
+    columnWidths[2].width = lastCol;
+    this.setState({ columnWidths });
   };
 
   render() {
@@ -205,9 +247,12 @@ export class AnnotationTable extends Component<ComponentProps> {
         </button>
       </Table.Cell>
     );
-
+    var emptyHeaderCell = (cellProps: any) => {
+      const { column } = cellProps;
+      return <TableHeaderRow.Cell {...cellProps}>&nbsp;</TableHeaderRow.Cell>;
+    };
     // Cells Based on Column Data
-    var Cell = (cellProps: any) => {
+    var dataCell = (cellProps: any) => {
       const { column } = cellProps;
       if (column.name === "txtTransl")
         return <FlowingCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
@@ -229,38 +274,38 @@ export class AnnotationTable extends Component<ComponentProps> {
         oneTwo: -1
       },
       {
+        name: "audCareful",
+        title: "Careful Clip",
+        oneTwo: 1
+      },
+      {
         name: "txtTransc",
         title: "Transcription",
         wordWrapEnabled: true,
         oneTwo: 1
       },
       {
-        name: "audCareful",
-        title: "Careful Clip",
-        oneTwo: 1
+        name: "audTransl",
+        title: "Trans. Clip",
+        oneTwo: 2
       },
       {
         name: "txtTransl",
         title: "Translation",
         wordWrapEnabled: true,
         oneTwo: 2
-      },
-      {
-        name: "audTransl",
-        title: "Trans. Clip",
-        oneTwo: 2
       }
     ];
 
-    // Column Names and Widths
+    /*     // Column Names and Widths
     const defaultColumnWidths = [
       {
         columnName: "startTime",
-        width: 70
+        width: 90
       },
       {
         columnName: "audCareful",
-        width: 100
+        width: 55
       },
       {
         columnName: "txtTransl",
@@ -272,12 +317,12 @@ export class AnnotationTable extends Component<ComponentProps> {
       },
       {
         columnName: "audTransl",
-        width: 100
+        width: 55
       }
-    ];
+    ]; */
     return (
-      <Paper className="annotation-table">
-        <div id="TranscriptionTableSpace">
+      <div id="TranscriptionTableSpace">
+        <Paper className="annotation-table">
           <Grid
             rows={this.props.annotationTable}
             columns={annotCols}
@@ -289,17 +334,18 @@ export class AnnotationTable extends Component<ComponentProps> {
               defaultSorting={[{ columnName: "startTime", direction: "asc" }]}
             />
             <IntegratedSorting />
-            <VirtualTable rowComponent={TableRow} cellComponent={Cell} />
+            <VirtualTable rowComponent={TableRow} cellComponent={dataCell} />
             <TableColumnResizing
-              defaultColumnWidths={defaultColumnWidths}
+              defaultColumnWidths={this.defaultColumnWidths}
               minColumnWidth={50}
+              onColumnWidthsChange={this.setColumnWidths}
             />
             <Toolbar />
-            <TableHeaderRow />
+            <TableHeaderRow cellComponent={emptyHeaderCell} />
             <SearchPanel />
           </Grid>
-        </div>
-      </Paper>
+        </Paper>
+      </div>
     );
   }
 }
@@ -309,6 +355,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   categories: state.annot.categories,
   currentTimeline: state.annot.currentTimeline,
   duration: state.player.duration,
+  dimensions: state.system.dimensions,
   prevTimeline: state.annot.prevTimeline,
   sourceMedia: state.tree.sourceMedia,
   timelineChanged: state.annot.timelineChanged,
