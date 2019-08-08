@@ -1,7 +1,6 @@
 import * as types from "./types";
 
 export const deeJayCleanStore: types.DeeJayState = {
-  durations: [-1, -1, -1],
   volumes: [1, 0, 0],
   dispatch: { dispatchType: "" }
 };
@@ -15,14 +14,6 @@ export function deeJayReducer(
       state = deeJayCleanStore;
       return {
         ...state
-      };
-    }
-    case types.SET_WS_DURATION: {
-      return {
-        ...state,
-        durations: state.durations.map((v: number, idx: number) =>
-          idx === action.payload.idx ? action.payload.duration : v
-        )
       };
     }
     case types.SET_WS_VOLUME: {

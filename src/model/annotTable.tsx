@@ -38,7 +38,6 @@ interface StateProps {
   timelinesInstantiated: boolean;
   url: string;
   duration: number;
-  durations: number[];
 }
 
 interface DispatchProps {
@@ -310,7 +309,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   categories: state.annot.categories,
   currentTimeline: state.annot.currentTimeline,
   duration: state.player.duration,
-  durations: state.deeJay.durations,
   prevTimeline: state.annot.prevTimeline,
   sourceMedia: state.tree.sourceMedia,
   timelineChanged: state.annot.timelineChanged,

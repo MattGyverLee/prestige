@@ -6,16 +6,6 @@ export function resetDeeJay(): types.DeeJayActionTypes {
   };
 }
 
-export function setWSDuration(
-  idx: number,
-  duration: number
-): types.DeeJayActionTypes {
-  return {
-    type: types.SET_WS_DURATION,
-    payload: { idx, duration }
-  };
-}
-
 export function setWSVolume(
   idx: number,
   volume: number

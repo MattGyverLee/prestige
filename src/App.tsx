@@ -3,7 +3,7 @@ import "./App.css";
 import * as actions from "./store";
 
 import AnnotationTable from "./model/annotTable";
-import DeeJay from "./model/deeJay";
+import DeeJay from "./model/DeeJay/deeJay";
 import FileList from "./model/fileList";
 import PlayerZone from "./model/player";
 import React from "react";

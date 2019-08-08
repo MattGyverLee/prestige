@@ -1,5 +1,4 @@
 export interface DeeJayState {
-  durations: number[];
   dispatch: DeeJayDispatch;
   volumes: number[];
 }
@@ -7,6 +6,7 @@ export interface DeeJayState {
 export interface DeeJayDispatch {
   dispatchType: string;
   wsNum?: number;
+  wsNum2?: number;
   clipStart?: number;
   clipStop?: number;
   refStart?: number;
@@ -14,15 +14,9 @@ export interface DeeJayDispatch {
   loop?: number;
 }
 
-export const SET_WS_DURATION = "SET_WS_DURATION";
 export const SET_WS_VOLUME = "SET_WS_VOLUME";
 export const RESET_DEE_JAY = "RESET_DEE_JAY";
 export const SET_DISPATCH = "SET_DISPATCH";
-
-interface SetWSDuration {
-  type: typeof SET_WS_DURATION;
-  payload: { idx: number; duration: number };
-}
 
 interface SetWSVolume {
   type: typeof SET_WS_VOLUME;
@@ -37,8 +31,4 @@ interface SetDispatch {
   payload: DeeJayDispatch;
 }
 
-export type DeeJayActionTypes =
-  | SetWSDuration
-  | SetWSVolume
-  | ResetDeeJay
-  | SetDispatch;
+export type DeeJayActionTypes = SetWSVolume | ResetDeeJay | SetDispatch;

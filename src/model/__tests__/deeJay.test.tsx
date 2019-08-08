@@ -2,7 +2,7 @@
 
 import "jest-dom/extend-expect";
 
-import ConnectedDeeJay, { DeeJay } from "../deeJay";
+import ConnectedDeeJay, { DeeJay } from "../DeeJay/deeJay";
 
 import { Provider } from "react-redux";
 import React from "react";
