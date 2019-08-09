@@ -6,10 +6,8 @@ import App from "./App";
 import { Provider } from "react-redux";
 import React from "react";
 import ReactDOM from "react-dom";
-import configureStore from "./store";
 import { SnackbarProvider } from "notistack";
-
-const store = configureStore();
+import store from "./store/store";
 
 console.log(`process.env: `, process.env);
 if (process.env.REACT_APP_MODE === "electron") {

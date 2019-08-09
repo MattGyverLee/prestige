@@ -1,7 +1,7 @@
 import * as actions from "../../store";
 
 import React, { Component } from "react";
-import { annotAudio, roundIt, sourceAudio } from "../globalFunctions";
+import { roundIt } from "../globalFunctions";
 
 import { DeeJayDispatch } from "../../store/deeJay/types";
 
@@ -11,11 +11,24 @@ import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import ControlRow from "./ControlRow/ControlRow";
 import WaveTableRow from "./WaveTableRow/WaveTableRow";
+import {
+  getInterMilestone,
+  findNextMilestoneIndex,
+  findLastMilestoneIndex,
+  getCurrentMilestone
+} from "./MilestoneFunctions";
+import { clipTime, calcPlaybackRate, calcRelativeTime } from "./TimeFunctions";
+import { syncContainsCurrent, findValidAudio } from "./FileFunctions";
+import {
+  generateRegionColors,
+  updateRegionAlpha,
+  toggleAllRegions
+} from "./RegionFunctions";
+import { createWaveSurfer, rowHeight } from "./WaveSurferFunctions";
 
 interface StateProps {
   annotMedia: any;
   currentTimeline: number;
-  dimensions: LooseObject;
   dispatch: DeeJayDispatch;
   playbackMultiplier: number;
   playerPlaying: boolean;
@@ -49,7 +62,6 @@ export class DeeJay extends Component<DeeJayProps> {
   private playPausing: boolean = false;
   private regionColors: string[] = [];
   private regionsOn: number = 0;
-  private ts: string[] = [];
   private voNum: number = 0;
   private waveSurfers: WaveSurfer[] = [];
 
@@ -65,32 +77,77 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   };
 
+  createWaveSurfer = (idx: number) => {
+    const newWS = createWaveSurfer(idx);
+
+    newWS.on("region-created", (region: any) => {
+      if (newWS.regions.list[region.id])
+        newWS.regions.list[region.id].onDrag(0);
+    });
+
+    // Process Region Hover In
+    newWS.on("region-mouseenter", (region: any) =>
+      this.regionHover(region, "hover", this.regionsOn)
+    );
+
+    // Process Region Hover Out
+    newWS.on("region-mouseleave", (region: any) =>
+      this.regionHover(region, "", this.regionsOn)
+    );
+
+    // Log Pause and Stop Player if All are Paused
+    newWS.on("pause", () => {
+      console.log(`${idx} Paused`);
+      let play = false;
+      this.idxs.forEach((idx: number) => {
+        if (this.waveSurfers[idx].isPlaying()) play = true;
+      });
+      if (!play) this.props.togglePlay(play);
+      // this.toggleAllRegions(true);
+    });
+
+    // Process WS Play
+    newWS.on("play", () => {
+      console.log(`${idx} Played`);
+      if (this.clipStart) this.clipStart = false;
+    });
+
+    // Process WS Error by Displaying Through Snackbar
+    newWS.on("error", (err: any) => {
+      console.log(err);
+    });
+
+    // Process WS Seeking
+    newWS.on("seek", () => this.wsSeek(idx));
+
+    this.waveSurfers[idx] = newWS;
+  };
+
+  regionHover = (region: any, element: string, regionsOn: number) => {
+    if (regionsOn !== 0) {
+      this.idxs.forEach((idx: number) => {
+        if (this.waveSurfers[idx].regions.list[region.id]) {
+          const thisRegion = this.waveSurfers[idx].regions.list[region.id];
+          thisRegion.element.id = element;
+          updateRegionAlpha(
+            this.waveSurfers[idx].regions.list,
+            regionsOn === 1 ? (element ? 0.7 : 0.1) : element ? 0.1 : 0.0,
+            region.start,
+            region.end
+          );
+          if (element) thisRegion.element.style.outlineOffset = "-3px";
+          thisRegion.onDrag(0);
+        }
+      });
+    }
+  };
+
   // Processes Reaction to State Updates
   componentDidUpdate() {
-    // Fetch Current Sync Media if Available
-    const currSync: string[] =
-      this.props.currentTimeline !== -1
-        ? this.props.timeline[this.props.currentTimeline].syncMedia
-        : [];
-
     // If currentURL and StateURL Don't Match
     if (this.currBlob !== this.props.url) {
       // Add Colors for Possible Regions if Necessary
-      if (this.props.currentTimeline !== -1) {
-        this.regionColors = [];
-        this.props.timeline[this.props.currentTimeline].milestones.forEach(() =>
-          this.regionColors.push(
-            "rgba(" +
-              [
-                ~~(Math.random() * 255),
-                ~~(Math.random() * 255),
-                ~~(Math.random() * 255),
-                0.0
-              ] +
-              ")"
-          )
-        );
-      }
+      this.regionColors = generateRegionColors();
 
       // Match URLs
       this.currBlob = this.props.url;
@@ -112,7 +169,7 @@ export class DeeJay extends Component<DeeJayProps> {
     this.idxs.forEach((idx: number) => {
       // If Sync Media Does Not Contain currBlob => No Timeline Actions
       // -> Else => Timeline Actions
-      if (currSync.filter((s: any) => s === this.currBlob).length !== 1) {
+      if (syncContainsCurrent(this.currBlob)) {
         // If WS is Playing => Check for Playing Actions
         // -> Else If WS0, and Not Empty URL => Load and Play URL
         if (this.currentPlaying[idx]) this.checkPlayingValues(idx);
@@ -123,33 +180,9 @@ export class DeeJay extends Component<DeeJayProps> {
         if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady)
           this.checkPlayingValues(idx);
         else if (!this.currentPlaying[idx]) {
-          let load = this.loadQueue[idx];
-          if (!this.loadQueue[idx]) {
-            const audio =
-              idx === 0
-                ? sourceAudio(this.props.sourceMedia, true).filter(
-                    (sa: LooseObject) =>
-                      sa.blobURL.includes("_StandardAudio_Normalized.mp3") &&
-                      currSync.indexOf(
-                        sa.blobURL.substring(
-                          0,
-                          sa.blobURL.indexOf("_Normalized.mp3")
-                        ) + ".wav"
-                      ) !== -1
-                  )
-                : annotAudio(
-                    this.props.annotMedia,
-                    true,
-                    this.props.currentTimeline,
-                    this.props.timeline
-                  ).filter((aa: LooseObject) =>
-                    aa.blobURL.includes(
-                      (idx - 1 ? "Translation" : "Careful") + "_Merged.mp3"
-                    )
-                  );
-            load = audio.length === 1 ? audio[0].blobURL : "";
-          }
-
+          let load = this.loadQueue[idx]
+            ? this.loadQueue[idx]
+            : findValidAudio(idx);
           // Load File if Possible, Otherwise Put Into LoadQueue
           if (!this.fileAllowed(load)) this.loadQueue[idx] = load;
           else this.loadFileWS(idx, load);
@@ -157,119 +190,11 @@ export class DeeJay extends Component<DeeJayProps> {
       }
     });
     [0, 1, 2].forEach(idx => {
-      if (this.waveSurfers[idx].height !== this.rowHeight()) {
-        this.waveSurfers[idx].height = this.rowHeight();
-  }
-    });
-  }
-  rowHeight = () => {
-    if (
-      this.props.dimensions !== undefined &&
-      this.props.dimensions.AppDeeJay !== undefined &&
-      this.props.dimensions.AppDeeJay.height !== undefined &&
-      this.props.dimensions.AppDeeJay.height !== -1
-    ) {
-      return Math.round((this.props.dimensions.AppDeeJay.height * 0.8) / 4);
-    } else {
-      return 128;
-    }
-  };
-  createWaveSurfer = (idx: number) => {
-    const regionsPlugin = require("../../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
-    this.waveSurfers[idx] = WaveSurfer.create({
-      container: "#waveform" + idx.toString(),
-      barWidth: 1,
-      cursorWidth: 2,
-      backend: "MediaElement",
-      progressColor: "#4a74a5",
-      cursorColor: "#4a74a5",
-      responsive: true,
-      waveColor: "#ccc",
-      hideScrollbar: true,
-      height: this.rowHeight(),
-      plugins: [regionsPlugin.create()]
-    });
-    this.waveSurfers[idx].empty();
-    this.waveSurfers[idx].setVolume(+(idx === 0));
-
-    // Process Region Hover In
-    this.waveSurfers[idx].on("region-mouseenter", (region: any) => {
-      if (this.regionsOn !== 0) {
-        this.ts.push(region.id);
-        this.idxs.forEach((idx: number) => {
-          if (
-            this.waveSurfers[idx].regions.list[region.id] &&
-            this.regionsOn !== 0
-          ) {
-            const thisRegion = this.waveSurfers[idx].regions.list[region.id];
-            thisRegion.element.id = "hover";
-            this.updateRegionAlpha(
-              idx,
-              region.id,
-              this.regionsOn === 1 ? 0.7 : 0.1
-            );
-            // thisRegion.element.style.backgroundColor = "rgba(18, 117, 240, 0.1)";
-            thisRegion.element.style.outlineOffset = "-3px";
-            thisRegion.onDrag(0);
-          }
-        });
+      if (this.waveSurfers[idx].height !== rowHeight()) {
+        this.waveSurfers[idx].height = rowHeight();
       }
     });
-
-    // Process Region Hover Out
-    this.waveSurfers[idx].on("region-mouseleave", (region: any) => {
-      if (this.regionsOn !== 0) {
-        this.ts = this.ts.filter((item: string) => item !== region.id);
-        this.idxs.forEach((idx: number) => {
-          if (
-            this.waveSurfers[idx].regions.list[region.id] &&
-            this.regionsOn !== 0
-          ) {
-            const thisRegion = this.waveSurfers[idx].regions.list[region.id];
-            thisRegion.element.id = "";
-            this.updateRegionAlpha(
-              idx,
-              region.id,
-              this.regionsOn === 1 ? 0.1 : 0.0
-            );
-            if (this.regionsOn === 2)
-              thisRegion.element.style.backgroundColor = "";
-            thisRegion.onDrag(0);
-          }
-        });
-      }
-    });
-
-    // Log Pause and Stop Player if All are Paused
-    this.waveSurfers[idx].on("pause", () => {
-      console.log(`${idx} Paused`);
-      let play = false;
-      this.idxs.forEach((idx: number) => {
-        if (this.waveSurfers[idx].isPlaying()) play = true;
-      });
-      if (!play) this.props.togglePlay(play);
-      // this.toggleAllRegions(true);
-    });
-
-    // Process WS Play
-    this.waveSurfers[idx].on("play", () => {
-      console.log(`${idx} Played`);
-      if (this.clipStart) this.clipStart = false;
-    });
-
-    // Process WS Finish
-    this.waveSurfers[idx].on("finish", () => {
-      //this.waveSurfers[idx].pause();
-    });
-
-    // Process WS Error by Displaying Through Snackbar
-    this.waveSurfers[idx].on("error", (err: any) => {
-      console.log(err);
-    });
-
-    // Process WS Seeking
-    this.waveSurfers[idx].on("seek", () => this.wsSeek(idx));
-  };
+  }
 
   wsSeek = (idx: number) => {
     if (!this.clicked[idx]) console.log(`${idx} No Click Seeking`);
@@ -284,7 +209,10 @@ export class DeeJay extends Component<DeeJayProps> {
           : this.props.timeline[this.props.currentTimeline].milestones;
 
       // Grab Current Milestone and Set Volum of Given WS
-      const currM = this.getCurrentMilestone(idx);
+      const currM = getCurrentMilestone(
+        idx,
+        this.waveSurfers[idx].getCurrentTime()
+      );
       this.waveSurfers[idx].setVolume(1);
       this.props.setWSVolume(idx, 1);
 
@@ -307,7 +235,13 @@ export class DeeJay extends Component<DeeJayProps> {
       };
       const lowestValidHigh = highs.reduce(
         (a: number, b: number) =>
-          (!b || this.getCurrentMilestone(0, currMD, b).data.length) &&
+          (!b ||
+            getCurrentMilestone(
+              0,
+              this.waveSurfers[0].getCurrentTime(),
+              currMD,
+              b
+            ).data.length) &&
           (b < a || a === -1)
             ? b
             : a,
@@ -323,11 +257,21 @@ export class DeeJay extends Component<DeeJayProps> {
           idx,
           lowestValidHigh,
           currM,
-          this.getCurrentMilestone(0, currMD, lowestValidHigh)
+          getCurrentMilestone(
+            0,
+            this.waveSurfers[0].getCurrentTime(),
+            currMD,
+            lowestValidHigh
+          )
         );
       } else {
         lows.forEach((low: number) => {
-          const lowM = this.getCurrentMilestone(0, currMD, low);
+          const lowM = getCurrentMilestone(
+            0,
+            this.waveSurfers[0].getCurrentTime(),
+            currMD,
+            low
+          );
           if (!low || lowM.data.length)
             this.setRelativeTime(idx, low, currM, lowM);
         });
@@ -350,10 +294,18 @@ export class DeeJay extends Component<DeeJayProps> {
                   // - 1. FindMilestoneIndex of High's Current Time
                   // - 2. + (0 If Next WS <= High Else -1)
                   let nextM: any;
-                  if (this.getCurrentMilestone(high)) {
+                  if (
+                    getCurrentMilestone(
+                      high,
+                      this.waveSurfers[high].getCurrentTime()
+                    )
+                  ) {
                     const comingMIdx =
-                      this.findNextMilestoneIndex(
-                        this.getCurrentMilestone(high)
+                      findNextMilestoneIndex(
+                        getCurrentMilestone(
+                          high,
+                          this.waveSurfers[high].getCurrentTime()
+                        )
                       ) +
                       +(highWS.getDuration() - highWS.getCurrentTime() < 0.05) +
                       +(nextIdx <= high) +
@@ -364,8 +316,9 @@ export class DeeJay extends Component<DeeJayProps> {
                     else {
                       // Grab currComingM
                       const currComingM = currMiles[comingMIdx];
-                      nextM = this.getCurrentMilestone(
+                      nextM = getCurrentMilestone(
                         0,
+                        this.waveSurfers[0].getCurrentTime(),
                         {
                           dispatchType: "WSSeek",
                           clipStart: currComingM.startTime,
@@ -389,14 +342,19 @@ export class DeeJay extends Component<DeeJayProps> {
               } else {
                 const currComingM =
                   currMiles[
-                    this.findNextMilestoneIndex(this.getCurrentMilestone(idx)) -
-                      1
+                    findNextMilestoneIndex(
+                      getCurrentMilestone(
+                        idx,
+                        this.waveSurfers[idx].getCurrentTime()
+                      )
+                    ) - 1
                   ];
                 this.checkVOAndPlay(
                   idx,
                   lows,
-                  this.getCurrentMilestone(
+                  getCurrentMilestone(
                     0,
+                    this.waveSurfers[0].getCurrentTime(),
                     {
                       dispatchType: "WSSeek",
                       clipStart: currComingM.startTime,
@@ -411,7 +369,12 @@ export class DeeJay extends Component<DeeJayProps> {
           };
 
           // If Current Milestone Has What it Needs => Set Relative Time
-          const highM = this.getCurrentMilestone(0, currMD, high);
+          const highM = getCurrentMilestone(
+            0,
+            this.waveSurfers[0].getCurrentTime(),
+            currMD,
+            high
+          );
           if (!high || highM.data.length)
             this.setRelativeTime(idx, high, currM, highM);
 
@@ -442,13 +405,20 @@ export class DeeJay extends Component<DeeJayProps> {
       clipStop: m.stopTime
     };
     const validLows = lows.filter(
-      (l: any) => !l || this.getCurrentMilestone(0, mD, l).data.length
+      (l: any) =>
+        !l ||
+        getCurrentMilestone(0, this.waveSurfers[0].getCurrentTime(), mD, l).data
+          .length
     );
     let voM;
     if (
       validLows.length &&
-      ((voM = this.getCurrentMilestone(0, mD, validLows[this.voNum])).data
-        .length ||
+      ((voM = getCurrentMilestone(
+        0,
+        this.waveSurfers[0].getCurrentTime(),
+        mD,
+        validLows[this.voNum]
+      )).data.length ||
         !validLows[this.voNum])
     ) {
       if (this.voNum) this.setRelativeTime(validLows[this.voNum], idx, voM, m);
@@ -460,52 +430,56 @@ export class DeeJay extends Component<DeeJayProps> {
 
   seekSyncAndPlay = (idx: number, m: Milestone) => {
     // Sync Player
-    const playbackRate = idx === 0 ? 1 : this.calcPlaybackRate(m);
+    const playbackRate = idx === 0 ? 1 : calcPlaybackRate(m);
     this.props.setPlaybackRate(roundIt(playbackRate, 2));
-    this.props.setSeek(this.calcRelativeTime(idx, m, playbackRate));
+    this.props.setSeek(
+      calcRelativeTime(
+        this.waveSurfers[idx].getCurrentTime(),
+        clipTime(idx, m, true),
+        this.waveSurfers[idx].getDuration(),
+        playbackRate,
+        clipTime(0, m, true)
+      )
+    );
     this.props.togglePlay(true);
 
     // Play From Now Until End of Clip
     this.waveSurfers[idx].play(
       this.waveSurfers[idx].getCurrentTime(),
-      this.findNextMilestoneIndex(m) === this.findLastMilestoneIndex(idx)
+      findNextMilestoneIndex(m) === findLastMilestoneIndex(idx)
         ? this.waveSurfers[idx].getDuration()
-        : this.clipTime(idx, m, false)
+        : clipTime(idx, m, false)
     );
   };
-
-  // Gets the Desired StartTime, StopTime, ClipStart, or ClipStop of the Milestone According to WS Idx
-  clipTime = (idx: number, milestone: any, startOrStop: boolean) =>
-    idx === 0
-      ? startOrStop
-        ? milestone.startTime
-        : milestone.stopTime
-      : startOrStop
-      ? milestone.data[0].clipStart
-      : milestone.data[0].clipStop;
 
   // Sets WS Idx2 to the Time Relative to WS Idx1
   // -> Returns Playback Rate
   setRelativeTime = (idx1: number, idx2: number, mile1: any, mile2: any) => {
     // Grab Filtered Milestone of the First High
-    const playbackRate = this.calcPlaybackRate(
+    const playbackRate = calcPlaybackRate(
       mile2,
       {
         dispatchType: "WSSeek",
-        clipStart: this.clipTime(idx1, mile1, true),
-        clipStop: this.clipTime(idx1, mile1, false)
+        clipStart: clipTime(idx1, mile1, true),
+        clipStop: clipTime(idx1, mile1, false)
       },
       {
         dispatchType: "WSSeek",
-        clipStart: this.clipTime(idx2, mile2, true),
-        clipStop: this.clipTime(idx2, mile2, false)
+        clipStart: clipTime(idx2, mile2, true),
+        clipStop: clipTime(idx2, mile2, false)
       }
     );
 
     // Set High Clicked and Seek it to the Relative Time
     // This Makes First High First One to Play
     this.waveSurfers[idx2].seekTo(
-      this.calcRelativeTime(idx1, mile1, playbackRate, idx2, mile2)
+      calcRelativeTime(
+        this.waveSurfers[idx1].getCurrentTime(),
+        clipTime(idx1, mile1, true),
+        this.waveSurfers[idx1].getDuration(),
+        playbackRate,
+        clipTime(idx2, mile2, true)
+      )
     );
     return playbackRate;
   };
@@ -517,7 +491,7 @@ export class DeeJay extends Component<DeeJayProps> {
     );
     this.waveSurfers[idx2].play(
       this.waveSurfers[idx2].getCurrentTime(),
-      this.clipTime(idx2, mile2, false)
+      clipTime(idx2, mile2, false)
     );
   };
 
@@ -544,30 +518,25 @@ export class DeeJay extends Component<DeeJayProps> {
       if (this.props.currentTimeline !== -1)
         this.props.timeline[this.props.currentTimeline].milestones.forEach(
           (m: any, mileNum: number) => {
-            if (idx === 0) {
-              this.waveSurfers[idx].addRegion({
-                id: m.startId,
-                start: m.startTime,
-                end: m.stopTime,
-                color: this.regionColors[mileNum],
-                drag: false,
-                resize: false
-              });
-              this.waveSurfers[idx].regions.list[m.startId].onDrag(0);
-            } else
+            const region = {
+              id: m.startId,
+              start: m.startTime,
+              end: m.stopTime,
+              color: this.regionColors[mileNum],
+              drag: false,
+              resize: false
+            };
+            if (idx === 0) this.waveSurfers[idx].addRegion(region);
+            else
               m.data.forEach((d: LooseObject) => {
                 if (
                   d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
                 ) {
                   this.waveSurfers[idx].addRegion({
-                    id: m.startId,
+                    ...region,
                     start: d.clipStart,
-                    end: d.clipStop,
-                    color: this.regionColors[mileNum],
-                    drag: false,
-                    resize: false
+                    end: d.clipStop
                   });
-                  this.waveSurfers[idx].regions.list[m.startId].onDrag(0);
                 }
               });
           }
@@ -579,7 +548,7 @@ export class DeeJay extends Component<DeeJayProps> {
         this.props.setSeek(0);
         this.props.togglePlay(true);
       }
-      this.toggleAllRegions(true);
+      toggleAllRegions(this.regionsOn, true, this.getWSRegions());
       ws.un(sub, waveformReady);
     };
 
@@ -608,7 +577,7 @@ export class DeeJay extends Component<DeeJayProps> {
       this.dispatchDJ();
     if (ws.getVolume() !== this.props.volumes[idx])
       ws.setVolume(this.props.volumes[idx]);
-    const expVolume = roundIt(
+    const expRate = roundIt(
       this.currentSpeeds[idx] * this.props.playbackMultiplier >= 15
         ? 14.5
         : this.currentSpeeds[idx] * this.props.playbackMultiplier <= 0.2
@@ -616,7 +585,7 @@ export class DeeJay extends Component<DeeJayProps> {
         : this.currentSpeeds[idx] * this.props.playbackMultiplier,
       2
     );
-    if (ws.getPlaybackRate() !== expVolume) ws.setPlaybackRate(expVolume);
+    if (ws.getPlaybackRate() !== expRate) ws.setPlaybackRate(expRate);
   };
 
   // Checks for Whether or not Given Blob is wsAllowed
@@ -677,175 +646,19 @@ export class DeeJay extends Component<DeeJayProps> {
       );
   };
 
-  // Toggle Between Various Representations of the Current Timeline's Regions
-  toggleAllRegions = (noIncrement?: boolean) => {
-    // FIXME: Last Region in all WSs Not Drawn
-    if (this.props.currentTimeline !== -1 && this.regionsOn !== 2) {
-      const alpha = this.regionsOn - +(noIncrement || 0) ? 0.0 : 0.1;
-      this.props.timeline[this.props.currentTimeline].milestones.forEach(
-        (m: any) => {
-          const reg0 = this.findRegion(0, m.startTime, m.stopTime);
-          if (reg0) this.updateRegionAlpha(0, reg0, alpha);
-          m.data.forEach((d: LooseObject) => {
-            const wsNum =
-              +d.channel.endsWith("Merged") *
-              (1 + +d.channel.startsWith("Translation"));
-            let reg;
-            if (
-              wsNum &&
-              (reg = this.findRegion(wsNum, d.clipStart, d.clipStop))
-            )
-              this.updateRegionAlpha(wsNum, reg, alpha);
-          });
-        }
-      );
-    }
-    if (!noIncrement) this.regionsOn = ++this.regionsOn % 3;
-  };
-
-  // Fetches the Current Milestone of the Specified WS
-  getCurrentMilestone = (
-    wsNum: number,
-    dispatch: DeeJayDispatch = { dispatchType: "" },
-    filter?: number
-  ) => {
-    if (!filter) filter = wsNum;
-    if (this.props.currentTimeline === -1) return -1;
-    const channel = `${filter === 1 ? "Careful" : "Translation"}Merged`;
-    return this.props.timeline[this.props.currentTimeline].milestones
-      .filter((m: Milestone) => {
-        return wsNum === 0
-          ? dispatch.dispatchType !== ""
-            ? m.startTime === dispatch.clipStart &&
-              m.stopTime === dispatch.clipStop
-            : m.startTime <= this.waveSurfers[wsNum].getCurrentTime() &&
-              this.waveSurfers[wsNum].getCurrentTime() < m.stopTime
-          : m.data.filter((d: LooseObject) => {
-              return (
-                d.channel === channel &&
-                (dispatch.dispatchType !== ""
-                  ? d.clipStart === dispatch.clipStart &&
-                    d.clipStop === dispatch.clipStop
-                  : d.clipStart <= this.waveSurfers[wsNum].getCurrentTime() &&
-                    this.waveSurfers[wsNum].getCurrentTime() < d.clipStop)
-              );
-            }).length === 1;
-      })
-      .map((m: Milestone) => {
-        return {
-          ...m,
-          data: m.data.filter(
-            (d: LooseObject) =>
-              (filter === 0 && wsNum === 0) || d.channel === channel
-          )
-        };
-      })[0];
-  };
-
-  // Returns the Milestone Containing the Given Time and Possibly a Specific Data Element
-  getInterMilestone = (time: number, wsNum?: number) =>
-    this.props.currentTimeline === -1
-      ? -1
-      : this.props.timeline[this.props.currentTimeline].milestones
-          .filter((m: any) => {
-            return m.startTime <= time && time < m.stopTime;
-          })
-          .map((m: Milestone) => {
-            return {
-              ...m,
-              data: m.data.filter(
-                (d: LooseObject) =>
-                  wsNum === 0 ||
-                  d.channel ===
-                    `${wsNum === 1 ? "Careful" : "Translation"}Merged`
-              )
-            };
-          })[0];
-
   // Returns an Array with the Indexes of Active WSs
-  getActives = () =>
-    this.idxs.filter(
+  getActives = () => {
+    return this.idxs.filter(
       (idx: number) =>
         this.waveSurfers[idx].getVolume() > 0 ||
         this.waveSurfers[idx].isPlaying()
     );
-
-  // Calculates PlaybackRate for Source/Video Based on Milestone or Milestone and Dispatch
-  calcPlaybackRate = (
-    milestone: any,
-    dispatch?: DeeJayDispatch,
-    dispatch2?: DeeJayDispatch
-  ) => {
-    const playbackRate =
-      ((dispatch2 ? dispatch2.clipStop : milestone.stopTime) -
-        (dispatch2 ? dispatch2.clipStart : milestone.startTime)) /
-      ((dispatch ? dispatch.clipStop : milestone.data[0].clipStop) -
-        (dispatch ? dispatch.clipStart : milestone.data[0].clipStart));
-    return playbackRate >= 15 ? 14.5 : playbackRate <= 0.2 ? 0.2 : playbackRate;
   };
 
-  // Calculates Relative Time for Source/Video Based on a WS, Milestone, and PlaybackRate
-  calcRelativeTime = (
-    idx: number,
-    milestone: any,
-    playbackRate: number,
-    idx2?: number,
-    milestone2?: any
-  ) =>
-    roundIt(
-      ((this.waveSurfers[idx].getCurrentTime() -
-        this.clipTime(idx, milestone, true)) *
-        playbackRate +
-        (!idx2 ? milestone.startTime : milestone2.data[0].clipStart)) /
-        this.waveSurfers[idx2 || 0].getDuration(),
-      3
+  getWSRegions = () => {
+    return this.idxs.map((idx: number) =>
+      this.waveSurfers[idx] ? this.waveSurfers[idx].regions.list : []
     );
-
-  // Finds the Index of the Milestone After the One Provided
-  findNextMilestoneIndex = (milestone: any) =>
-    this.props.currentTimeline === -1
-      ? -1
-      : this.props.timeline[this.props.currentTimeline].milestones.findIndex(
-          (m: any) => m.startTime === milestone.startTime
-        );
-
-  // Finds the Index of the Last Milestone of a Particular Type
-  findLastMilestoneIndex = (wsNum: number) => {
-    if (this.props.currentTimeline === -1) return -1;
-    const milestones = this.props.timeline[this.props.currentTimeline]
-      .milestones;
-    return wsNum === 0
-      ? milestones.length - 1
-      : milestones
-          .map((m: any, idx: number) =>
-            m.data.findIndex(
-              (d: any) =>
-                d.channel === `${wsNum === 1 ? "Careful" : "Translation"}Merged`
-            ) === -1
-              ? 0
-              : idx
-          )
-          .reduce((a: number, b: number) => (a > b ? a : b), 0);
-  };
-
-  findRegion = (wsNum: number, start: number, end: number) => {
-    const id = Object.keys(this.waveSurfers[wsNum].regions.list).filter(
-      (id: any) => {
-        const r = this.waveSurfers[wsNum].regions.list[id];
-        return r.start === start && r.end === end;
-      }
-    );
-    return id.length === 1 ? id[0] : "";
-  };
-
-  updateRegionAlpha = (wsNum: number, id: string, alpha: number) => {
-    this.waveSurfers[wsNum].regions.list[id].color = this.waveSurfers[
-      wsNum
-    ].regions.list[id].color
-      .split(",")
-      .map((v: string) => (v.endsWith(")") ? `${alpha})` : v))
-      .join(",");
-    this.waveSurfers[wsNum].regions.list[id].onDrag(0);
   };
 
   // Responds to DJ Dispatches
@@ -885,7 +698,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
         // If WS 0 => Seek To Ref
         // -> Else If Milestone Data Exists => Seek To Relative Ref
-        currM = this.getInterMilestone(dispatch.refStart, actives[0]);
+        currM = getInterMilestone(dispatch.refStart, actives[0]);
         if (actives[0] === 0)
           this.waveSurfers[0].seekTo(
             dispatch.refStart / this.waveSurfers[actives[0]].getDuration()
@@ -919,8 +732,9 @@ export class DeeJay extends Component<DeeJayProps> {
           this.playPausing = false;
           if (this.actingDispatch.wsNum !== undefined) {
             const ppWS = this.waveSurfers[this.actingDispatch.wsNum];
-            currM = this.getCurrentMilestone(
+            currM = getCurrentMilestone(
               this.actingDispatch.wsNum,
+              this.waveSurfers[this.actingDispatch.wsNum].getCurrentTime(),
               {
                 dispatchType: ""
               },
@@ -928,14 +742,15 @@ export class DeeJay extends Component<DeeJayProps> {
             );
             ppWS.play(
               ppWS.getCurrentTime(),
-              this.clipTime(this.actingDispatch.wsNum, currM, false)
+              clipTime(this.actingDispatch.wsNum, currM, false)
             );
             this.props.togglePlay(true);
           }
           if (this.actingDispatch.wsNum2 !== undefined) {
             const ppWS = this.waveSurfers[this.actingDispatch.wsNum2];
-            currM = this.getCurrentMilestone(
+            currM = getCurrentMilestone(
               this.actingDispatch.wsNum2,
+              this.waveSurfers[this.actingDispatch.wsNum2].getCurrentTime(),
               {
                 dispatchType: ""
               },
@@ -943,7 +758,7 @@ export class DeeJay extends Component<DeeJayProps> {
             );
             ppWS.play(
               ppWS.getCurrentTime(),
-              this.clipTime(this.actingDispatch.wsNum2, currM, false)
+              clipTime(this.actingDispatch.wsNum2, currM, false)
             );
           }
         }
@@ -954,7 +769,11 @@ export class DeeJay extends Component<DeeJayProps> {
         this.clearDispatchLeftovers();
 
         // Grab Current Milestone and "Solo" the Given WS
-        currM = this.getCurrentMilestone(wsNum, dispatch);
+        currM = getCurrentMilestone(
+          wsNum,
+          this.waveSurfers[wsNum].getCurrentTime(),
+          dispatch
+        );
         this.solo(wsNum, false);
         this.waveSurfers[wsNum].setVolume(1);
         this.props.setWSVolume(wsNum, 1);
@@ -981,12 +800,17 @@ export class DeeJay extends Component<DeeJayProps> {
             clipStart: currM.startTime,
             clipStop: currM.stopTime
           };
-          const m1 = this.getCurrentMilestone(0, m1Dispatch, highs[x]);
+          const m1 = getCurrentMilestone(
+            0,
+            this.waveSurfers[0].getCurrentTime(),
+            m1Dispatch,
+            highs[x]
+          );
 
           // Process Only if it WS is 0 or M1 has Data
           if (!highs[x] || m1.data.length) {
-            const m1Start = this.clipTime(highs[x], m1, true);
-            const m1Stop = this.clipTime(highs[x], m1, false);
+            const m1Start = clipTime(highs[x], m1, true);
+            const m1Stop = clipTime(highs[x], m1, false);
 
             // For Each WS in Low
             for (let y = lows.length - 1; y >= 0; y--) {
@@ -996,24 +820,30 @@ export class DeeJay extends Component<DeeJayProps> {
                 clipStart: m1.startTime,
                 clipStop: m1.stopTime
               };
-              const m2 = this.getCurrentMilestone(0, m2Dispatch, lows[y]);
+              const m2 = getCurrentMilestone(
+                0,
+                this.waveSurfers[0].getCurrentTime(),
+                m2Dispatch,
+                lows[y]
+              );
 
               // Process Only if it Has Data
               if (!lows[y] || m2.data.length) {
-                const m2Start = this.clipTime(lows[y], m2, true);
-                const m2Stop = this.clipTime(lows[y], m2, false);
+                const m2Start = clipTime(lows[y], m2, true);
+                const m2Stop = clipTime(lows[y], m2, false);
 
                 // Create and Push Next Voiceover
                 voiceOvers.push(() => {
                   // Craft its Region
-                  this.updateRegionAlpha(
-                    lows[y],
-                    this.findRegion(lows[y], m2Start, m2Stop),
-                    0.7
+                  updateRegionAlpha(
+                    this.waveSurfers[lows[y]].regions.list,
+                    0.7,
+                    m2Start,
+                    m2Stop
                   );
 
                   // Determine its Playback Rate
-                  this.currentSpeeds[lows[y]] = this.calcPlaybackRate(
+                  this.currentSpeeds[lows[y]] = calcPlaybackRate(
                     m2,
                     {
                       dispatchType: "Clip",
@@ -1038,16 +868,17 @@ export class DeeJay extends Component<DeeJayProps> {
             recentStart = () => {
               if (!this.playPausing && (x === 0 || !this.clipStart)) {
                 // Reset Highlights
-                this.toggleAllRegions(true);
-                this.updateRegionAlpha(
-                  highs[x],
-                  this.findRegion(highs[x], m1Start, m1Stop),
-                  0.7
+                toggleAllRegions(this.regionsOn, true, this.getWSRegions());
+                updateRegionAlpha(
+                  this.waveSurfers[highs[x]].regions.list,
+                  0.7,
+                  m1Start,
+                  m1Stop
                 );
                 if (this.voNum + x < voiceOvers.length)
                   voiceOvers[voiceOvers.length - (this.voNum + x + 1)]("");
                 this.props.setPlaybackRate(
-                  roundIt(this.calcPlaybackRate(m1, dispatch), 2)
+                  roundIt(calcPlaybackRate(m1, dispatch), 2)
                 );
                 this.props.setSeek(m1.startTime || 0);
                 this.props.togglePlay(true);
@@ -1133,7 +964,12 @@ export class DeeJay extends Component<DeeJayProps> {
             <tbody>{waveTableRows}</tbody>
           </table>
         </div>
-        <button onClick={() => this.toggleAllRegions()}>
+        <button
+          onClick={() => {
+            toggleAllRegions(this.regionsOn, false, this.getWSRegions());
+            this.regionsOn = ++this.regionsOn % 3;
+          }}
+        >
           {this.regionsOn === 2 ? "Hide Regions" : "Toggle Regions"}
         </button>
       </div>
@@ -1143,7 +979,6 @@ export class DeeJay extends Component<DeeJayProps> {
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotMedia: state.tree.annotMedia,
-  dimensions: state.system.dimensions,
   currentTimeline: state.annot.currentTimeline,
   dispatch: state.deeJay.dispatch,
   playbackMultiplier: state.player.playbackMultiplier,

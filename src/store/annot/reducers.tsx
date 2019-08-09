@@ -212,6 +212,9 @@ export function annotationReducer(
     case types.SET_TIMELINE_CHANGED: {
       return { ...state, timelineChanged: action.payload };
     }
+    case types.LOAD_ANNOT: {
+      return { ...action.payload };
+    }
     default:
       // console.log("Failed Tree Action", action);
       return state;
