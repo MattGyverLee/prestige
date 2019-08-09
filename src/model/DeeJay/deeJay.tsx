@@ -253,6 +253,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // Process WS Play
     this.waveSurfers[idx].on("play", () => {
+      console.log(`${idx} Played`);
       if (this.clipStart) this.clipStart = false;
     });
 
@@ -338,71 +339,74 @@ export class DeeJay extends Component<DeeJayProps> {
           // Function for Loading Next Clip on Pause
           const loadNext = () => {
             // If No Highs are Playing => Load Next
-            if (!this.playPausing && !this.voNum) {
-              // Cycle Through All Highs (from First After Current, Ending on Current)
-              for (let i = 1, l = highs.length + 1; i < l; i++) {
-                // Grab Index of Next WS and the WS Itself
-                const nextIdx = highs[(hIdx + i) % highs.length];
+            if (!this.playPausing) {
+              if (!this.voNum) {
+                // Cycle Through All Highs (from First After Current, Ending on Current)
+                for (let i = 1, l = highs.length + 1; i < l; i++) {
+                  // Grab Index of Next WS and the WS Itself
+                  const nextIdx = highs[(hIdx + i) % highs.length];
 
-                // Calculate Timeline Index of the Coming Milestone:
-                // - 1. FindMilestoneIndex of High's Current Time
-                // - 2. + (0 If Next WS <= High Else -1)
-                let nextM: any;
-                if (this.getCurrentMilestone(high)) {
-                  const comingMIdx =
-                    this.findNextMilestoneIndex(
-                      this.getCurrentMilestone(high)
-                    ) +
-                    +(highWS.getDuration() - highWS.getCurrentTime() < 0.05) +
-                    +(nextIdx <= high) +
-                    -1;
+                  // Calculate Timeline Index of the Coming Milestone:
+                  // - 1. FindMilestoneIndex of High's Current Time
+                  // - 2. + (0 If Next WS <= High Else -1)
+                  let nextM: any;
+                  if (this.getCurrentMilestone(high)) {
+                    const comingMIdx =
+                      this.findNextMilestoneIndex(
+                        this.getCurrentMilestone(high)
+                      ) +
+                      +(highWS.getDuration() - highWS.getCurrentTime() < 0.05) +
+                      +(nextIdx <= high) +
+                      -1;
 
-                  if (comingMIdx === currMiles.length)
-                    highWS.un("pause", loadNext);
-                  else {
-                    // Grab currComingM
-                    const currComingM = currMiles[comingMIdx];
-                    nextM = this.getCurrentMilestone(
-                      0,
-                      {
-                        dispatchType: "WSSeek",
-                        clipStart: currComingM.startTime,
-                        clipStop: currComingM.stopTime
-                      },
-                      nextIdx
-                    );
-                    // If NextM Exists and NextM Has Data if Necessary => Load Next Clip
-                    if (nextM && (!nextIdx || nextM.data.length)) {
-                      // Force Exit Loop Now
-                      i = l;
-                      this.checkVOAndPlay(nextIdx, lows, nextM);
-                      this.actingDispatch = {
-                        dispatchType: "WSSeek",
-                        wsNum: nextIdx
-                      };
+                    if (comingMIdx === currMiles.length)
+                      highWS.un("pause", loadNext);
+                    else {
+                      // Grab currComingM
+                      const currComingM = currMiles[comingMIdx];
+                      nextM = this.getCurrentMilestone(
+                        0,
+                        {
+                          dispatchType: "WSSeek",
+                          clipStart: currComingM.startTime,
+                          clipStop: currComingM.stopTime
+                        },
+                        nextIdx
+                      );
+                      // If NextM Exists and NextM Has Data if Necessary => Load Next Clip
+                      if (nextM && (!nextIdx || nextM.data.length)) {
+                        // Force Exit Loop Now
+                        i = l;
+                        this.checkVOAndPlay(nextIdx, lows, nextM);
+                        this.actingDispatch = {
+                          dispatchType: "WSSeek",
+                          wsNum: nextIdx
+                        };
+                      }
                     }
                   }
                 }
+              } else {
+                const currComingM =
+                  currMiles[
+                    this.findNextMilestoneIndex(this.getCurrentMilestone(idx)) -
+                      1
+                  ];
+                this.checkVOAndPlay(
+                  idx,
+                  lows,
+                  this.getCurrentMilestone(
+                    0,
+                    {
+                      dispatchType: "WSSeek",
+                      clipStart: currComingM.startTime,
+                      clipStop: currComingM.stopTime
+                    },
+                    idx
+                  )
+                );
+                this.actingDispatch = { dispatchType: "WSSeek", wsNum: idx };
               }
-            } else {
-              const currComingM =
-                currMiles[
-                  this.findNextMilestoneIndex(this.getCurrentMilestone(idx)) - 1
-                ];
-              this.checkVOAndPlay(
-                idx,
-                lows,
-                this.getCurrentMilestone(
-                  0,
-                  {
-                    dispatchType: "WSSeek",
-                    clipStart: currComingM.startTime,
-                    clipStop: currComingM.stopTime
-                  },
-                  idx
-                )
-              );
-              this.actingDispatch = { dispatchType: "WSSeek", wsNum: idx };
             }
           };
 
