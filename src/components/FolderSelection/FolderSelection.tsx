@@ -2,7 +2,7 @@ import * as aTypes from "../../store/annot/types";
 import * as actions from "../../store";
 import * as tTypes from "../../store/tree/types";
 
-import Timelines from "../timeline";
+import Timelines from "./Timelines";
 import React, { Component } from "react";
 import { getSourceMedia, getTimelineIndex, roundIt } from "../globalFunctions";
 
