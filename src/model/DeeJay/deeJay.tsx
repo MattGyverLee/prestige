@@ -15,6 +15,7 @@ import WaveTableRow from "./WaveTableRow/WaveTableRow";
 interface StateProps {
   annotMedia: any;
   currentTimeline: number;
+  dimensions: LooseObject;
   dispatch: DeeJayDispatch;
   playbackMultiplier: number;
   playerPlaying: boolean;
@@ -155,8 +156,24 @@ export class DeeJay extends Component<DeeJayProps> {
         }
       }
     });
+    [0, 1, 2].forEach(idx => {
+      if (this.waveSurfers[idx].height !== this.rowHeight()) {
+        this.waveSurfers[idx].height = this.rowHeight();
   }
-
+    });
+  }
+  rowHeight = () => {
+    if (
+      this.props.dimensions !== undefined &&
+      this.props.dimensions.AppDeeJay !== undefined &&
+      this.props.dimensions.AppDeeJay.height !== undefined &&
+      this.props.dimensions.AppDeeJay.height !== -1
+    ) {
+      return Math.round((this.props.dimensions.AppDeeJay.height * 0.8) / 4);
+    } else {
+      return 128;
+    }
+  };
   createWaveSurfer = (idx: number) => {
     const regionsPlugin = require("../../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
     this.waveSurfers[idx] = WaveSurfer.create({
@@ -169,6 +186,7 @@ export class DeeJay extends Component<DeeJayProps> {
       responsive: true,
       waveColor: "#ccc",
       hideScrollbar: true,
+      height: this.rowHeight(),
       plugins: [regionsPlugin.create()]
     });
     this.waveSurfers[idx].empty();
@@ -1121,6 +1139,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotMedia: state.tree.annotMedia,
+  dimensions: state.system.dimensions,
   currentTimeline: state.annot.currentTimeline,
   dispatch: state.deeJay.dispatch,
   playbackMultiplier: state.player.playbackMultiplier,
