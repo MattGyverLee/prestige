@@ -1,6 +1,6 @@
-import * as actions from "../store";
+import * as actions from "../../store";
 
-import { AnnotationRow, LooseObject } from "../store/annot/types";
+import { AnnotationRow, LooseObject } from "../../store/annot/types";
 import {
   IntegratedFiltering,
   IntegratedSorting,
@@ -21,7 +21,7 @@ import React, { Component } from "react";
 import Paper from "@material-ui/core/Paper";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { getTimelineIndex } from "./globalFunctions";
+import { getTimelineIndex } from "../globalFunctions";
 
 const Root = (props: any) => (
   <Grid.Root

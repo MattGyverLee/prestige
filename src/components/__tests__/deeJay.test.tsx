@@ -2,7 +2,8 @@
 
 import "jest-dom/extend-expect";
 
-import ConnectedAnnotationTable, { AnnotationTable } from "../annotTable";
+import ConnectedDeeJay, { DeeJay } from "../DeeJay/DeeJay";
+
 import { Provider } from "react-redux";
 import React from "react";
 import { annCleanStore } from "../../store/annot/reducers";
@@ -28,29 +29,36 @@ const store = configureMockStore([])({
   tree: { ...treeCleanStore }
 });
 
-var annotationTableMaster: any;
+var deejayMaster: any;
 
 // TODO: Constrain to Media Type
 
 afterEach(cleanup);
 
-const props = {};
+const props = {
+  setWSVolume: jest.fn(),
+  setWSDuration: jest.fn(),
+  setSeek: jest.fn(),
+  resetDeeJay: jest.fn(),
+  setDispatch: jest.fn(),
+  playerPlay: jest.fn(),
+  waveformAdded: jest.fn(),
+  volumes: [1, 0, 0]
+};
 
 afterEach(cleanup);
 
 it("is true", () => true);
 
-it("renders annotTable without crashing", () => {
+it("renders deeJay without crashing", () => {
   renderer.act(() => {
-    annotationTableMaster = renderer.create(
+    deejayMaster = renderer.create(
       <Provider store={store}>
-        <ConnectedAnnotationTable {...props} />
+        <ConnectedDeeJay {...props} />
       </Provider>
     );
   });
-  expect(annotationTableMaster).toMatchSnapshot();
-  const annotationTableHandle: AnnotationTable = annotationTableMaster.root.findByType(
-    AnnotationTable
-  ).instance;
-  expect(annotationTableHandle).toBeVisible();
+  expect(deejayMaster).toMatchSnapshot();
+  let deejayHandle: DeeJay = deejayMaster.root.findByType(DeeJay).instance;
+  expect(deejayHandle).toBeVisible();
 });

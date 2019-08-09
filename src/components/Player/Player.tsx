@@ -1,14 +1,15 @@
-import "../App.css";
+import "../../App.css";
 
-import * as actions from "../store";
+import * as actions from "../../store";
 
 import React, { Component } from "react";
 
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { getTimelineIndex } from "./globalFunctions";
-import ResizableDiv from "./resizableDiv";
+import { getTimelineIndex } from "../globalFunctions";
+import ResizableDiv from "../resizableDiv";
+import ControlRow from "./ControlRow/ControlRow";
 
 interface StateProps {
   duration: any;
@@ -100,6 +101,10 @@ class PlayerZone extends Component<PlayerProps> {
             volume={this.props.volume}
             width="100%"
           />
+        </div>
+        <div>
+          <ControlRow />
+          <div className="current-transcription"></div>
         </div>
       </ResizableDiv>
     );

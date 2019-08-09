@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Duration from "../../duration";
+import Duration from "./Duration";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import repeat from "../../../assets/icons/player/repeat.png";
 import { speeds } from "../../../store/player/reducers";

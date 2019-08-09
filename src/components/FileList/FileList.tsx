@@ -1,9 +1,9 @@
-import * as actions from "../store";
+import * as actions from "../../store";
 
 import React, { Component } from "react";
-import { getSourceMedia, getTimelineIndex } from "./globalFunctions";
+import { getSourceMedia, getTimelineIndex } from "../globalFunctions";
 
-import { LooseObject } from "../store/annot/types";
+import { LooseObject } from "../../store/annot/types";
 import Paper from "@material-ui/core/Paper";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";

@@ -9,7 +9,6 @@ import { LooseObject, Milestone } from "../../store/annot/types";
 import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import ControlRow from "./ControlRow/ControlRow";
 import WaveTableRow from "./WaveTableRow/WaveTableRow";
 import {
   getInterMilestone,
@@ -955,10 +954,6 @@ export class DeeJay extends Component<DeeJayProps> {
 
     return (
       <div>
-        <div>
-          <ControlRow />
-          <div className="current-transcription"></div>
-        </div>
         <div className="wave-table-container">
           <table className="wave-table">
             <tbody>{waveTableRows}</tbody>

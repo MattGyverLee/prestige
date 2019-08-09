@@ -2,19 +2,18 @@ import "./App.css";
 
 import * as actions from "./store";
 
-import AnnotationTable from "./model/annotTable";
-import DeeJay from "./model/DeeJay/deeJay";
-import FileList from "./model/fileList";
-import PlayerZone from "./model/player";
+import AnnotationTable from "./components/AnnotTable/annotTable";
+import DeeJay from "./components/DeeJay/DeeJay";
+import FileList from "./components/FileList/FileList";
+import PlayerZone from "./components/Player/Player";
 import React from "react";
-import SelectFolderZone from "./model/folderSelection";
+import SelectFolderZone from "./components/FolderSelection/FolderSelection";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import getDirectoryListing from "./model/testFs";
 import { hot } from "react-hot-loader";
 import logo from "./assets/icons/png/256x256.png";
-import Notifier from "./model/notifier";
-import ResizableDiv from "./model/resizableDiv";
+import Notifier from "./components/notifier";
+import ResizableDiv from "./components/resizableDiv";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{ value: string }>;
 
@@ -32,7 +31,6 @@ interface DispatchProps {
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
-  getDirectoryListing: typeof getDirectoryListing;
   sourceMediaAdded: typeof actions.sourceMediaAdded;
   annotMediaAdded: typeof actions.annotMediaAdded;
   sourceMediaChanged: typeof actions.sourceMediaChanged;
@@ -157,7 +155,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
-      getDirectoryListing,
       sourceMediaAdded: actions.sourceMediaAdded,
       annotMediaAdded: actions.annotMediaAdded,
       sourceMediaChanged: actions.sourceMediaChanged,

@@ -3,7 +3,7 @@ import "jest-dom/extend-expect";
 import { cleanup, render } from "@testing-library/react";
 import configureStore, * as actions from "../../store";
 
-import { FileList } from "../fileList";
+import { FileList } from "../FileList/FileList";
 import { Provider } from "react-redux";
 import React from "react";
 import { getSourceMedia } from "../globalFunctions";
