@@ -2,7 +2,7 @@ import "./App.css";
 
 import * as actions from "./store";
 
-import AnnotationTable from "./components/AnnotTable/annotTable";
+import AnnotationTable from "./components/AnnotTable/AnnotTable";
 import DeeJay from "./components/DeeJay/DeeJay";
 import FileList from "./components/FileList/FileList";
 import PlayerZone from "./components/Player/Player";
