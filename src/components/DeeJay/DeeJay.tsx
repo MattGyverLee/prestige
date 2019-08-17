@@ -435,7 +435,7 @@ export class DeeJay extends Component<DeeJayProps> {
       calcRelativeTime(
         this.waveSurfers[idx].getCurrentTime(),
         clipTime(idx, m, true),
-        this.waveSurfers[idx].getDuration(),
+        this.waveSurfers[0].getDuration(),
         playbackRate,
         clipTime(0, m, true)
       )
@@ -475,7 +475,7 @@ export class DeeJay extends Component<DeeJayProps> {
       calcRelativeTime(
         this.waveSurfers[idx1].getCurrentTime(),
         clipTime(idx1, mile1, true),
-        this.waveSurfers[idx1].getDuration(),
+        this.waveSurfers[idx2].getDuration(),
         playbackRate,
         clipTime(idx2, mile2, true)
       )
