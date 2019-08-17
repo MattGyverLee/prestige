@@ -4,7 +4,7 @@ import { deeJayCleanStore, deeJayReducer } from "./deeJay/reducers";
 import { playerCleanStore, playerReducer } from "./player/reducers";
 import { treeCleanStore, treeReducer } from "./tree/reducers";
 
-import { composeWithDevTools } from "redux-devtools-extension";
+// import { composeWithDevTools } from "redux-devtools-extension";
 import { systemReducer } from "./system/reducers";
 import thunkMiddleware from "redux-thunk";
 
@@ -46,8 +46,8 @@ export default function configureStore() {
   const middleWareEnhancer = applyMiddleware(...middlewares);
 
   const store = createStore(
-    allReducers,
-    composeWithDevTools(middleWareEnhancer)
+    allReducers
+    // composeWithDevTools(middleWareEnhancer)
   );
 
   if (process.env.NODE_ENV !== "production") {

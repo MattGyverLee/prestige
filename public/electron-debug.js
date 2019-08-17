@@ -68,6 +68,7 @@ function createWindow() {
 app.on("ready", async () => {
   const path = require("path");
   const os = require("os");
+  /*
   BrowserWindow.addDevToolsExtension(
     path.join(
       os.homedir(),
@@ -80,6 +81,7 @@ app.on("ready", async () => {
       "/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0"
     )
   );
+  */
   createWindow();
 });
 
