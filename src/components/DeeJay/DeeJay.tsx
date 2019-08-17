@@ -131,8 +131,8 @@ export class DeeJay extends Component<DeeJayProps> {
           updateRegionAlpha(
             this.waveSurfers[idx].regions.list,
             regionsOn === 1 ? (element ? 0.7 : 0.1) : element ? 0.1 : 0.0,
-            region.start,
-            region.end
+            thisRegion.start,
+            thisRegion.end
           );
           if (element) thisRegion.element.style.outlineOffset = "-3px";
           thisRegion.onDrag(0);
