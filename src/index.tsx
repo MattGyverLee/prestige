@@ -24,18 +24,6 @@ const Root = () => (
   </Provider>
 );
 
-if (module.hot) {
-  module.hot.accept("./App", () => {
-    ReactDOM.render(
-      <Provider store={store}>
-        <SnackbarProvider maxSnack={3} preventDuplicate={true}>
-          <App />
-        </SnackbarProvider>
-      </Provider>,
-      document.getElementById("root")
-    );
-  });
-}
 
 ReactDOM.render(<Root />, document.getElementById("root"));
 

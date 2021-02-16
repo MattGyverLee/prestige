@@ -1,12 +1,12 @@
 import { annCleanStore, annotationReducer } from "./annot/reducers";
-import { applyMiddleware, combineReducers, createStore } from "redux";
+import { combineReducers, createStore } from "redux";
 import { deeJayCleanStore, deeJayReducer } from "./deeJay/reducers";
 import { playerCleanStore, playerReducer } from "./player/reducers";
 import { treeCleanStore, treeReducer } from "./tree/reducers";
 
 // import { composeWithDevTools } from "redux-devtools-extension";
 import { systemReducer } from "./system/reducers";
-import thunkMiddleware from "redux-thunk";
+// import thunkMiddleware from "redux-thunk";
 
 // These are intentionally ordered
 export const appReducer = combineReducers({
@@ -42,21 +42,13 @@ const allReducers = (state: any, action: any) => {
 export type StateProps = ReturnType<typeof allReducers>;
 
 export default function configureStore() {
-  const middlewares = [thunkMiddleware];
-  const middleWareEnhancer = applyMiddleware(...middlewares);
+  // const middlewares = [thunkMiddleware];
+  // const middleWareEnhancer = applyMiddleware(...middlewares);
 
   const store = createStore(
     allReducers
     // composeWithDevTools(middleWareEnhancer)
   );
-
-  if (process.env.NODE_ENV !== "production") {
-    if (module.hot) {
-      module.hot.accept(".", () => {
-        store.replaceReducer(allReducers);
-      });
-    }
-  }
 
   return store;
 }

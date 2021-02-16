@@ -248,7 +248,7 @@ export class AnnotationTable extends Component<ComponentProps> {
       </Table.Cell>
     );
     var emptyHeaderCell = (cellProps: any) => {
-      const { column } = cellProps;
+      // const { column } = cellProps;
       return <TableHeaderRow.Cell {...cellProps}>&nbsp;</TableHeaderRow.Cell>;
     };
     // Cells Based on Column Data

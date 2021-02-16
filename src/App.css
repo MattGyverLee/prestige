@@ -2,6 +2,7 @@
 
 .App {
   text-align: center;
+  height: 100vh;
 }
 
 .AppHeader {
@@ -16,9 +17,8 @@
 }
 .AppBody {
   background-color: #525252;
-  min-height: 75vh;
-  height: 80vh;
-  min-width: 95vw;
+  min-height: calc(100vh - 55px);
+  max-height: calc(100vh - 55px);
   display: flex;
   flex-direction: row;
   align-content: stretch;
@@ -29,7 +29,7 @@
 }
 
 .AppFooter {
-  min-height: 5vh;
+  padding-top:5px;
 }
 
 .AppSidebar {
@@ -192,32 +192,6 @@ img.black {
   opacity: 0;
 }
 
-/* # ===== Icon Animation ===== */
-
-@keyframes rock {
-  0% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  50% {
-    transform: rotate(0deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
-}
-
-.AppLogo {
-  animation: rock infinite 3s linear;
-  height: 50px;
-  pointer-events: none;
-  vertical-align: middle;
-}
 
 /* ===== React-Player ===== */
 
@@ -375,6 +349,11 @@ img.black {
 td {
   /* Todo: Should this be wrap? */
   overflow: wrap;
+}
+
+.folder-selection {
+  display:inline-block;
+  margin-right: 15px;
 }
 
 div #TranscriptionTableSpace thead tr {

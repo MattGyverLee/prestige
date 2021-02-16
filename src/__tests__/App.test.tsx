@@ -1,4 +1,4 @@
-import "jest-dom/extend-expect";
+import "@testing-library/jest-dom/extend-expect";
 
 import ConnectedApp, { App } from "../App";
 import { Provider } from "react-redux";

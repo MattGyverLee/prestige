@@ -902,6 +902,7 @@ class SelectFolderZone extends Component<FolderProps> {
 
   render() {
     if (this.props.env === "electron") {
+      // https://jaketrent.com/post/select-directory-in-electron
       return (
         <div className="folder-selection">
           <input

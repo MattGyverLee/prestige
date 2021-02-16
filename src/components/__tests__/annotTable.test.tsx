@@ -1,6 +1,6 @@
 // This comment Allows me to put Jest Calls before Imports
 
-import "jest-dom/extend-expect";
+import "@testing-library/jest-dom/extend-expect";
 
 import ConnectedAnnotationTable, {
   AnnotationTable
