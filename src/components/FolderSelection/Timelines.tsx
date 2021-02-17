@@ -12,7 +12,7 @@ export class Timelines {
   }
 
   // Adds Passed Milestone to the Timeline
-  public addMilestone(newMilestone: LooseObject) {
+  public addMilestone(newMilestone: LooseObject): void {
     // Push to Existing Milestone Data if Times Match
     // Otherwise, Push Whole Milestone to Timeline
     let dup = false;
@@ -35,12 +35,12 @@ export class Timelines {
     // need to handle multiple instances
     return timeline.milestones.length();
   }
-  public addEAFToIndex(index: number, filelist: string[]) {
+  public addEAFToIndex(index: number, filelist: string[]): void {
     for (let f = 0, l = filelist.length; f < l; f++)
       if (timeline[index]["filename"].indexOf(filelist[f]) === -1)
         timeline.eaf.push(filelist[f]);
   }
-  public addMediaToIndex(index: number, filelist: string[]) {
+  public addMediaToIndex(index: number, filelist: string[]): void {
     for (let f = 0, l = filelist.length; f < l; f++)
       if (timeline[index]["filename"].indexOf(filelist[f]) === -1)
         timeline.syncedMedia.push(filelist[f]);

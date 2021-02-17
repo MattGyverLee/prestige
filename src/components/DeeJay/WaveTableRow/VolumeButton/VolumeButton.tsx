@@ -69,7 +69,7 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
     }
   };
 
-  render() {
+  render(): JSX.Element {
     return (
       <td className="wave-table-enable">
         <div className="buttonWrapper">

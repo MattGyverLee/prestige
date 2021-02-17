@@ -80,11 +80,11 @@ export class AnnotationTable extends Component<ComponentProps> {
     },
   ];
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     console.log("UnMounting Annot");
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(): void {
     const newIndex = getTimelineIndex(this.props.timelines, this.props.url);
     if (
       this.props.timelinesInstantiated &&
@@ -98,7 +98,7 @@ export class AnnotationTable extends Component<ComponentProps> {
   }
 
   // Loads Annotation Table Based on Timeline
-  formatTimeline = (timeline: LooseObject) => {
+  formatTimeline = (timeline: LooseObject): void => {
     // Fill Annotation Table with Annotation Rows by Milestone
     const table: AnnotationRow[] = [];
     if (timeline === undefined || timeline === null) {

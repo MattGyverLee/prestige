@@ -488,7 +488,12 @@ export class DeeJay extends Component<DeeJayProps> {
     return playbackRate;
   };
 
-  setRelativePlay = (idx1: number, idx2: number, mile1: any, mile2: any) => {
+  setRelativePlay = (
+    idx1: number,
+    idx2: number,
+    mile1: any,
+    mile2: any
+  ): void => {
     this.currentSpeeds[idx2] = this.setRelativeTime(idx1, idx2, mile1, mile2);
     this.waveSurfers[idx2].setPlaybackRate(
       roundIt(this.currentSpeeds[idx2], 2)
@@ -633,7 +638,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Clears All Temp WS Regions and "pause" Subscriptions
-  clearDispatchLeftovers = () => {
+  clearDispatchLeftovers = (): void => {
     this.idxs.forEach((idx: number) => {
       this.clearHandler(idx, "pause");
       this.clearHandler(idx, "play");
@@ -642,7 +647,7 @@ export class DeeJay extends Component<DeeJayProps> {
     this.voNum = 0;
   };
 
-  clearHandler = (idx: number, handler: string) => {
+  clearHandler = (idx: number, handler: string): void => {
     while (this.waveSurfers[idx].handlers[handler].length > 1)
       this.waveSurfers[idx].un(
         handler,
@@ -651,7 +656,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Returns an Array with the Indexes of Active WSs
-  getActives = () => {
+  getActives = (): Array<number> => {
     return this.idxs.filter(
       (idx: number) =>
         this.waveSurfers[idx].getVolume() > 0 ||
@@ -659,14 +664,14 @@ export class DeeJay extends Component<DeeJayProps> {
     );
   };
 
-  getWSRegions = () => {
+  getWSRegions = (): Array<number> => {
     return this.idxs.map((idx: number) =>
       this.waveSurfers[idx] ? this.waveSurfers[idx].regions.list : []
     );
   };
 
   // Responds to DJ Dispatches
-  dispatchDJ = () => {
+  dispatchDJ = (): void => {
     // Store Dispatch Into Local Variable and Clear It
     if (this.props.dispatch.dispatchType !== "PlayPause") {
       this.actingDispatch = { ...this.props.dispatch };
@@ -935,7 +940,7 @@ export class DeeJay extends Component<DeeJayProps> {
     }
   };
 
-  render() {
+  render(): JSX.Element {
     // Forms the Rows for Each WS
     const waveTableRows = this.idxs.map((idx: number) => {
       return (

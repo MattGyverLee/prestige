@@ -60,7 +60,7 @@ interface AppProps extends StateProps, DispatchProps {
 }
 
 export class App extends React.Component<AppProps> {
-  componentDidMount() {
+  componentDidMount(): void {
     this.props.updateSession({
       loggedIn: true,
       session: "my_session",
@@ -90,23 +90,23 @@ export class App extends React.Component<AppProps> {
 
   // Player Features
 
-  hardResetApp = (inString: string) => {
+  hardResetApp = (inString: string): void => {
     this.props.hardResetApp(inString);
     this.hardResetHelper(document.querySelector("[id=selectFolder]"));
   };
 
-  hardResetHelper = (input: any) => {
+  hardResetHelper = (input: any): void => {
     if (input !== null) {
       input.value = "";
     }
   };
 
-  onProgress = (playState: any) => {
+  onProgress = (playState: any): void => {
     this.props.onProgress(playState);
     console.log("onProgressApp", playState);
   };
 
-  clearLocalStorage = () => {
+  clearLocalStorage = (): void => {
     for (const l in localStorage)
       if (l.startsWith("Prestige")) localStorage.removeItem(l);
   };

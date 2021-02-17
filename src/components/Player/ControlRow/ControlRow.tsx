@@ -35,11 +35,11 @@ interface DispatchProps {
 interface ControlRowProps extends StateProps, DispatchProps {}
 
 export class ControlRow extends Component<ControlRowProps> {
-  onClickFullscreen = () => {
+  onClickFullscreen = (): void => {
     // screenfull.request(findDOMNode(this.player))
   };
 
-  render() {
+  render(): JSX.Element {
     return (
       <div className="control-row">
         <div className="control-row-items">

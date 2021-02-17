@@ -30,10 +30,12 @@
         "endOfLine": "auto"
       }
     ],
+    // TODO: Remove these blocks.
     "@typescript-eslint/no-explicit-any": ["off"],
     "@typescript-eslint/no-var-require": ["off"],
     "@typescript-eslint/no-empty-interface": ["off"],
     "jest/no-commented-out-tests": ["off"],
+    "@typescript-eslint/explicit-module-boundary-types": ["off"],
     // end temp
     "standard/array-bracket-even-spacing": ["off"],
     "standard/computed-property-even-spacing": ["off"],
