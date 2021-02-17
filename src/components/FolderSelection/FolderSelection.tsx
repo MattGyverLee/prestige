@@ -61,6 +61,13 @@ class SelectFolderZone extends Component<FolderProps> {
   private usingStoredData = false;
   private watcherRef: any;
 
+  componentDidMount(): void {
+    // Cleaning Storage
+    // FIXME: This is a hack to avoid a crash during presentation.
+    for (const l in localStorage)
+      if (l.startsWith("Prestige")) localStorage.removeItem(l);
+  }
+
   componentWillUnmount() {
     if (this.watcherRef !== undefined) {
       this.watcherRef.close();
