@@ -33,6 +33,7 @@
     "@typescript-eslint/no-explicit-any": ["off"],
     "@typescript-eslint/no-var-require": ["off"],
     "@typescript-eslint/no-empty-interface": ["off"],
+    "jest/no-commented-out-tests": ["off"],
     // end temp
     "standard/array-bracket-even-spacing": ["off"],
     "standard/computed-property-even-spacing": ["off"],

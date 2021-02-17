@@ -2,6 +2,7 @@ import WaveSurfer from "wavesurfer.js";
 import store from "../../store/store";
 
 export function createWaveSurfer(idx: number): WaveSurfer {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const regionsPlugin = require("../../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
   const newWS = WaveSurfer.create({
     container: "#waveform" + idx.toString(),

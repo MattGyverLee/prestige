@@ -13,8 +13,9 @@ import { deeJayCleanStore } from "../../store/deeJay/reducers";
 import { playerCleanStore } from "../../store/player/reducers";
 import { systemCleanStore } from "../../store/system/reducers";
 import { treeCleanStore } from "../../store/tree/reducers";
+import TestRenderer from "react-test-renderer";
 
-const renderer = require("react-test-renderer");
+const renderer = TestRenderer;
 
 // jest.mock("wavesurfer.js");
 jest.autoMockOn();

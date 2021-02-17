@@ -1,4 +1,5 @@
 import { LooseObject } from "../store/annot/types";
+import pathy from "path";
 
 interface tempTimeline {
   syncMedia: string[];
@@ -45,7 +46,7 @@ export function getSourceMedia(
     .sort((a: LooseObject, b: LooseObject) =>
       sortName(a.name.toLowerCase(), b.name.toLowerCase())
     );
-  const path = require("path");
+  const path = pathy;
   const mp3s: string[] = [];
   const sourceAud = sourceAudio(sourceMedia, allOrViewer)
     .filter((sa: any) => {

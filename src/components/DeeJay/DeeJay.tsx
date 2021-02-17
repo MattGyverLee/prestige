@@ -76,7 +76,7 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   };
 
-  createWaveSurfer = (idx: number) => {
+  createWaveSurfer = (idx: number): void => {
     const newWS = createWaveSurfer(idx);
 
     newWS.on("region-created", (region: any) => {
@@ -122,7 +122,7 @@ export class DeeJay extends Component<DeeJayProps> {
     this.waveSurfers[idx] = newWS;
   };
 
-  regionHover = (region: any, element: string, regionsOn: number) => {
+  regionHover = (region: any, element: string, regionsOn: number): void => {
     if (regionsOn !== 0) {
       this.idxs.forEach((idx: number) => {
         if (this.waveSurfers[idx].regions.list[region.id]) {
@@ -142,7 +142,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Processes Reaction to State Updates
-  componentDidUpdate() {
+  componentDidUpdate(): void {
     // If currentURL and StateURL Don't Match
     if (this.currBlob !== this.props.url) {
       // Add Colors for Possible Regions if Necessary
@@ -195,7 +195,7 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   }
 
-  wsSeek = (idx: number) => {
+  wsSeek = (idx: number): void => {
     if (!this.clicked[idx]) console.log(`${idx} No Click Seeking`);
     else {
       // Log Action and Reset Clicked
@@ -427,7 +427,7 @@ export class DeeJay extends Component<DeeJayProps> {
     this.seekSyncAndPlay(idx, m);
   };
 
-  seekSyncAndPlay = (idx: number, m: Milestone) => {
+  seekSyncAndPlay = (idx: number, m: Milestone): void => {
     // Sync Player
     const playbackRate = idx === 0 ? 1 : calcPlaybackRate(m);
     this.props.setPlaybackRate(roundIt(playbackRate, 2));
@@ -453,7 +453,12 @@ export class DeeJay extends Component<DeeJayProps> {
 
   // Sets WS Idx2 to the Time Relative to WS Idx1
   // -> Returns Playback Rate
-  setRelativeTime = (idx1: number, idx2: number, mile1: any, mile2: any) => {
+  setRelativeTime = (
+    idx1: number,
+    idx2: number,
+    mile1: any,
+    mile2: any
+  ): number => {
     // Grab Filtered Milestone of the First High
     const playbackRate = calcPlaybackRate(
       mile2,
@@ -495,7 +500,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Loads a WS and Subscribes it to an "onReady" Function
-  loadFileWS = (idx: number, load: string) => {
+  loadFileWS = (idx: number, load: string): void => {
     // Grab WS, Its WF (if it exists), and Subscription Function (based on if WF exists or not)
     const ws = this.waveSurfers[idx];
     const wave = (idx === 0
@@ -561,13 +566,13 @@ export class DeeJay extends Component<DeeJayProps> {
     this.loadQueue[idx] = "";
   };
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     console.log("UnMounting DeeJay Component");
     // todo: Make sure Wavesurfers Unloaded Gently.
   }
 
   // Does Necessary Playback Checks (Dispatch, Volume, Playback Rate) for a Given WS
-  checkPlayingValues = (idx: number) => {
+  checkPlayingValues = (idx: number): void => {
     const ws = this.waveSurfers[idx];
     if (
       this.props.dispatch.wsNum === idx ||
@@ -602,7 +607,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Resets Volumes of and Stops all but Specified WS
-  solo = (wsNum: number, resetAll: boolean) => {
+  solo = (wsNum: number, resetAll: boolean): void => {
     // If Reset All or Any High => Set Only wsNum On
     if (
       resetAll ||
@@ -790,6 +795,8 @@ export class DeeJay extends Component<DeeJayProps> {
         );
 
         // For Each WS in High, Starting at End
+        // TODO: Check whether this empty function is an issue.]
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         let recentStart = () => {};
         const voiceOvers: ((data: string) => void)[] = [];
         for (let x = highs.length - 1; x >= 0; x--) {
@@ -998,7 +1005,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     dispatch
   ),
 });
-
+//Todo: Try to import Snackbar.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 export default require("notistack").withSnackbar(
   connect(mapStateToProps, mapDispatchToProps)(DeeJay)
 );

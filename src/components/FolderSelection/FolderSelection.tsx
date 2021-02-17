@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import * as aTypes from "../../store/annot/types";
 import * as actions from "../../store";
 import * as tTypes from "../../store/tree/types";
-import chokidar from "chokidar";
 
 import Timelines from "./Timelines";
 import React, { Component } from "react";
@@ -75,7 +75,7 @@ class SelectFolderZone extends Component<FolderProps> {
     if (this.watcherRef !== undefined) this.watcherRef.close();
 
     // Creates a Watcher to Watch Input Path
-    const watcher = chokidar.watch(path, {
+    const watcher = require("chokidar").watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
       ignoreInitial: ignoreInitial,

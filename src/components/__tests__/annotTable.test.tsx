@@ -4,7 +4,7 @@ import "@testing-library/jest-dom/extend-expect";
 
 import ConnectedAnnotationTable, {
   AnnotationTable,
-} from "../AnnotTable/annotTable";
+} from "../AnnotTable/AnnotTable";
 import { Provider } from "react-redux";
 import React from "react";
 import { annCleanStore } from "../../store/annot/reducers";
@@ -14,8 +14,9 @@ import { deeJayCleanStore } from "../../store/deeJay/reducers";
 import { playerCleanStore } from "../../store/player/reducers";
 import { systemCleanStore } from "../../store/system/reducers";
 import { treeCleanStore } from "../../store/tree/reducers";
+import TestRenderer from "react-test-renderer";
 
-const renderer = require("react-test-renderer");
+const renderer = TestRenderer;
 
 // jest.mock("wavesurfer.js");
 jest.autoMockOn();
@@ -40,7 +41,7 @@ const props = {};
 
 afterEach(cleanup);
 
-it("is true", () => true);
+// it("is true", () => true);
 
 it("renders annotTable without crashing", () => {
   renderer.act(() => {

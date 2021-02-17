@@ -1,5 +1,4 @@
 import "@testing-library/jest-dom/extend-expect";
-
 import ConnectedApp, { App } from "../App";
 import { Provider } from "react-redux";
 import React from "react";
@@ -9,7 +8,7 @@ import { deeJayCleanStore } from "../store/deeJay/reducers";
 import { playerCleanStore } from "../store/player/reducers";
 import { systemCleanStore } from "../store/system/reducers";
 import { treeCleanStore } from "../store/tree/reducers";
-
+import TestRenderer from "react-test-renderer";
 /*
 import {
   cleanup,
@@ -19,7 +18,7 @@ import {
 } from "@testing-library/react"; 
 */
 
-const renderer = require("react-test-renderer");
+const renderer = TestRenderer;
 
 declare global {
   interface Window {
@@ -40,7 +39,7 @@ let appMaster: any;
 
 jest.autoMockOn();
 
-it("is true", () => true);
+// it("is true", () => true);
 
 it("renders without crashing", () => {
   renderer.act(() => {

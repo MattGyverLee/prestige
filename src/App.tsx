@@ -178,7 +178,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     dispatch
   ),
 });
-
+// Todo: Try to import notistack
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const withSnackbar = require("notistack").withSnackbar;
 
 export default withSplashScreen(

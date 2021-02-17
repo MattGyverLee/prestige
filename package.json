@@ -44,6 +44,7 @@
     "electron-is-dev": "^1.1.0",
     "env-cmd": "^9.0.3",
     "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-react": "^7.22.0",
     "ffmpeg": "^0.0.4",
     "ffprobe": "^1.1.0",
     "file-url": "3.0.0",
@@ -98,6 +99,7 @@
     "@types/react-redux": "^7.1.0",
     "@types/react-router-dom": "^4.3.4",
     "@types/react-select": "^2.0.19",
+    "@types/react-test-renderer": "^17.0.1",
     "@types/redux-mock-store": "^1.0.1",
     "@types/wavesurfer.js": "^2.0.2",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
@@ -133,6 +135,7 @@
   },
   "lint-staged": {
     "src/**/*.js": [
+      "eslint src --ext .tsx --ext .js",
       "prettier --write",
       "git add"
     ]
