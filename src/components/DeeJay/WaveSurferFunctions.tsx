@@ -14,7 +14,7 @@ export function createWaveSurfer(idx: number): WaveSurfer {
     waveColor: "#ccc",
     hideScrollbar: true,
     height: rowHeight(),
-    plugins: [regionsPlugin.create()]
+    plugins: [regionsPlugin.create()],
   });
   newWS.empty();
   newWS.setVolume(+(idx === 0));

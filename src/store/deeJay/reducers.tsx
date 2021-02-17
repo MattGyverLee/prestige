@@ -2,7 +2,7 @@ import * as types from "./types";
 
 export const deeJayCleanStore: types.DeeJayState = {
   volumes: [1, 0, 0],
-  dispatch: { dispatchType: "" }
+  dispatch: { dispatchType: "" },
 };
 
 export function deeJayReducer(
@@ -13,7 +13,7 @@ export function deeJayReducer(
     case types.RESET_DEE_JAY: {
       state = deeJayCleanStore;
       return {
-        ...state
+        ...state,
       };
     }
     case types.SET_WS_VOLUME: {
@@ -21,13 +21,13 @@ export function deeJayReducer(
         ...state,
         volumes: state.volumes.map((v: number, idx: number) =>
           idx === action.payload.idx ? action.payload.volume : v
-        )
+        ),
       };
     }
     case types.SET_DISPATCH: {
       return {
         ...state,
-        dispatch: action.payload
+        dispatch: action.payload,
       };
     }
     default: {

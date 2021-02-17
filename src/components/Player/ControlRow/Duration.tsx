@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Duration({
   className,
-  seconds
+  seconds,
 }: {
   className: string;
   seconds: any;

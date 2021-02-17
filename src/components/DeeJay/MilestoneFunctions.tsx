@@ -18,7 +18,7 @@ export function getInterMilestone(time: number, wsNum?: number): number {
               (d: LooseObject) =>
                 wsNum === 0 ||
                 d.channel === `${wsNum === 1 ? "Careful" : "Translation"}Merged`
-            )
+            ),
           };
         })[0];
 }
@@ -88,7 +88,7 @@ export function getCurrentMilestone(
         data: m.data.filter(
           (d: LooseObject) =>
             (filter === 0 && wsNum === 0) || d.channel === channel
-        )
+        ),
       };
     })[0];
 }

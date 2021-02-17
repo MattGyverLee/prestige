@@ -3,7 +3,7 @@ import * as types from "./types";
 export function hardResetApp(inString: string): types.AnnotationActionTypes {
   return {
     type: types.HARD_RESET_APP,
-    payload: inString
+    payload: inString,
   };
 }
 
@@ -12,7 +12,7 @@ export function loadAnnot(
 ): types.AnnotationActionTypes {
   return {
     type: types.LOAD_ANNOT,
-    payload: inState
+    payload: inState,
   };
 }
 
@@ -22,14 +22,14 @@ export function onNewFolder(
 ): types.AnnotationActionTypes {
   return {
     type: types.ON_NEW_FOLDER,
-    payload: { inString, blobURL }
+    payload: { inString, blobURL },
   };
 }
 
 export function onReloadFolder(inString: string): types.AnnotationActionTypes {
   return {
     type: types.ON_RELOAD_FOLDER,
-    payload: { inString }
+    payload: { inString },
   };
 }
 
@@ -39,13 +39,13 @@ export function addOralAnnotation(
 ): types.AnnotationActionTypes {
   return {
     type: types.ADD_ORAL_ANNOTATION,
-    payload: { newMilestone, idx }
+    payload: { newMilestone, idx },
   };
 }
 export function addCategory(inString: string): types.AnnotationActionTypes {
   return {
     type: types.ADD_CATEGORY,
-    payload: inString
+    payload: inString,
   };
 }
 export function pushAnnotation(
@@ -53,7 +53,7 @@ export function pushAnnotation(
 ): types.AnnotationActionTypes {
   return {
     type: types.PUSH_ANNOTATION,
-    payload: milestones
+    payload: milestones,
   };
 }
 export function pushAnnotationTable(
@@ -61,7 +61,7 @@ export function pushAnnotationTable(
 ): types.AnnotationActionTypes {
   return {
     type: types.PUSH_ANNOTATION_TABLE,
-    payload: inTable
+    payload: inTable,
   };
 }
 export function pushTimeline(
@@ -69,7 +69,7 @@ export function pushTimeline(
 ): types.AnnotationActionTypes {
   return {
     type: types.PUSH_TIMELINE,
-    payload: timeline
+    payload: timeline,
   };
 }
 export function toggleAudcarefulMain(
@@ -77,7 +77,7 @@ export function toggleAudcarefulMain(
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDCAREFUL_MAIN,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function toggleAudtranslMain(
@@ -85,7 +85,7 @@ export function toggleAudtranslMain(
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDTRANSL_MAIN,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function toggleAudtranscMain(
@@ -93,13 +93,13 @@ export function toggleAudtranscMain(
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDTRANSC_MAIN,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function toggleTranscSub(toggle?: boolean): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_TRANSC_SUB,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function toggleTxttranslMain(
@@ -107,7 +107,7 @@ export function toggleTxttranslMain(
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_TXTTRANSL_MAIN,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function toggleAudtranslSub(
@@ -115,25 +115,25 @@ export function toggleAudtranslSub(
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDTRANSL_SUB,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function toggleMetaMain(toggle?: boolean): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_META_MAIN,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function toggleFileinfo(toggle?: boolean): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_FILEINFO,
-    payload: toggle
+    payload: toggle,
   };
 }
 export function updatePrevTimeline(idx: number): types.AnnotationActionTypes {
   return {
     type: types.UPDATE_PREV_TIMELINE,
-    payload: idx
+    payload: idx,
   };
 }
 export function setTimelinesInstantiated(
@@ -141,13 +141,13 @@ export function setTimelinesInstantiated(
 ): types.AnnotationActionTypes {
   return {
     type: types.SET_TIMELINES_INSTANTIATED,
-    payload: bln
+    payload: bln,
   };
 }
 
 export function setTimelineChanged(bln: boolean): types.AnnotationActionTypes {
   return {
     type: types.SET_TIMELINE_CHANGED,
-    payload: bln
+    payload: bln,
   };
 }

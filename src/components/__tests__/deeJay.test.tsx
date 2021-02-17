@@ -22,14 +22,14 @@ jest.autoMockOn();
 const store = configureMockStore([])({
   annot: { ...annCleanStore },
   deeJay: {
-    ...deeJayCleanStore
+    ...deeJayCleanStore,
   },
   player: { ...playerCleanStore },
   system: { ...systemCleanStore },
-  tree: { ...treeCleanStore }
+  tree: { ...treeCleanStore },
 });
 
-var deejayMaster: any;
+let deejayMaster: any;
 
 // TODO: Constrain to Media Type
 
@@ -43,7 +43,7 @@ const props = {
   setDispatch: jest.fn(),
   playerPlay: jest.fn(),
   waveformAdded: jest.fn(),
-  volumes: [1, 0, 0]
+  volumes: [1, 0, 0],
 };
 
 afterEach(cleanup);
@@ -59,6 +59,6 @@ it("renders deeJay without crashing", () => {
     );
   });
   expect(deejayMaster).toMatchSnapshot();
-  let deejayHandle: DeeJay = deejayMaster.root.findByType(DeeJay).instance;
+  const deejayHandle: DeeJay = deejayMaster.root.findByType(DeeJay).instance;
   expect(deejayHandle).toBeVisible();
 });

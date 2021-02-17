@@ -14,7 +14,7 @@ export default function getDirectoryListing(props: any): string {
       }
     });
     tempList = tempList.sort();
-    tempList.sort(function(a: string, b: string) {
+    tempList.sort(function (a: string, b: string) {
       const nameA = a.toLowerCase();
       const nameB = b.toLowerCase();
       if (nameA < nameB) {

@@ -3,7 +3,7 @@
 import "@testing-library/jest-dom/extend-expect";
 
 import ConnectedAnnotationTable, {
-  AnnotationTable
+  AnnotationTable,
 } from "../AnnotTable/annotTable";
 import { Provider } from "react-redux";
 import React from "react";
@@ -23,14 +23,14 @@ jest.autoMockOn();
 const store = configureMockStore([])({
   annot: { ...annCleanStore },
   deeJay: {
-    ...deeJayCleanStore
+    ...deeJayCleanStore,
   },
   player: { ...playerCleanStore },
   system: { ...systemCleanStore },
-  tree: { ...treeCleanStore }
+  tree: { ...treeCleanStore },
 });
 
-var annotationTableMaster: any;
+let annotationTableMaster: any;
 
 // TODO: Constrain to Media Type
 

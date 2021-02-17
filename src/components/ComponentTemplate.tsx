@@ -23,7 +23,7 @@ class ComponentZone extends Component<ComponentProps> {
   constructor(props: any) {
     super(props);
     this.state = {
-      open: false
+      open: false,
     };
   }
 
@@ -46,9 +46,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       // annotations: state.annot.annotations,
     },
     dispatch
-  )
+  ),
 });
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ComponentZone);
+export default connect(mapStateToProps, mapDispatchToProps)(ComponentZone);

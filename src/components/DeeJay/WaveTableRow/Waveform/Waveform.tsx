@@ -18,7 +18,4 @@ export class Waveform extends Component<PassProps> {
   }
 }
 
-export default connect(
-  undefined,
-  undefined
-)(Waveform);
+export default connect(undefined, undefined)(Waveform);

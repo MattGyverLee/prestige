@@ -14,8 +14,8 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
   ) {
     return -1;
   }
-  let temp = timelines.map((t: LooseObject, idx: number) => {
-    let x: tempTimeline = { syncMedia: t.syncMedia, idx };
+  const temp = timelines.map((t: LooseObject, idx: number) => {
+    const x: tempTimeline = { syncMedia: t.syncMedia, idx };
     return x;
   });
   for (let i = 0, l = temp.length; i < l; i++) {
@@ -40,14 +40,14 @@ export function getSourceMedia(
   sourceMedia: LooseObject[],
   allOrViewer: boolean
 ): LooseObject[] {
-  let sourceVids = sourceMedia
-    .filter(file => !file.isAnnotation && file.mimeType.startsWith("video"))
+  const sourceVids = sourceMedia
+    .filter((file) => !file.isAnnotation && file.mimeType.startsWith("video"))
     .sort((a: LooseObject, b: LooseObject) =>
       sortName(a.name.toLowerCase(), b.name.toLowerCase())
     );
   const path = require("path");
-  let mp3s: string[] = [];
-  let sourceAud = sourceAudio(sourceMedia, allOrViewer)
+  const mp3s: string[] = [];
+  const sourceAud = sourceAudio(sourceMedia, allOrViewer)
     .filter((sa: any) => {
       const parsedPath = path.parse(sa.path);
       if (parsedPath.ext.toLowerCase() === ".mp3") mp3s.push(parsedPath.name);
@@ -75,9 +75,9 @@ export function sourceAudio(
   sourceMedia: LooseObject[],
   allOrViewer: boolean
 ): LooseObject[] {
-  let sourceAud = sourceMedia
+  const sourceAud = sourceMedia
     .filter(
-      file =>
+      (file) =>
         !file.isAnnotation &&
         file.mimeType.startsWith("audio") &&
         (!file.isMerged || allOrViewer)
@@ -95,9 +95,9 @@ export function annotAudio(
   timelines: any[]
   // true: merged only, false: split only
 ): LooseObject[] {
-  let annotAud = annotMedia
+  const annotAud = annotMedia
     .filter(
-      file =>
+      (file) =>
         file.isAnnotation &&
         file.mimeType.startsWith("audio") &&
         (splitOrMerged ? file.isMerged : !file.isMerged) &&

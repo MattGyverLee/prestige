@@ -33,14 +33,14 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
         variant: vType || "default",
         action: (key: LooseObject) => (
           <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
-        )
-      }
+        ),
+      },
     });
 
   // Toggles the Volume Between Three Predetermined States
   toggleVol = () => {
     if (this.props.getReady()) {
-      let name = `${
+      const name = `${
         !this.props.index
           ? "Original"
           : this.props.index === 1
@@ -97,7 +97,7 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
                       ? this.props.volumes[this.props.index]
                       : 0,
                     2
-                  )
+                  ),
                 }}
                 src={require("../../../../assets/buttons/enabled50.png")}
               />
@@ -116,7 +116,7 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  volumes: state.deeJay.volumes
+  volumes: state.deeJay.volumes,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -124,13 +124,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       closeSnackbar: actions.closeSnackbar,
       enqueueSnackbar: actions.enqueueSnackbar,
-      setWSVolume: actions.setWSVolume
+      setWSVolume: actions.setWSVolume,
     },
     dispatch
-  )
+  ),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(VolumeButton);
+export default connect(mapStateToProps, mapDispatchToProps)(VolumeButton);

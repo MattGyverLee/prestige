@@ -17,7 +17,7 @@ export class Timelines {
     // Otherwise, Push Whole Milestone to Timeline
     let dup = false;
     for (let m = 0, l = timeline.milestones.length; m < l; m++) {
-      let currMil = timeline.milestones[m];
+      const currMil = timeline.milestones[m];
       if (
         currMil.startTime === newMilestone.startTime &&
         currMil.stopTime === newMilestone.stopTime

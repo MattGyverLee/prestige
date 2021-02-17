@@ -6,37 +6,37 @@ export const enqueueSnackbar = (notification: types.SnackbarObject) => {
     type: types.ENQUEUE_SNACKBAR,
     notification: {
       ...notification,
-      key: key || new Date().getTime() + Math.random()
-    }
+      key: key || new Date().getTime() + Math.random(),
+    },
   };
 };
 
 export const closeSnackbar = (key: any) => ({
   type: types.CLOSE_SNACKBAR,
   dismissAll: !key, // dismiss all if no key has been defined
-  key
+  key,
 });
 
 export const removeSnackbar = (key: any) => ({
   type: types.REMOVE_SNACKBAR,
-  key
+  key,
 });
 
 export const updateDimensions = (payload: types.DimensionObject) => ({
   type: types.UPDATE_DIMENSIONS,
-  payload
+  payload,
 });
 
 export const updateSnackbar = (key: any, message: string) => ({
   type: types.UPDATE_SNACKBAR,
   key,
-  message
+  message,
 });
 
 export function sysHardResetApp(inString: string): types.SystemActionTypes {
   return {
     type: types.HARD_RESET_APP,
-    payload: inString
+    payload: inString,
   };
 }
 export function updateSession(
@@ -44,6 +44,6 @@ export function updateSession(
 ): types.SystemActionTypes {
   return {
     type: types.UPDATE_SESSION,
-    payload: newSession
+    payload: newSession,
   };
 }

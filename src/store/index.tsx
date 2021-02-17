@@ -14,7 +14,7 @@ export const appReducer = combineReducers({
   tree: treeReducer,
   player: playerReducer,
   deeJay: deeJayReducer,
-  annot: annotationReducer
+  annot: annotationReducer,
 });
 
 const allReducers = (state: any, action: any) => {
@@ -28,12 +28,12 @@ const allReducers = (state: any, action: any) => {
       tree: treeCleanStore,
       annot: annCleanStore,
       deeJay: deeJayCleanStore,
-      player: playerCleanStore
+      player: playerCleanStore,
     };
   } else if (action.type === "RESET_DEE_JAY") {
     state = {
       ...state,
-      deeJay: deeJayCleanStore
+      deeJay: deeJayCleanStore,
     };
   }
   return appReducer(state, action);

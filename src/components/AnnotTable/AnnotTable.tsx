@@ -6,7 +6,7 @@ import {
   IntegratedSorting,
   SortingState,
   TableColumnResizing,
-  SearchState
+  SearchState,
 } from "@devexpress/dx-react-grid";
 import {
   Grid,
@@ -14,7 +14,7 @@ import {
   TableHeaderRow,
   VirtualTable,
   Toolbar,
-  SearchPanel
+  SearchPanel,
 } from "@devexpress/dx-react-grid-material-ui";
 import React, { Component } from "react";
 
@@ -60,24 +60,24 @@ export class AnnotationTable extends Component<ComponentProps> {
   private defaultColumnWidths = [
     {
       columnName: "startTime",
-      width: 90
+      width: 90,
     },
     {
       columnName: "audCareful",
-      width: 55
+      width: 55,
     },
     {
       columnName: "txtTransl",
-      width: 200
+      width: 200,
     },
     {
       columnName: "txtTransc",
-      width: 200
+      width: 200,
     },
     {
       columnName: "audTransl",
-      width: 55
-    }
+      width: 55,
+    },
   ];
 
   componentWillUnmount() {
@@ -100,34 +100,34 @@ export class AnnotationTable extends Component<ComponentProps> {
   // Loads Annotation Table Based on Timeline
   formatTimeline = (timeline: LooseObject) => {
     // Fill Annotation Table with Annotation Rows by Milestone
-    let table: AnnotationRow[] = [];
+    const table: AnnotationRow[] = [];
     if (timeline === undefined || timeline === null) {
-      let row: AnnotationRow = {
+      const row: AnnotationRow = {
         id: 1,
         startTime: 0,
         stopTime: 0,
         audCareful: "",
         audTransl: "",
         txtTransc: "Not Loaded",
-        txtTransl: ""
+        txtTransl: "",
       };
       table.push(row);
     } else {
       timeline.milestones.forEach((milestone: LooseObject, idx: number) => {
         // Create Each Row
-        let row: AnnotationRow = {
+        const row: AnnotationRow = {
           id: idx + 1,
           startTime: milestone.startTime,
           stopTime: milestone.stopTime,
           audCareful: "",
           audTransl: "",
           txtTransc: "",
-          txtTransl: ""
+          txtTransl: "",
         };
 
         // Fill Row with Data
         for (let d = 0, l = milestone.data.length; d < l; d++) {
-          let curr = milestone.data[d];
+          const curr = milestone.data[d];
           if (curr.mimeType.startsWith("audio")) {
             if (curr.channel === "CarefulMerged")
               row.audCareful =
@@ -183,7 +183,7 @@ export class AnnotationTable extends Component<ComponentProps> {
         style={{
           whiteSpace: "normal",
           wordWrap: "break-word",
-          ...style
+          ...style,
         }}
         onClick={
           this.props.currentTimeline === -1
@@ -193,14 +193,14 @@ export class AnnotationTable extends Component<ComponentProps> {
                   dispatchType: "Clip",
                   wsNum: 0,
                   clipStart: row.startTime,
-                  clipStop: row.stopTime
+                  clipStop: row.stopTime,
                 })
         }
       >
         <span
           style={{
             color:
-              value !== "" ? (oneTwo === 1 ? "darkgreen" : "black") : undefined
+              value !== "" ? (oneTwo === 1 ? "darkgreen" : "black") : undefined,
           }}
         >
           {value}
@@ -215,31 +215,31 @@ export class AnnotationTable extends Component<ComponentProps> {
         {...restProps}
         style={{
           // backgroundColor: value < 1000 ? 'lightpink' : undefined,
-          ...style
+          ...style,
         }}
       >
         <button
           onClick={() => {
             const parsedURL = value.split("#");
             if (parsedURL.length > 1) {
-              let splitParsed = parsedURL[1].split(",");
+              const splitParsed = parsedURL[1].split(",");
               if (splitParsed.length === 1)
                 this.props.setDispatch({
                   dispatchType: "Seek",
                   wsNum: oneTwo,
-                  clipStart: parseFloat(splitParsed[0].substring(1))
+                  clipStart: parseFloat(splitParsed[0].substring(1)),
                 });
               else
                 this.props.setDispatch({
                   dispatchType: "Clip",
                   wsNum: oneTwo,
                   clipStart: parseFloat(splitParsed[0].substring(1)),
-                  clipStop: parseFloat(splitParsed[1])
+                  clipStop: parseFloat(splitParsed[1]),
                 });
             }
           }}
           style={{
-            display: value < 1000 ? "none" : undefined
+            display: value < 1000 ? "none" : undefined,
             // color: value !="" ? 'lightgreen' : undefined,
           }}
         >
@@ -247,12 +247,12 @@ export class AnnotationTable extends Component<ComponentProps> {
         </button>
       </Table.Cell>
     );
-    var emptyHeaderCell = (cellProps: any) => {
+    const emptyHeaderCell = (cellProps: any) => {
       // const { column } = cellProps;
       return <TableHeaderRow.Cell {...cellProps}>&nbsp;</TableHeaderRow.Cell>;
     };
     // Cells Based on Column Data
-    var dataCell = (cellProps: any) => {
+    const dataCell = (cellProps: any) => {
       const { column } = cellProps;
       if (column.name === "txtTransl")
         return <FlowingCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
@@ -271,30 +271,30 @@ export class AnnotationTable extends Component<ComponentProps> {
       {
         name: "startTime",
         title: "Start",
-        oneTwo: -1
+        oneTwo: -1,
       },
       {
         name: "audCareful",
         title: "Careful Clip",
-        oneTwo: 1
+        oneTwo: 1,
       },
       {
         name: "txtTransc",
         title: "Transcription",
         wordWrapEnabled: true,
-        oneTwo: 1
+        oneTwo: 1,
       },
       {
         name: "audTransl",
         title: "Trans. Clip",
-        oneTwo: 2
+        oneTwo: 2,
       },
       {
         name: "txtTransl",
         title: "Translation",
         wordWrapEnabled: true,
-        oneTwo: 2
-      }
+        oneTwo: 2,
+      },
     ];
 
     /*     // Column Names and Widths
@@ -361,7 +361,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   timelineChanged: state.annot.timelineChanged,
   timelines: state.annot.timeline,
   timelinesInstantiated: state.annot.timelinesInstantiated,
-  url: state.player.url
+  url: state.player.url,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -371,12 +371,9 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       pushAnnotationTable: actions.pushAnnotationTable,
       updatePrevTimeline: actions.updatePrevTimeline,
       setDispatch: actions.setDispatch,
-      setTimelineChanged: actions.setTimelineChanged
+      setTimelineChanged: actions.setTimelineChanged,
     },
     dispatch
-  )
+  ),
 });
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(AnnotationTable);
+export default connect(mapStateToProps, mapDispatchToProps)(AnnotationTable);

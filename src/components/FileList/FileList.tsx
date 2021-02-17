@@ -36,7 +36,7 @@ export class FileList extends Component<FileListProps> {
         <Paper>
           <ul data-testid="fileList.UL" className="list-group list-group-flush">
             {" "}
-            {getSourceMedia(this.props.sourceMedia, false).map(d => (
+            {getSourceMedia(this.props.sourceMedia, false).map((d) => (
               <li
                 key={d.blobURL}
                 className={"list-group-item flex-container"}
@@ -56,20 +56,17 @@ export class FileList extends Component<FileListProps> {
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   sourceMedia: state.tree.sourceMedia,
-  timeline: state.annot.timeline
+  timeline: state.annot.timeline,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
       togglePlay: actions.togglePlay,
-      setURL: actions.setURL
+      setURL: actions.setURL,
     },
     dispatch
-  )
+  ),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(FileList);
+export default connect(mapStateToProps, mapDispatchToProps)(FileList);

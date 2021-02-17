@@ -12,7 +12,7 @@ export const treeCleanStore: types.TreeState = {
   folderName: "",
   folderPath: "",
   loaded: false,
-  prevPath: ""
+  prevPath: "",
 };
 
 export function treeReducer(
@@ -31,7 +31,7 @@ export function treeReducer(
     }
     case types.UPDATE_TREE: {
       return {
-        ...action.payload
+        ...action.payload,
       };
     }
     case types.LOAD_TREE: {
@@ -41,70 +41,72 @@ export function treeReducer(
     case types.FILE_ADDED: {
       return {
         ...state,
-        availableFiles: [...state.availableFiles, action.payload.file]
+        availableFiles: [...state.availableFiles, action.payload.file],
       };
     }
     case types.SOURCE_MEDIA_ADDED: {
       return {
         ...state,
-        sourceMedia: [...state.sourceMedia, action.payload.file]
+        sourceMedia: [...state.sourceMedia, action.payload.file],
       };
     }
     case types.ANNOT_MEDIA_ADDED: {
       return {
         ...state,
-        annotMedia: [...state.annotMedia, action.payload.file]
+        annotMedia: [...state.annotMedia, action.payload.file],
       };
     }
     case types.FILE_CHANGED: {
       const tempState = state.availableFiles.filter(
-        file => file.name !== action.payload.file.name
+        (file) => file.name !== action.payload.file.name
       );
       // let tempState: any[] = []
       return {
         ...state,
-        availableFiles: [...tempState, action.payload.file]
+        availableFiles: [...tempState, action.payload.file],
       };
     }
     case types.SOURCE_MEDIA_CHANGED: {
       const tempState = state.sourceMedia.filter(
-        file => file.name !== action.payload.file.name
+        (file) => file.name !== action.payload.file.name
       );
       return {
         ...state,
-        sourceMedia: [...tempState, action.payload.file]
+        sourceMedia: [...tempState, action.payload.file],
       };
     }
     case types.ANNOT_MEDIA_CHANGED: {
       const tempState = state.annotMedia.filter(
-        file => file.name !== action.payload.file.name
+        (file) => file.name !== action.payload.file.name
       );
       return {
         ...state,
-        annotMedia: [...tempState, action.payload.file]
+        annotMedia: [...tempState, action.payload.file],
       };
     }
     case types.FILE_DELETED: {
       return {
         ...state,
         sourceMedia: [
-          ...state.sourceMedia.filter(file => file.blobURL !== action.payload)
+          ...state.sourceMedia.filter(
+            (file) => file.blobURL !== action.payload
+          ),
         ],
         annotMedia: [
-          ...state.annotMedia.filter(file => file.blobURL !== action.payload)
+          ...state.annotMedia.filter((file) => file.blobURL !== action.payload),
         ],
         availableFiles: [
           ...state.availableFiles.filter(
-            file => file.blobURL !== action.payload
-          )
-        ]
+            (file) => file.blobURL !== action.payload
+          ),
+        ],
       };
     }
     case types.WAVEFORM_ADDED: {
       const tempFiltered = (action.payload.sourceAnnot
         ? state.sourceMedia
         : state.annotMedia
-      ).map(file =>
+      ).map((file) =>
         file.blobURL === action.payload.ref
           ? { ...file, waveform: action.payload.wavedata }
           : file
@@ -112,38 +114,38 @@ export function treeReducer(
       if (action.payload.sourceAnnot) {
         return {
           ...state,
-          sourceMedia: [...tempFiltered]
+          sourceMedia: [...tempFiltered],
         };
       } else {
         return {
           ...state,
-          annotMedia: [...tempFiltered]
+          annotMedia: [...tempFiltered],
         };
       }
     }
     case types.SET_ANNOT_MEDIA_IN_MILESTONES: {
-      const tempAnnot = state.annotMedia.map(m => {
+      const tempAnnot = state.annotMedia.map((m) => {
         return m.blobURL === action.payload ? { ...m, inMilestones: true } : m;
       });
       return {
         ...state,
-        annotMedia: tempAnnot
+        annotMedia: tempAnnot,
       };
     }
     case types.SET_ANNOT_MEDIA_WS_ALLOWED: {
       return {
         ...state,
-        annotMedia: state.annotMedia.map(m => {
+        annotMedia: state.annotMedia.map((m) => {
           return m.blobURL === action.payload ? { ...m, wsAllowed: true } : m;
-        })
+        }),
       };
     }
     case types.SET_SOURCE_MEDIA_WS_ALLOWED: {
       return {
         ...state,
-        sourceMedia: state.sourceMedia.map(m => {
+        sourceMedia: state.sourceMedia.map((m) => {
           return m.blobURL === action.payload ? { ...m, wsAllowed: true } : m;
-        })
+        }),
       };
     }
     default:

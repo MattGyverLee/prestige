@@ -11,7 +11,7 @@ export const speeds: number[] = [
   1.5,
   2,
   3,
-  5
+  5,
 ];
 
 export const playerCleanStore: types.MediaPlayerState = {
@@ -28,7 +28,7 @@ export const playerCleanStore: types.MediaPlayerState = {
   seeking: false,
   speedsIndex: 5,
   url: "",
-  volume: 0.8
+  volume: 0.8,
 };
 
 export function playerReducer(
@@ -44,7 +44,7 @@ export function playerReducer(
       if (action.payload.blobURL !== undefined) {
         return {
           ...playerCleanStore,
-          url: action.payload.blobURL
+          url: action.payload.blobURL,
         };
       }
       return playerCleanStore;
@@ -53,37 +53,37 @@ export function playerReducer(
       // I might Deprecate This Action
       return {
         ...state,
-        ...action.payload
+        ...action.payload,
       };
     }
     case types.SET_URL: {
       return {
         ...playerCleanStore,
-        url: action.payload.blobURL
+        url: action.payload.blobURL,
       };
     }
     case types.TOGGLE_PLAY: {
       return {
         ...state,
-        playing: action.payload !== undefined ? action.payload : !state.playing
+        playing: action.payload !== undefined ? action.payload : !state.playing,
       };
     }
     case types.STOP_PLAYING: {
       return {
         ...state,
         playing: false,
-        url: "none"
+        url: "none",
       };
     }
     case types.TOGGLE_LOOP: {
       return {
         ...state,
-        loop: !state.loop
+        loop: !state.loop,
       };
     }
     case types.ON_PLAY: {
       return {
-        ...state
+        ...state,
         // playing: true
         // this seems circular
       };
@@ -91,14 +91,14 @@ export function playerReducer(
     case types.ON_ENDED: {
       return {
         ...state,
-        playing: state.loop
+        playing: state.loop,
       };
     }
     case types.ON_PROGRESS: {
       if (!state.seeking && action.payload !== undefined) {
         return {
           ...state,
-          ...action.payload
+          ...action.payload,
         };
       } else {
         return state;
@@ -107,7 +107,7 @@ export function playerReducer(
     case types.SET_DURATION: {
       return {
         ...state,
-        duration: action.payload
+        duration: action.payload,
       };
     }
     case types.SET_PLAYBACK_RATE: {
@@ -118,49 +118,49 @@ export function playerReducer(
             ? 14.5
             : action.payload <= 0.2
             ? 0.2
-            : action.payload
+            : action.payload,
       };
     }
     case types.SET_PLAYBACK_MULTIPLIER: {
       return {
         ...state,
-        playbackMultiplier: action.payload
+        playbackMultiplier: action.payload,
       };
     }
     case types.TOGGLE_MUTED: {
       return {
         ...state,
-        muted: !state.muted
+        muted: !state.muted,
       };
     }
     case types.ON_SEEK_MOUSE_DOWN: {
       return {
         ...state,
-        seeking: true
+        seeking: true,
       };
     }
     case types.ON_SEEK_MOUSE_UP: {
       return {
         ...state,
-        seeking: false
+        seeking: false,
       };
     }
     case types.ON_SEEK_CHANGE: {
       return {
         ...state,
-        played: action.payload
+        played: action.payload,
       };
     }
     case types.ON_VOLUME_CHANGE: {
       return {
         ...state,
-        volume: action.payload
+        volume: action.payload,
       };
     }
     case types.SET_SEEK: {
       return {
         ...state,
-        seek: action.payload
+        seek: action.payload,
       };
     }
     case types.CHANGE_SPEEDS_INDEX: {
@@ -169,7 +169,7 @@ export function playerReducer(
       return {
         ...state,
         speedsIndex: idx,
-        playbackMultiplier: speeds[idx]
+        playbackMultiplier: speeds[idx],
       };
     }
     // this.setState({ url: null, playing: false })

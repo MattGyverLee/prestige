@@ -12,7 +12,7 @@ export function generateRegionColors(): string[] {
             ~~(Math.random() * 255),
             ~~(Math.random() * 255),
             ~~(Math.random() * 255),
-            0.0
+            0.0,
           ] +
           ")"
       )

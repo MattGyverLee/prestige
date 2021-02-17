@@ -27,7 +27,4 @@ export class WaveTableRow extends Component<PassProps> {
   }
 }
 
-export default connect(
-  undefined,
-  undefined
-)(WaveTableRow);
+export default connect(undefined, undefined)(WaveTableRow);

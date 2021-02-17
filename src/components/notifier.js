@@ -8,7 +8,7 @@ import { removeSnackbar } from "../store/system/actions";
 class Notifier extends Component {
   displayed = [];
 
-  storeDisplayed = id => {
+  storeDisplayed = (id) => {
     this.displayed = [...this.displayed, id];
   };
 
@@ -50,7 +50,7 @@ class Notifier extends Component {
           }
           // Dispatch action to remove snackbar from redux store
           this.props.removeSnackbar(key);
-        }
+        },
       });
       // Keep track of snackbars that we've displayed
       this.storeDisplayed(key);
@@ -62,16 +62,13 @@ class Notifier extends Component {
   }
 }
 
-const mapStateToProps = store => ({
-  notifications: store.system.notifications
+const mapStateToProps = (store) => ({
+  notifications: store.system.notifications,
 });
 
-const mapDispatchToProps = dispatch =>
+const mapDispatchToProps = (dispatch) =>
   bindActionCreators({ removeSnackbar }, dispatch);
 
 export default withSnackbar(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(Notifier)
+  connect(mapStateToProps, mapDispatchToProps)(Notifier)
 );

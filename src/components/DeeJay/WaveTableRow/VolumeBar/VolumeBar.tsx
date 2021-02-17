@@ -30,7 +30,7 @@ export class VolumeBar extends Component<VolumeBarProps & PassProps> {
           max={1}
           step={0.01}
           value={roundIt(this.props.volumes[this.props.index] ** 4, 2)}
-          onChange={e =>
+          onChange={(e) =>
             this.props.setWSVolume(
               parseInt(e.target.id),
               parseFloat(e.target.value) ** 0.25
@@ -44,19 +44,16 @@ export class VolumeBar extends Component<VolumeBarProps & PassProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  volumes: state.deeJay.volumes
+  volumes: state.deeJay.volumes,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      setWSVolume: actions.setWSVolume
+      setWSVolume: actions.setWSVolume,
     },
     dispatch
-  )
+  ),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(VolumeBar);
+export default connect(mapStateToProps, mapDispatchToProps)(VolumeBar);

@@ -37,7 +37,7 @@ export class ResizableDiv extends Component<ComponentProps> {
       this.props.updateDimensions({
         width: Math.round(this.props.size.width),
         height: Math.round(this.props.size.height),
-        target: this.props.className
+        target: this.props.className,
       });
     }
   }
@@ -54,24 +54,19 @@ export class ResizableDiv extends Component<ComponentProps> {
 }
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
-  dimensions: state.system.dimensions
+  dimensions: state.system.dimensions,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      updateDimensions: actions.updateDimensions
+      updateDimensions: actions.updateDimensions,
     },
     dispatch
-  )
+  ),
 });
 
 export default withSize({
   monitorHeight: true,
-  refreshMode: "debounce"
-})(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(ResizableDiv)
-);
+  refreshMode: "debounce",
+})(connect(mapStateToProps, mapDispatchToProps)(ResizableDiv));

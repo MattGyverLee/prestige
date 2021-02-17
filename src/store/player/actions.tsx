@@ -5,7 +5,7 @@ export function updatePlayerAction(
 ): types.PlayerActionTypes {
   return {
     type: types.UPDATE_PLAYER_SESSION,
-    payload: newPlayerState
+    payload: newPlayerState,
   };
 }
 
@@ -15,59 +15,59 @@ export function setURL(
 ): types.PlayerActionTypes {
   return {
     type: types.SET_URL,
-    payload: { blobURL, timelineIndex }
+    payload: { blobURL, timelineIndex },
   };
 }
 
 export function togglePlay(playPause?: boolean): types.PlayerActionTypes {
   return {
     type: types.TOGGLE_PLAY,
-    payload: playPause
+    payload: playPause,
   };
 }
 
 export function stopPlaying(): types.PlayerActionTypes {
   return {
-    type: types.STOP_PLAYING
+    type: types.STOP_PLAYING,
   };
 }
 
 export function toggleLoop(): types.PlayerActionTypes {
   return {
-    type: types.TOGGLE_LOOP
+    type: types.TOGGLE_LOOP,
   };
 }
 
 export function onPlay(): types.PlayerActionTypes {
   return {
-    type: types.ON_PLAY
+    type: types.ON_PLAY,
   };
 }
 
 export function onEnded(): types.PlayerActionTypes {
   return {
-    type: types.ON_ENDED
+    type: types.ON_ENDED,
   };
 }
 
 export function setDuration(duration: number): types.PlayerActionTypes {
   return {
     type: types.SET_DURATION,
-    payload: duration
+    payload: duration,
   };
 }
 
 export function onProgress(playState: any): types.PlayerActionTypes {
   return {
     type: types.ON_PROGRESS,
-    payload: playState
+    payload: playState,
   };
 }
 
 export function setPlaybackRate(speed: number): types.PlayerActionTypes {
   return {
     type: types.SET_PLAYBACK_RATE,
-    payload: speed
+    payload: speed,
   };
 }
 
@@ -76,52 +76,52 @@ export function setPlaybackMultiplier(
 ): types.PlayerActionTypes {
   return {
     type: types.SET_PLAYBACK_MULTIPLIER,
-    payload: multiplier
+    payload: multiplier,
   };
 }
 
 export function toggleMuted(): types.PlayerActionTypes {
   return {
-    type: types.TOGGLE_MUTED
+    type: types.TOGGLE_MUTED,
   };
 }
 
 export function onSeekMouseDown(): types.PlayerActionTypes {
   return {
-    type: types.ON_SEEK_MOUSE_DOWN
+    type: types.ON_SEEK_MOUSE_DOWN,
   };
 }
 
 export function onSeekMouseUp(): types.PlayerActionTypes {
   return {
-    type: types.ON_SEEK_MOUSE_UP
+    type: types.ON_SEEK_MOUSE_UP,
   };
 }
 
 export function onSeekChange(time: number): types.PlayerActionTypes {
   return {
     type: types.ON_SEEK_CHANGE,
-    payload: time
+    payload: time,
   };
 }
 
 export function onVolumeChange(volume: number): types.PlayerActionTypes {
   return {
     type: types.ON_VOLUME_CHANGE,
-    payload: volume
+    payload: volume,
   };
 }
 
 export function setSeek(prctTime: number): types.PlayerActionTypes {
   return {
     type: types.SET_SEEK,
-    payload: prctTime
+    payload: prctTime,
   };
 }
 
 export function changeSpeedsIndex(manner: string): types.PlayerActionTypes {
   return {
     type: types.CHANGE_SPEEDS_INDEX,
-    payload: manner
+    payload: manner,
   };
 }

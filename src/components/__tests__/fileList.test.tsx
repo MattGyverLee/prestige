@@ -26,7 +26,7 @@ const sourceMedia = [
       "Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
     path:
       "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
-    wsAllowed: true
+    wsAllowed: true,
   },
   {
     // Saymore Ripped Audio
@@ -41,7 +41,7 @@ const sourceMedia = [
     name: "Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav",
     path:
       "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav",
-    wsAllowed: false
+    wsAllowed: false,
   },
   {
     // Original File
@@ -56,7 +56,7 @@ const sourceMedia = [
     name: "Messsage for Cameroon Branch - lo res_Source.mp4",
     path:
       "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source.mp4",
-    wsAllowed: false
+    wsAllowed: false,
   },
   {
     // Unrelated File
@@ -71,13 +71,13 @@ const sourceMedia = [
     name: "zPearfilm.mp4",
     path:
       "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\zPearfilm.mp4",
-    wsAllowed: false
-  }
+    wsAllowed: false,
+  },
 ];
 
 afterEach(cleanup);
 
-let tree = (props?: any) => (
+const tree = (props?: any) => (
   <Provider store={store}>
     <FileList
       sourceMedia={getSourceMedia(sourceMedia, true)}
@@ -93,7 +93,7 @@ it("Displays the Full Set", () => {
   const { getByTestId } = render(tree());
   const ul = getByTestId("fileList.UL");
   expect(ul).toBeVisible();
-  expect(ul.childNodes.length === 2);
+  expect(ul.childNodes.length).toMatch(2);
   expect(ul).toMatchSnapshot();
 });
 
@@ -102,7 +102,7 @@ it("Displays the MP4", () => {
   const { getByTestId } = render(tree());
   const ul = getByTestId("fileList.UL");
   expect(ul).toBeVisible();
-  expect(ul.childNodes.length === 1);
+  expect(ul.childNodes.length).toMatch(1);
   expect(ul.firstElementChild).toHaveTextContent("res_Source.mp4");
   expect(ul).toMatchSnapshot();
 });
@@ -111,7 +111,7 @@ it("Displays the WAV", () => {
   const { getByTestId } = render(tree());
   const ul = getByTestId("fileList.UL");
   expect(ul).toBeVisible();
-  expect(ul.childNodes.length === 1);
+  expect(ul.childNodes.length).toMatch(1);
   expect(ul.firstElementChild).toHaveTextContent("rce_StandardAudio.wav");
   expect(ul).toMatchSnapshot();
 });

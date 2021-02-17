@@ -6,7 +6,7 @@ import { speeds } from "../../../store/player/reducers";
 import {
   faExpandArrowsAlt,
   faPause,
-  faPlay
+  faPlay,
 } from "@fortawesome/free-solid-svg-icons";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -48,7 +48,7 @@ export class ControlRow extends Component<ControlRowProps> {
             onClick={() => {
               this.props.setDispatch({
                 dispatchType: "PlayPause",
-                wsNum: -1
+                wsNum: -1,
               });
             }}
           >
@@ -89,16 +89,18 @@ export class ControlRow extends Component<ControlRowProps> {
             className="seek-input"
             max={1}
             min={0}
-            onChange={e => this.props.onSeekChange(parseFloat(e.target.value))}
+            onChange={(e) =>
+              this.props.onSeekChange(parseFloat(e.target.value))
+            }
             onMouseDown={this.props.onSeekMouseDown}
-            onMouseUp={e => {
+            onMouseUp={(e) => {
               this.props.onSeekMouseUp();
               this.props.setDispatch({
                 dispatchType: "PlayerSeek",
                 wsNum: -1,
                 refStart:
                   parseFloat((e.target as HTMLInputElement).value) *
-                  this.props.playerDuration
+                  this.props.playerDuration,
               });
             }}
             step="any"
@@ -136,7 +138,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   playerRate: state.player.playbackRate,
   playerPlayed: state.player.played,
   playerPlaying: state.player.playing,
-  speedsIndex: state.player.speedsIndex
+  speedsIndex: state.player.speedsIndex,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -148,13 +150,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       onSeekMouseUp: actions.onSeekMouseUp,
       resetDeeJay: actions.resetDeeJay,
       setDispatch: actions.setDispatch,
-      toggleLoop: actions.toggleLoop
+      toggleLoop: actions.toggleLoop,
     },
     dispatch
-  )
+  ),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ControlRow);
+export default connect(mapStateToProps, mapDispatchToProps)(ControlRow);

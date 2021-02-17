@@ -7,8 +7,8 @@ export const annCleanStore: types.AnnotationState = {
     {
       id: 0,
       startTime: 0,
-      txtTransc: "Not Loaded"
-    }
+      txtTransc: "Not Loaded",
+    },
   ],
   audCarefulMain: false,
   audTranslMain: false,
@@ -23,7 +23,7 @@ export const annCleanStore: types.AnnotationState = {
   txtTranslMain: false,
   txtTranslSubtitle: false,
   timelineChanged: false,
-  timelinesInstantiated: false
+  timelinesInstantiated: false,
 };
 
 export function annotationReducer(
@@ -43,7 +43,7 @@ export function annotationReducer(
     case types.SET_URL: {
       return {
         ...state,
-        currentTimeline: action.payload.timelineIndex
+        currentTimeline: action.payload.timelineIndex,
       };
     }
     case types.ADD_ORAL_ANNOTATION: {
@@ -56,11 +56,11 @@ export function annotationReducer(
           milestones: [action.payload.newMilestone],
           eafFile: eafFile,
           syncMedia: [syncMedia],
-          instantiated: true
+          instantiated: true,
         };
         return { ...state, timeline: [...state.timeline, timeline] };
       }
-      let added: boolean = false;
+      let added = false;
       let milestones = state.timeline[action.payload.idx].milestones.map(
         (m: types.LooseObject) => {
           if (
@@ -70,7 +70,7 @@ export function annotationReducer(
             added = true;
             return {
               ...m,
-              data: [...m.data, ...action.payload.newMilestone.data]
+              data: [...m.data, ...action.payload.newMilestone.data],
             };
           } else {
             return m;
@@ -85,87 +85,87 @@ export function annotationReducer(
         ...state,
         timeline: state.timeline.map((t: types.LooseObject, i: number) =>
           i === action.payload.idx ? { ...t, milestones } : t
-        )
+        ),
       };
     }
     case types.ADD_CATEGORY: {
       return {
         ...state,
-        categories: [...state.categories, action.payload]
+        categories: [...state.categories, action.payload],
       };
     }
     case types.PUSH_ANNOTATION: {
       return {
         ...state,
-        annotations: [action.payload]
+        annotations: [action.payload],
       };
     }
     case types.PUSH_ANNOTATION_TABLE: {
       return {
         ...state,
         annotationTable: action.payload,
-        timelineChanged: false
+        timelineChanged: false,
       };
     }
     case types.PUSH_TIMELINE: {
       return {
         ...state,
         timeline: state.timeline.concat(action.payload.timeline),
-        timelineChanged: true
+        timelineChanged: true,
       };
     }
     case types.TOGGLE_AUDCAREFUL_MAIN: {
       return {
         ...state,
-        audCarefulMain: action.payload || !state.audCarefulMain
+        audCarefulMain: action.payload || !state.audCarefulMain,
       };
     }
     case types.TOGGLE_AUDTRANSL_MAIN: {
       return {
         ...state,
-        audTranslMain: action.payload || !state.audTranslMain
+        audTranslMain: action.payload || !state.audTranslMain,
       };
     }
     case types.TOGGLE_AUDTRANSC_MAIN: {
       return {
         ...state,
-        txtTranscMain: action.payload || !state.txtTranscMain
+        txtTranscMain: action.payload || !state.txtTranscMain,
       };
     }
     case types.TOGGLE_TRANSC_SUB: {
       return {
         ...state,
-        txtTranscSubtitle: action.payload || !state.txtTranscSubtitle
+        txtTranscSubtitle: action.payload || !state.txtTranscSubtitle,
       };
     }
     case types.TOGGLE_TXTTRANSL_MAIN: {
       return {
         ...state,
-        txtTranslMain: action.payload || !state.txtTranslMain
+        txtTranslMain: action.payload || !state.txtTranslMain,
       };
     }
     case types.TOGGLE_AUDTRANSL_SUB: {
       return {
         ...state,
-        audTranslMain: action.payload || !state.audTranslMain
+        audTranslMain: action.payload || !state.audTranslMain,
       };
     }
     case types.TOGGLE_META_MAIN: {
       return {
         ...state,
-        sayMoreMetaMain: action.payload || !state.sayMoreMetaMain
+        sayMoreMetaMain: action.payload || !state.sayMoreMetaMain,
       };
     }
     case types.TOGGLE_FILEINFO: {
       return {
         ...state,
-        fileInfoMain: action.payload || !state.fileInfoMain
+        fileInfoMain: action.payload || !state.fileInfoMain,
       };
     }
     case types.FILE_DELETED: {
       const tempTimeline = state.timeline
         .map((t: types.LooseObject) => {
-          let tempTimeline = {
+          const tempTimeline = {
             ...t,
             milestones: t.milestones
               .map((m: any) => {
@@ -178,11 +178,11 @@ export function annotationReducer(
                         t.eafFile === action.payload &&
                         !md.data.startsWith("file:///")
                       )
-                  )
+                  ),
                 };
               })
               .filter((m: any) => m.data.length !== 0),
-            syncMedia: t.syncMedia.filter((s: any) => s !== action.payload)
+            syncMedia: t.syncMedia.filter((s: any) => s !== action.payload),
           };
           return tempTimeline;
         })
@@ -200,7 +200,7 @@ export function annotationReducer(
           }
         ),
         timeline: tempTimeline,
-        timelineChanged: true
+        timelineChanged: true,
       };
     }
     case types.UPDATE_PREV_TIMELINE: {

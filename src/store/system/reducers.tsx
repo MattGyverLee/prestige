@@ -11,8 +11,8 @@ export const systemCleanStore: types.SystemState = {
   dimensions: {
     AppDetails: { width: -1, height: -1 },
     AppPlayer: { width: -1, height: -1 },
-    AppDeeJay: { width: -1, height: -1 }
-  }
+    AppDeeJay: { width: -1, height: -1 },
+  },
 };
 
 export function systemReducer(
@@ -23,7 +23,7 @@ export function systemReducer(
     case types.UPDATE_SESSION: {
       return {
         ...state,
-        ...action.payload
+        ...action.payload,
       };
     }
     case types.ENQUEUE_SNACKBAR: {
@@ -33,27 +33,27 @@ export function systemReducer(
           ...state.notifications,
           {
             key: action.key,
-            ...action.notification
-          }
-        ]
+            ...action.notification,
+          },
+        ],
       };
     }
     case types.CLOSE_SNACKBAR: {
       return {
         ...state,
-        notifications: state.notifications.map(notification =>
+        notifications: state.notifications.map((notification) =>
           action.dismissAll || notification.key === action.key
             ? { ...notification, dismissed: true }
             : { ...notification }
-        )
+        ),
       };
     }
     case types.REMOVE_SNACKBAR: {
       return {
         ...state,
         notifications: state.notifications.filter(
-          notification => notification.key !== action.key
-        )
+          (notification) => notification.key !== action.key
+        ),
       };
     }
     case types.UPDATE_DIMENSIONS: {
@@ -66,9 +66,9 @@ export function systemReducer(
               ...state.dimensions,
               AppDetails: {
                 width: action.payload.width,
-                height: action.payload.height
-              }
-            }
+                height: action.payload.height,
+              },
+            },
           };
         case "AppPlayer":
           return {
@@ -77,9 +77,9 @@ export function systemReducer(
               ...state.dimensions,
               AppPlayer: {
                 width: action.payload.width,
-                height: action.payload.height
-              }
-            }
+                height: action.payload.height,
+              },
+            },
           };
         case "AppDeeJay":
           return {
@@ -88,9 +88,9 @@ export function systemReducer(
               ...state.dimensions,
               AppDeeJay: {
                 width: action.payload.width,
-                height: action.payload.height
-              }
-            }
+                height: action.payload.height,
+              },
+            },
           };
         default:
           return state;
@@ -99,18 +99,18 @@ export function systemReducer(
     case types.UPDATE_SNACKBAR: {
       // TODO: Finish This
       state.notifications.filter(
-        notification => notification.key === action.key
+        (notification) => notification.key === action.key
       );
       return {
         ...state,
         notifications: [
           ...state.notifications.filter(
-            notification => notification.key !== action.key
+            (notification) => notification.key !== action.key
           ),
           state.notifications.filter(
-            notification => notification.key === action.key
-          )
-        ]
+            (notification) => notification.key === action.key
+          ),
+        ],
       };
     }
     default:

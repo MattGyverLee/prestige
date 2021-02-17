@@ -1,6 +1,7 @@
 import * as aTypes from "../../store/annot/types";
 import * as actions from "../../store";
 import * as tTypes from "../../store/tree/types";
+import chokidar from "chokidar";
 
 import Timelines from "./Timelines";
 import React, { Component } from "react";
@@ -12,6 +13,7 @@ import { connect } from "react-redux";
 interface StateProps {
   annotMedia: aTypes.LooseObject[];
   annot: aTypes.AnnotationState;
+  // eslint-disable-next-line @typescript-eslint/ban-types
   annotations: object;
   availableFiles: aTypes.LooseObject[];
   categories: string[];
@@ -52,10 +54,10 @@ interface DispatchProps {
 interface FolderProps extends StateProps, DispatchProps {}
 
 class SelectFolderZone extends Component<FolderProps> {
-  private isChokReady: boolean = false;
+  private isChokReady = false;
   private currentFolder: any;
-  private prevPath: string = "";
-  private readyPlayURL: string = "";
+  private prevPath = "";
+  private readyPlayURL = "";
   private usingStoredData = false;
   private watcherRef: any;
 
@@ -68,15 +70,15 @@ class SelectFolderZone extends Component<FolderProps> {
   }
 
   // Starts the Chokidar File Watcher
-  startWatcher = (path: string, props: any, ignoreInitial: boolean = false) => {
+  startWatcher = (path: string, props: any, ignoreInitial = false) => {
     // Closes Existing Watcher
     if (this.watcherRef !== undefined) this.watcherRef.close();
 
     // Creates a Watcher to Watch Input Path
-    const watcher = require("chokidar").watch(path, {
+    const watcher = chokidar.watch(path, {
       ignored: /[/\\]\./,
       persistent: true,
-      ignoreInitial: ignoreInitial
+      ignoreInitial: ignoreInitial,
     });
     this.watcherRef = watcher;
 
@@ -95,7 +97,7 @@ class SelectFolderZone extends Component<FolderProps> {
         parsedPath.dir.endsWith("_Annotations") ||
         parsedPath.base.includes("oralAnnotations") ||
         isMerged;
-      let blobURL = fileURL(path);
+      const blobURL = fileURL(path);
 
       // Get Temporary Mime Type of File
       const mime = require("mime");
@@ -107,26 +109,26 @@ class SelectFolderZone extends Component<FolderProps> {
       if (tempMime.startsWith("model") && tempMime.endsWith(".mts")) {
         require("ffmpeg")(blobURL).then(
           // Converts Video
-          function(video: any) {
+          function (video: any) {
             // Callback mode
             video
               .setVideoSize("640x?", true, true, "#fff")
               .setAudioCodec("libfaac")
               .setAudioChannels(2)
-              .save(parsedPath.dir + "\\" + parsedPath.name + ".avi", function(
-                error: Error,
-                file: File
-              ) {
-                if (!error) {
-                  console.log("New video file: " + file);
-                } else {
-                  console.log("Error: " + error);
+              .save(
+                parsedPath.dir + "\\" + parsedPath.name + ".avi",
+                function (error: Error, file: File) {
+                  if (!error) {
+                    console.log("New video file: " + file);
+                  } else {
+                    console.log("Error: " + error);
+                  }
+                  return undefined;
                 }
-                return undefined;
-              });
+              );
           },
           // Reports on Video Conversion Errors
-          function(err: Error) {
+          function (err: Error) {
             console.log("Video Conversion Error: " + err);
           }
         );
@@ -147,7 +149,7 @@ class SelectFolderZone extends Component<FolderProps> {
         name: parsedPath.base,
         path: path,
         wsAllowed: false,
-        waveform: ""
+        waveform: "",
       };
     };
 
@@ -291,8 +293,8 @@ class SelectFolderZone extends Component<FolderProps> {
 
   private dirSnapshot(dir: string): any {
     // Returns Stringified DIR Object
-    let fs = require("fs");
-    let path = require("path");
+    const fs = require("fs");
+    const path = require("path");
     const walkSync = (inDir: string, filelist = []) =>
       fs.readdirSync(inDir).map((file: any) =>
         // Todo: Flatten this in process.
@@ -314,8 +316,8 @@ class SelectFolderZone extends Component<FolderProps> {
       localStorage.getItem(`Prestige.${dir}`) !== null &&
       localStorage.getItem(`Prestige.${dir}`) !== currentDir
     ) {
-      let oldDir = JSON.parse(localStorage.getItem(`Prestige.${dir}`) + "");
-      let newDir = JSON.parse(currentDir + "");
+      const oldDir = JSON.parse(localStorage.getItem(`Prestige.${dir}`) + "");
+      const newDir = JSON.parse(currentDir + "");
       const _ = require("lodash");
       const diffs = _.difference(newDir, oldDir);
       if (diffs.length > 0) {
@@ -360,8 +362,8 @@ class SelectFolderZone extends Component<FolderProps> {
         `Prestige.annot.${dir}`,
         JSON.stringify(this.props.annot)
       );
-      let time = Date.now() + 0;
-      let timeString = time.toString();
+      const time = Date.now() + 0;
+      const timeString = time.toString();
       localStorage.setItem("Prestige.time", timeString);
       return true;
     }
@@ -420,7 +422,7 @@ class SelectFolderZone extends Component<FolderProps> {
 
   // Adds All Oral Annotations not Yet in Milestones into Milestones
   addNewMediaToMilestone() {
-    this.props.annotMedia.forEach(mediaFile => {
+    this.props.annotMedia.forEach((mediaFile) => {
       if (
         mediaFile.isAnnotation &&
         !mediaFile.name.includes("oralAnnotation") &&
@@ -428,9 +430,7 @@ class SelectFolderZone extends Component<FolderProps> {
         !mediaFile.isMerged
       ) {
         // Define Fields for oralMilestone
-        const splitPath = require("path")
-          .parse(mediaFile.path)
-          .name.split("_");
+        const splitPath = require("path").parse(mediaFile.path).name.split("_");
         const tier = `${splitPath[3]}_audio`;
 
         // Create oralMilestone
@@ -442,11 +442,11 @@ class SelectFolderZone extends Component<FolderProps> {
               data: mediaFile.blobURL,
               linguisticType: tier,
               locale: "",
-              mimeType: mediaFile.mimeType
-            }
+              mimeType: mediaFile.mimeType,
+            },
           ],
           startTime: parseFloat(splitPath[0]),
-          stopTime: parseFloat(splitPath[2])
+          stopTime: parseFloat(splitPath[2]),
         };
 
         // Add Tier to Categories if not Already There
@@ -477,11 +477,11 @@ class SelectFolderZone extends Component<FolderProps> {
     const fs = require("fs-extra");
     const path = require("path");
     const app = require("electron").remote.app;
-    var chromeCacheDir = path.join(app.getPath("userData"), "Cache");
+    const chromeCacheDir = path.join(app.getPath("userData"), "Cache");
     if (fs.existsSync(chromeCacheDir)) {
-      var files = fs.readdirSync(chromeCacheDir);
-      for (var i = 0; i < files.length; i++) {
-        var filename = path.join(chromeCacheDir, files[i]);
+      const files = fs.readdirSync(chromeCacheDir);
+      for (let i = 0; i < files.length; i++) {
+        const filename = path.join(chromeCacheDir, files[i]);
         if (fs.existsSync(filename)) {
           try {
             fs.unlinkSync(filename);
@@ -501,7 +501,7 @@ class SelectFolderZone extends Component<FolderProps> {
     const ffmpegStaticElectron = require("ffmpeg-static-electron");
 
     // Set Up Fluent FFMpeg and its Associated Paths
-    let fluentFfmpeg = require("fluent-ffmpeg");
+    const fluentFfmpeg = require("fluent-ffmpeg");
     if (require("electron-is-dev")) {
       fluentFfmpeg.setFfmpegPath(`${process.cwd()}\\bin\\win\\x64\\ffmpeg.exe`);
       fluentFfmpeg.setFfprobePath(
@@ -522,8 +522,8 @@ class SelectFolderZone extends Component<FolderProps> {
 
     // Sort FilteredAnnot Based on Start Time into InputFiles
     let annotDir = "";
-    let path = require("path");
-    let inputFiles: any[] = this.props.annotMedia
+    const path = require("path");
+    const inputFiles: any[] = this.props.annotMedia
       .filter((am: any) => am.name.includes("_" + ctString))
       .sort((a1: any, a2: any) => {
         return (
@@ -603,10 +603,10 @@ class SelectFolderZone extends Component<FolderProps> {
               )
             );
           if (err) console.error(err);
-          var timecodes: number[] = [];
-          var len = relevantlines.length - 1;
+          const timecodes: number[] = [];
+          const len = relevantlines.length - 1;
           if (len >= 0) {
-            for (var i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
               if (relevantlines[i] !== relevantlines[i + 1]) {
                 timecodes.push(relevantlines[i]);
               }
@@ -615,9 +615,9 @@ class SelectFolderZone extends Component<FolderProps> {
           }
 
           // Creates and Add Oral Milestones to Timeline
-          const TOGGLE_TIMES: boolean = true;
-          let primaryIdx: number = 0;
-          let inputTimes: any[] = [];
+          const TOGGLE_TIMES = true;
+          let primaryIdx = 0;
+          const inputTimes: any[] = [];
           mergedAudio._inputs.forEach((v: any, idx: number) => {
             if (!v.source.endsWith("silence.wav"))
               mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
@@ -631,7 +631,7 @@ class SelectFolderZone extends Component<FolderProps> {
                   name,
                   duration: roundIt(metadata.streams[0].duration, 3),
                   refStart: name.split("_")[0],
-                  refStop: name.split("_")[2]
+                  refStop: name.split("_")[2],
                 });
 
                 // Create Milestones if Last FFProbe Has Been Called
@@ -660,11 +660,11 @@ class SelectFolderZone extends Component<FolderProps> {
                               : timecodes[2 * i - 1]
                             : timecodes[2 * i],
                           // Accounts for Excessive Time Padding
-                          clipStop: timecodes[2 * i + 1]
-                        }
+                          clipStop: timecodes[2 * i + 1],
+                        },
                       ],
                       startTime: parseFloat(inputTimes[i].refStart),
-                      stopTime: parseFloat(inputTimes[i].refStop)
+                      stopTime: parseFloat(inputTimes[i].refStop),
                     };
 
                     // Add Milestone to Timeline
@@ -708,7 +708,7 @@ class SelectFolderZone extends Component<FolderProps> {
   convertToMP3 = (path: string) => {
     // Set Up Fluent FFMpeg and its Associated Paths
     const ffmpegStaticElectron = require("ffmpeg-static-electron");
-    let fluentFfmpeg = require("fluent-ffmpeg");
+    const fluentFfmpeg = require("fluent-ffmpeg");
 
     // Determines Location for Ffmpeg and Ffprobe from environment variables.
     if (require("electron-is-dev")) {
@@ -769,7 +769,7 @@ class SelectFolderZone extends Component<FolderProps> {
     let content: any = "";
     require("xml2js").parseString(
       require("fs-extra").readFileSync(path),
-      function(err: Error, result: any) {
+      function (err: Error, result: any) {
         if (!err) content = result;
         else console.log(err.stack);
       }
@@ -794,9 +794,9 @@ class SelectFolderZone extends Component<FolderProps> {
       );
 
     // Instantiate tempTimeline
-    let tempTimeline = new Timelines({
+    const tempTimeline = new Timelines({
       syncMedia: syncMedia,
-      eafFile: fileURL(path)
+      eafFile: fileURL(path),
     });
 
     // Inline Function Definition for findTime and findAnnotTime
@@ -835,14 +835,14 @@ class SelectFolderZone extends Component<FolderProps> {
                   fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text",
                 data: alAnnPointer.ANNOTATION_VALUE[0],
                 locale: fileData.TIER[j].$.DEFAULT_LOCALE,
-                mimeType: "string"
-              }
+                mimeType: "string",
+              },
             ],
             startTime: findTime(alAnnPointer.$.TIME_SLOT_REF1) / 1000,
             startId: alAnnPointer.$.TIME_SLOT_REF1,
             stopTime: findTime(alAnnPointer.$.TIME_SLOT_REF2) / 1000,
             stopId: alAnnPointer.$.TIME_SLOT_REF2,
-            timeline: parsedPath.base
+            timeline: parsedPath.base,
           };
           miles.push(milestone);
           tempTimeline.addMilestone(milestone);
@@ -860,8 +860,8 @@ class SelectFolderZone extends Component<FolderProps> {
                   data: refAnnPointer.ANNOTATION_VALUE[0],
                   linguisticType: fileData.TIER[j].$.TIER_ID + "_text",
                   locale: fileData.TIER[j].$.DEFAULT_LOCALE,
-                  mimeType: "string"
-                }
+                  mimeType: "string",
+                },
               ],
               startId: refAnnPointer.$.TIME_SLOT_REF1,
               startTime: findAnnotTime(
@@ -873,7 +873,7 @@ class SelectFolderZone extends Component<FolderProps> {
                 refAnnPointer.$.ANNOTATION_REF,
                 "stopTime"
               ),
-              timeline: parsedPath.base
+              timeline: parsedPath.base,
             };
             tempTimeline.addMilestone(milestone2);
           }
@@ -895,8 +895,8 @@ class SelectFolderZone extends Component<FolderProps> {
         variant: vType || "default",
         action: (key: aTypes.LooseObject) => (
           <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
-        )
-      }
+        ),
+      },
     });
   };
 
@@ -908,7 +908,7 @@ class SelectFolderZone extends Component<FolderProps> {
           <input
             id="selectFolder"
             className="custom-file-input"
-            ref={node => this._addDirectory(node)}
+            ref={(node) => this._addDirectory(node)}
             type="file"
             placeholder="Select Folder"
           />
@@ -940,7 +940,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   timeline: state.annot.timeline,
   url: state.player.url,
   annot: state.annot,
-  tree: state.tree
+  tree: state.tree,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -968,15 +968,12 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setTimelinesInstantiated: actions.setTimelinesInstantiated,
       setTimelineChanged: actions.setTimelineChanged,
       setAnnotMediaWSAllowed: actions.setAnnotMediaWSAllowed,
-      setSourceMediaWSAllowed: actions.setSourceMediaWSAllowed
+      setSourceMediaWSAllowed: actions.setSourceMediaWSAllowed,
     },
     dispatch
-  )
+  ),
 });
 const withSnackbar = require("notistack").withSnackbar;
 export default withSnackbar(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(SelectFolderZone)
+  connect(mapStateToProps, mapDispatchToProps)(SelectFolderZone)
 );

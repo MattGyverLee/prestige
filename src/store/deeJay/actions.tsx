@@ -2,7 +2,7 @@ import * as types from "./types";
 
 export function resetDeeJay(): types.DeeJayActionTypes {
   return {
-    type: types.RESET_DEE_JAY
+    type: types.RESET_DEE_JAY,
   };
 }
 
@@ -12,7 +12,7 @@ export function setWSVolume(
 ): types.DeeJayActionTypes {
   return {
     type: types.SET_WS_VOLUME,
-    payload: { idx, volume }
+    payload: { idx, volume },
   };
 }
 export function setDispatch(
@@ -20,6 +20,6 @@ export function setDispatch(
 ): types.DeeJayActionTypes {
   return {
     type: types.SET_DISPATCH,
-    payload: type
+    payload: type,
   };
 }

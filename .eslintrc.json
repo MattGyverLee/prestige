@@ -4,7 +4,12 @@
     "es6": true,
     "jest": true
   },
-  "extends": ["react-app", "standard", "prettier"],
+  "extends": ["plugin:@typescript-eslint/recommended",
+    "plugin:jest/recommended",
+    "prettier",
+    "prettier/react",
+    "prettier/@typescript-eslint",
+    "plugin:prettier/recommended"],
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
@@ -16,9 +21,19 @@
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
-  "plugins": ["react"],
+  "plugins": ["react", "@typescript-eslint", "jest"],
   "rules": {
     "linebreak-style": ["off", "unix"],
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": ["off"],
+    "@typescript-eslint/no-var-require": ["off"],
+    "@typescript-eslint/no-empty-interface": ["off"],
+    // end temp
     "standard/array-bracket-even-spacing": ["off"],
     "standard/computed-property-even-spacing": ["off"],
     "standard/object-curly-even-spacing": ["off"],
@@ -26,16 +41,6 @@
     "react/jsx-filename-extension": [
       "error",
       { "extensions": [".jsx", ".tsx"] }
-    ],
-    "import/extensions": [
-      "error",
-      "always",
-      {
-        "js": "never",
-        "jsx": "never",
-        "ts": "never",
-        "tsx": "never"
-      }
     ]
   },
   "settings": {

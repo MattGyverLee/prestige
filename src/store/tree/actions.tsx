@@ -15,13 +15,13 @@ export function treeHardResetApp(inString: string): types.TreeActionTypes {
 export function updateTree(newTree: types.TreeState): types.TreeActionTypes {
   return {
     type: types.UPDATE_TREE,
-    payload: newTree
+    payload: newTree,
   };
 }
 export function loadTree(inState: types.TreeState): types.TreeActionTypes {
   return {
     type: types.LOAD_TREE,
-    payload: inState
+    payload: inState,
   };
 }
 /* export function updateActiveFolder(newFolder: types.Folders) {
@@ -34,21 +34,21 @@ export function loadTree(inState: types.TreeState): types.TreeActionTypes {
 export function treeHardResetApp(inString: string): types.TreeActionTypes {
   return {
     type: types.HARD_RESET_APP,
-    payload: inString
+    payload: inString,
   };
 }
 
 export function treeOnNewFolder(inString: string): types.TreeActionTypes {
   return {
     type: types.ON_NEW_FOLDER,
-    payload: inString
+    payload: inString,
   };
 }
 
 export function fileAdded(inFile: types.FileDesc): types.TreeActionTypes {
   return {
     type: types.FILE_ADDED,
-    payload: inFile
+    payload: inFile,
   };
 }
 export function sourceMediaAdded(
@@ -56,19 +56,19 @@ export function sourceMediaAdded(
 ): types.TreeActionTypes {
   return {
     type: types.SOURCE_MEDIA_ADDED,
-    payload: inFile
+    payload: inFile,
   };
 }
 export function annotMediaAdded(inFile: types.FileDesc): types.TreeActionTypes {
   return {
     type: types.ANNOT_MEDIA_ADDED,
-    payload: inFile
+    payload: inFile,
   };
 }
 export function fileChanged(inFile: types.FileDesc): types.TreeActionTypes {
   return {
     type: types.FILE_CHANGED,
-    payload: inFile
+    payload: inFile,
   };
 }
 export function sourceMediaChanged(
@@ -76,13 +76,13 @@ export function sourceMediaChanged(
 ): types.TreeActionTypes {
   return {
     type: types.SOURCE_MEDIA_CHANGED,
-    payload: inFile
+    payload: inFile,
   };
 }
 export function waveformAdded(waveIn: types.Wavein): types.TreeActionTypes {
   return {
     type: types.WAVEFORM_ADDED,
-    payload: waveIn
+    payload: waveIn,
   };
 }
 export function annotMediaChanged(
@@ -90,19 +90,19 @@ export function annotMediaChanged(
 ): types.TreeActionTypes {
   return {
     type: types.ANNOT_MEDIA_CHANGED,
-    payload: inFile
+    payload: inFile,
   };
 }
 export function fileDeleted(blobURL: string): types.TreeActionTypes {
   return {
     type: types.FILE_DELETED,
-    payload: blobURL
+    payload: blobURL,
   };
 }
 export function changePrevPath(inPath: string): types.TreeActionTypes {
   return {
     type: types.CHANGE_PREV_PATH,
-    payload: inPath
+    payload: inPath,
   };
 }
 export function setAnnotMediaInMilestones(
@@ -110,13 +110,13 @@ export function setAnnotMediaInMilestones(
 ): types.TreeActionTypes {
   return {
     type: types.SET_ANNOT_MEDIA_IN_MILESTONES,
-    payload: blobURL
+    payload: blobURL,
   };
 }
 export function setAnnotMediaWSAllowed(blobURL: string): types.TreeActionTypes {
   return {
     type: types.SET_ANNOT_MEDIA_WS_ALLOWED,
-    payload: blobURL
+    payload: blobURL,
   };
 }
 export function setSourceMediaWSAllowed(
@@ -124,6 +124,6 @@ export function setSourceMediaWSAllowed(
 ): types.TreeActionTypes {
   return {
     type: types.SET_SOURCE_MEDIA_WS_ALLOWED,
-    payload: blobURL
+    payload: blobURL,
   };
 }

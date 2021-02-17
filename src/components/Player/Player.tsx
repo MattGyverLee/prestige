@@ -80,12 +80,12 @@ class PlayerZone extends Component<PlayerProps> {
             onBuffer={() => console.log("Player Buffer")}
             onDuration={this.onDuration}
             onEnded={this.props.onEnded}
-            onError={e => console.log("Player Error: " + e)}
+            onError={(e) => console.log("Player Error: " + e)}
             onPause={this.onPause}
             onPlay={this.onPlay}
             onProgress={this.props.onProgress}
             onReady={() => console.log("Player Ready")}
-            onSeek={e => console.log("Player Seek: " + e)}
+            onSeek={(e) => console.log("Player Seek: " + e)}
             onStart={() => console.log("Player Start")}
             playbackRate={
               this.props.playbackRate * this.props.playbackMultiplier >= 15
@@ -121,7 +121,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   seek: state.player.seek,
   timeline: state.annot.timeline,
   url: state.player.url,
-  volume: state.player.volume
+  volume: state.player.volume,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -133,12 +133,9 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setDuration: actions.setDuration,
       setSeek: actions.setSeek,
       setURL: actions.setURL,
-      togglePlay: actions.togglePlay
+      togglePlay: actions.togglePlay,
     },
     dispatch
-  )
+  ),
 });
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(PlayerZone);
+export default connect(mapStateToProps, mapDispatchToProps)(PlayerZone);

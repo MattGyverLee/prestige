@@ -29,11 +29,11 @@ declare global {
 const store = configureMockStore([])({
   annot: { ...annCleanStore },
   deeJay: {
-    ...deeJayCleanStore
+    ...deeJayCleanStore,
   },
   player: { ...playerCleanStore },
   system: { ...systemCleanStore },
-  tree: { ...treeCleanStore }
+  tree: { ...treeCleanStore },
 });
 
 let appMaster: any;
