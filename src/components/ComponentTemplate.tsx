@@ -36,6 +36,7 @@ class ComponentZone extends Component<ComponentProps> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   // annotations: state.annot.annotations,
 });

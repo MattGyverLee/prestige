@@ -171,9 +171,8 @@ export class AnnotationTable extends Component<ComponentProps> {
 
   render() {
     // Table Values
-    const TableRow = ({ row, ...restProps }: any) => (
-      <Table.Row {...restProps} />
-    );
+    // was const TableRow = ({ row, ...restProps }: any)
+    const TableRow = ({ ...restProps }: any) => <Table.Row {...restProps} />;
 
     // Text Cells
     // oneOrTwo: One => Transcription, One => Translation

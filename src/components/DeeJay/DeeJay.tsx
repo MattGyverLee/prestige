@@ -1,5 +1,5 @@
 import * as actions from "../../store";
-
+import * as aTypes from "../../store/annot/types";
 import React, { Component } from "react";
 import { roundIt } from "../globalFunctions";
 
@@ -39,6 +39,8 @@ interface StateProps {
 }
 
 interface DispatchProps {
+  closeSnackbar: typeof actions.closeSnackbar;
+  enqueueSnackbar: typeof actions.enqueueSnackbar;
   setDispatch: typeof actions.setDispatch;
   setPlaybackRate: typeof actions.setPlaybackRate;
   setSeek: typeof actions.setSeek;
@@ -60,9 +62,10 @@ export class DeeJay extends Component<DeeJayProps> {
   private loadQueue: string[] = [];
   private playPausing = false;
   private regionColors: string[] = [];
-  private regionsOn = 0;
+  private regionsOn = 1;
   private voNum = 0;
   private waveSurfers: WaveSurfer[] = [];
+  private debugPlayback = true;
 
   // Set Up DeeJay Instance Variables
   componentDidMount = (): void => {
@@ -114,6 +117,7 @@ export class DeeJay extends Component<DeeJayProps> {
     // Process WS Error by Displaying Through Snackbar
     newWS.on("error", (err: any) => {
       console.log(err);
+      this.sendSnackbar(String(err));
     });
 
     // Process WS Seeking
@@ -442,6 +446,20 @@ export class DeeJay extends Component<DeeJayProps> {
     );
     this.props.togglePlay(true);
 
+    // Discuss
+    if (this.debugPlayback) {
+      this.sendSnackbar(
+        "Playing WS" +
+          idx +
+          " from " +
+          m.startTime +
+          " to " +
+          m.stopTime +
+          ". Video at " +
+          roundIt(playbackRate, 2) +
+          "x."
+      );
+    }
     // Play From Now Until End of Clip
     this.waveSurfers[idx].play(
       this.waveSurfers[idx].getCurrentTime(),
@@ -801,8 +819,9 @@ export class DeeJay extends Component<DeeJayProps> {
 
         // For Each WS in High, Starting at End
         // TODO: Check whether this empty function is an issue.]
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        let recentStart = () => {};
+        let recentStart = () => {
+          // This is a placeholder to keep this function in scope
+        };
         const voiceOvers: ((data: string) => void)[] = [];
         for (let x = highs.length - 1; x >= 0; x--) {
           // Grab its Milestone
@@ -939,7 +958,19 @@ export class DeeJay extends Component<DeeJayProps> {
       }
     }
   };
-
+  // TODO: Make this a global function
+  sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
+    this.props.enqueueSnackbar({
+      message: inMessage,
+      options: {
+        key: inKey || new Date().getTime() + Math.random(),
+        variant: vType || "default",
+        action: (key: aTypes.LooseObject) => (
+          <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
+        ),
+      },
+    });
+  };
   render(): JSX.Element {
     // Forms the Rows for Each WS
     const waveTableRows = this.idxs.map((idx: number) => {
@@ -1000,6 +1031,8 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
+      closeSnackbar: actions.closeSnackbar,
+      enqueueSnackbar: actions.enqueueSnackbar,
       setDispatch: actions.setDispatch,
       setPlaybackRate: actions.setPlaybackRate,
       setSeek: actions.setSeek,

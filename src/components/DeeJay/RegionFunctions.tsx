@@ -1,22 +1,39 @@
 import store from "../../store/store";
 import { LooseObject } from "../../store/annot/types";
+import { roundIt } from "../globalFunctions";
+
+export function getNiceHSLColor(colorPos = 0): string {
+  // https://gist.github.com/AlexLamson/6785065
+  // https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
+  const goldenRatioConj = (1.0 + Math.sqrt(5.0)) / 2.0;
+  let hue = Math.random();
+  hue += goldenRatioConj * (colorPos / (5 * Math.random()));
+  hue = hue % 1;
+  hue = roundIt(359 * hue, 0);
+  return "hsl(" + hue + ", " + 60 + "%, " + 50 + "%, 0.0)";
+}
+export function getRandomRGBAColor(): string {
+  const rgb =
+    "rgba(" +
+    [
+      ~~(Math.random() * 255),
+      ~~(Math.random() * 255),
+      ~~(Math.random() * 255),
+      0.0,
+    ] +
+    ")";
+  return rgb;
+}
 
 export function generateRegionColors(): string[] {
   const state = store.getState();
   const regionColors: string[] = [];
+  let pos = 0;
   if (state.annot.currentTimeline !== -1) {
-    state.annot.timeline[state.annot.currentTimeline].milestones.forEach(() =>
-      regionColors.push(
-        "rgba(" +
-          [
-            ~~(Math.random() * 255),
-            ~~(Math.random() * 255),
-            ~~(Math.random() * 255),
-            0.0,
-          ] +
-          ")"
-      )
-    );
+    state.annot.timeline[state.annot.currentTimeline].milestones.forEach(() => {
+      regionColors.push(getNiceHSLColor(pos));
+      pos += 1;
+    });
   }
   return regionColors;
 }
