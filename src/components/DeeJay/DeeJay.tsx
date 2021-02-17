@@ -36,11 +36,14 @@ interface StateProps {
   timelineChanged: boolean;
   url: string;
   volumes: number[];
+  isReady: boolean;
+  dimensions: any;
 }
 
 interface DispatchProps {
   closeSnackbar: typeof actions.closeSnackbar;
   enqueueSnackbar: typeof actions.enqueueSnackbar;
+  onReady: typeof actions.onReady;
   setDispatch: typeof actions.setDispatch;
   setPlaybackRate: typeof actions.setPlaybackRate;
   setSeek: typeof actions.setSeek;
@@ -66,6 +69,19 @@ export class DeeJay extends Component<DeeJayProps> {
   private voNum = 0;
   private waveSurfers: WaveSurfer[] = [];
   private debugPlayback = true;
+  private lastDimensions = 477;
+
+  getDimensions = (): number => {
+    if (
+      this.props.dimensions.AppBody.height > 1 &&
+      this.props.dimensions.AppPlayer.height > 1
+    )
+      return (
+        this.props.dimensions.AppBody.height -
+        this.props.dimensions.AppPlayer.height
+      );
+    else return 477;
+  };
 
   // Set Up DeeJay Instance Variables
   componentDidMount = (): void => {
@@ -168,6 +184,17 @@ export class DeeJay extends Component<DeeJayProps> {
       });
     }
 
+    if (
+      this.props.isReady &&
+      this.props.playerPlaying &&
+      this.lastDimensions !== this.getDimensions()
+    ) {
+      this.lastDimensions = this.getDimensions();
+      this.idxs.forEach((idx: number) => {
+        this.waveSurfers[idx].setHeight(rowHeight());
+      });
+    }
+
     // Loop Through all WSs
     this.idxs.forEach((idx: number) => {
       // If Sync Media Does Not Contain currBlob => No Timeline Actions
@@ -190,11 +217,6 @@ export class DeeJay extends Component<DeeJayProps> {
           if (!this.fileAllowed(load)) this.loadQueue[idx] = load;
           else this.loadFileWS(idx, load);
         }
-      }
-    });
-    [0, 1, 2].forEach((idx) => {
-      if (this.waveSurfers[idx].height !== rowHeight()) {
-        this.waveSurfers[idx].height = rowHeight();
       }
     });
   }
@@ -1018,7 +1040,9 @@ export class DeeJay extends Component<DeeJayProps> {
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   annotMedia: state.tree.annotMedia,
   currentTimeline: state.annot.currentTimeline,
+  dimensions: state.system.dimensions,
   dispatch: state.deeJay.dispatch,
+  isReady: state.player.ready,
   playbackMultiplier: state.player.playbackMultiplier,
   playerPlaying: state.player.playing,
   sourceMedia: state.tree.sourceMedia,
@@ -1033,6 +1057,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       closeSnackbar: actions.closeSnackbar,
       enqueueSnackbar: actions.enqueueSnackbar,
+      onReady: actions.onReady,
       setDispatch: actions.setDispatch,
       setPlaybackRate: actions.setPlaybackRate,
       setSeek: actions.setSeek,

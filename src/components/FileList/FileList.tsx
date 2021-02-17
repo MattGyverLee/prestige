@@ -7,6 +7,7 @@ import { LooseObject } from "../../store/annot/types";
 import Paper from "@material-ui/core/Paper";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import ResizableDiv from "../../components/resizableDiv";
 
 interface StateProps {
   sourceMedia: LooseObject[];
@@ -32,7 +33,7 @@ export class FileList extends Component<FileListProps> {
 
   render() {
     return (
-      <div>
+      <ResizableDiv className="FileList">
         <Paper>
           <ul data-testid="fileList.UL" className="list-group list-group-flush">
             {" "}
@@ -49,7 +50,7 @@ export class FileList extends Component<FileListProps> {
             ))}{" "}
           </ul>
         </Paper>
-      </div>
+      </ResizableDiv>
     );
   }
 }

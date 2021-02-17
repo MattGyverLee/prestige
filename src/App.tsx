@@ -80,6 +80,18 @@ export class App extends React.Component<AppProps> {
           width: -1,
           height: -1,
         },
+        AppBody: {
+          width: -1,
+          height: -1,
+        },
+        FileList: {
+          width: -1,
+          height: -1,
+        },
+        AnnotDiv: {
+          width: -1,
+          height: -1,
+        },
       },
     });
 
@@ -114,7 +126,7 @@ export class App extends React.Component<AppProps> {
   render(): JSX.Element {
     return (
       <div className="App">
-        <div className="AppBody">
+        <ResizableDiv className="AppBody">
           <Notifier />
           <div className="AppSidebar">
             <PlayerZone />
@@ -126,7 +138,7 @@ export class App extends React.Component<AppProps> {
             <AnnotationTable />
             <FileList />
           </ResizableDiv>
-        </div>
+        </ResizableDiv>
         <div className="AppFooter">
           <SelectFolderZone />
           <button onClick={this.clearLocalStorage}>

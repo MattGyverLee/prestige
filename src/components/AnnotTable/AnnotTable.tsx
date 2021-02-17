@@ -22,14 +22,7 @@ import Paper from "@material-ui/core/Paper";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { getTimelineIndex } from "../globalFunctions";
-
-const Root = (props: any) => (
-  <Grid.Root
-    {...props}
-    style={{ minHeight: "50vh", height: "70vh", flexGrow: 1 }}
-  />
-  // 100
-);
+import ResizableDiv from "../../components/resizableDiv";
 
 interface StateProps {
   timelines: LooseObject[];
@@ -44,6 +37,18 @@ interface StateProps {
   url: string;
   duration: number;
 }
+const Root = (props: any) => (
+  <Grid.Root
+    {...props}
+    style={{
+      minHeight: "50vh",
+      height: "90vh",
+      flexGrow: 1,
+      flexShrink: 1,
+    }}
+  />
+  // 100
+);
 
 interface DispatchProps {
   togglePlay: typeof actions.togglePlay;
@@ -71,12 +76,12 @@ export class AnnotationTable extends Component<ComponentProps> {
       width: 200,
     },
     {
-      columnName: "txtTransc",
-      width: 200,
-    },
-    {
       columnName: "audTransl",
       width: 55,
+    },
+    {
+      columnName: "txtTransc",
+      width: 200,
     },
   ];
 
@@ -320,7 +325,7 @@ export class AnnotationTable extends Component<ComponentProps> {
       }
     ]; */
     return (
-      <div id="TranscriptionTableSpace">
+      <ResizableDiv className="AnnotDiv" id="TranscriptionTableSpace">
         <Paper className="annotation-table">
           <Grid
             rows={this.props.annotationTable}
@@ -344,7 +349,7 @@ export class AnnotationTable extends Component<ComponentProps> {
             <SearchPanel />
           </Grid>
         </Paper>
-      </div>
+      </ResizableDiv>
     );
   }
 }

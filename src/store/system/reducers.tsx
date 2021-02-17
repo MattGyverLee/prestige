@@ -12,6 +12,9 @@ export const systemCleanStore: types.SystemState = {
     AppDetails: { width: -1, height: -1 },
     AppPlayer: { width: -1, height: -1 },
     AppDeeJay: { width: -1, height: -1 },
+    AppBody: { width: -1, height: -1 },
+    AnnotDiv: { width: -1, height: -1 },
+    FileList: { width: -1, height: -1 },
   },
 };
 
@@ -87,6 +90,39 @@ export function systemReducer(
             dimensions: {
               ...state.dimensions,
               AppDeeJay: {
+                width: action.payload.width,
+                height: action.payload.height,
+              },
+            },
+          };
+        case "AppBody":
+          return {
+            ...state,
+            dimensions: {
+              ...state.dimensions,
+              AppBody: {
+                width: action.payload.width,
+                height: action.payload.height,
+              },
+            },
+          };
+        case "AnnotDiv":
+          return {
+            ...state,
+            dimensions: {
+              ...state.dimensions,
+              AnnotDiv: {
+                width: action.payload.width,
+                height: action.payload.height,
+              },
+            },
+          };
+        case "FileList":
+          return {
+            ...state,
+            dimensions: {
+              ...state.dimensions,
+              FileList: {
                 width: action.payload.width,
                 height: action.payload.height,
               },

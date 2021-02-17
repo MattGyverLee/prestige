@@ -43,6 +43,12 @@ export function onPlay(): types.PlayerActionTypes {
     type: types.ON_PLAY,
   };
 }
+export function onReady(ready: boolean): types.PlayerActionTypes {
+  return {
+    type: types.ON_READY,
+    payload: ready,
+  };
+}
 
 export function onEnded(): types.PlayerActionTypes {
   return {

@@ -7,14 +7,14 @@ export function createWaveSurfer(idx: number): WaveSurfer {
   const newWS = WaveSurfer.create({
     container: "#waveform" + idx.toString(),
     barWidth: 1,
-    cursorWidth: 2,
+    cursorWidth: 4,
     backend: "MediaElement",
-    progressColor: "#4a74a5",
+    progressColor: "#fff",
     cursorColor: "#4a74a5",
     responsive: true,
-    waveColor: "#ccc",
+    waveColor: "#00ccff",
     hideScrollbar: true,
-    height: rowHeight(),
+    height: 128,
     plugins: [regionsPlugin.create()],
   });
   newWS.empty();
@@ -29,9 +29,19 @@ export function rowHeight() {
     state.system.dimensions !== undefined &&
     state.system.dimensions.AppDeeJay !== undefined &&
     state.system.dimensions.AppDeeJay.height !== undefined &&
-    state.system.dimensions.AppDeeJay.height !== -1
+    state.system.dimensions.AppDeeJay.height !== -1 &&
+    state.system.dimensions.AppBody.height !== undefined &&
+    state.system.dimensions.AppBody.height !== -1 &&
+    state.system.dimensions.AppPlayer.height !== undefined &&
+    state.system.dimensions.AppPlayer.height !== -1
   ) {
-    return Math.round((state.system.dimensions.AppDeeJay.height * 0.8) / 4);
+    const idealHeight = Math.round(
+      (state.system.dimensions.AppBody.height -
+        100 -
+        state.system.dimensions.AppPlayer.height) /
+        3
+    );
+    return idealHeight;
   } else {
     return 128;
   }

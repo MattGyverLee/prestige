@@ -24,6 +24,7 @@ export const playerCleanStore: types.MediaPlayerState = {
   playbackMultiplier: 1.0,
   played: 0,
   playing: false,
+  ready: false,
   seek: -1,
   seeking: false,
   speedsIndex: 5,
@@ -92,6 +93,12 @@ export function playerReducer(
       return {
         ...state,
         playing: state.loop,
+      };
+    }
+    case types.ON_READY: {
+      return {
+        ...state,
+        ready: action.payload,
       };
     }
     case types.ON_PROGRESS: {

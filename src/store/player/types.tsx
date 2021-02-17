@@ -9,6 +9,7 @@ export interface MediaPlayerState {
   playbackRate: number;
   played: number;
   playing: boolean;
+  ready: boolean;
   seek: number;
   seeking?: boolean;
   speedsIndex: number;
@@ -22,6 +23,7 @@ export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_ENDED = "ON_ENDED";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const ON_PLAY = "ON_PLAY";
+export const ON_READY = "ON_READY";
 export const ON_PROGRESS = "ON_PROGESS";
 export const ON_SEEK_CHANGE = "ON_SEEK_CHANGE";
 export const ON_SEEK_MOUSE_DOWN = "ON_SEEK_MOUSE_DOWN";
@@ -50,6 +52,11 @@ interface OnEnded {
 
 interface OnPlay {
   type: typeof ON_PLAY;
+}
+
+interface OnReady {
+  type: typeof ON_READY;
+  payload: boolean;
 }
 
 interface OnProgress {
@@ -141,6 +148,7 @@ export type PlayerActionTypes =
   | ChangeSpeedsIndex
   | OnEnded
   | OnPlay
+  | OnReady
   | OnProgress
   | OnSeekChange
   | OnSeekMouseDown

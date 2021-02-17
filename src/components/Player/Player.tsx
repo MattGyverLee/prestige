@@ -22,11 +22,13 @@ interface StateProps {
   timeline: any[];
   url: string;
   volume: number;
+  ready: boolean;
 }
 
 interface DispatchProps {
   onEnded: typeof actions.onEnded;
   onPlay: typeof actions.onPlay;
+  onReady: typeof actions.onReady;
   onProgress: typeof actions.onProgress;
   setDuration: typeof actions.setDuration;
   setSeek: typeof actions.setSeek;
@@ -52,6 +54,10 @@ class PlayerZone extends Component<PlayerProps> {
 
   onPlay = () => {
     this.props.onPlay();
+  };
+
+  onReady = () => {
+    this.props.onReady(true);
   };
 
   loadNewFile(blobURL: string) {
@@ -84,7 +90,7 @@ class PlayerZone extends Component<PlayerProps> {
             onPause={this.onPause}
             onPlay={this.onPlay}
             onProgress={this.props.onProgress}
-            onReady={() => console.log("Player Ready")}
+            onReady={this.onReady}
             onSeek={(e) => console.log("Player Seek: " + e)}
             onStart={() => console.log("Player Start")}
             playbackRate={
@@ -122,6 +128,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   timeline: state.annot.timeline,
   url: state.player.url,
   volume: state.player.volume,
+  ready: state.player.ready,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
@@ -129,6 +136,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       onEnded: actions.onEnded,
       onPlay: actions.onPlay,
+      onReady: actions.onReady,
       onProgress: actions.onProgress,
       setDuration: actions.setDuration,
       setSeek: actions.setSeek,

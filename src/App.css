@@ -339,11 +339,18 @@ img.black {
 }
 
 /* ===== Annotation Table ===== */
-
-.annotation-table {
-  flex-grow: 1;
+.AnnotDiv {
+  min-height: calc(100vh - 150px);
+  max-height: calc(100vh - 150px);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
+}
+  
+.TableContainer-root-79 {
+  overflow-x: hidden;
+  overflow-y: visible;
+  min-height: calc(100vh - 150px - 68px);
+  max-height: calc(100vh - 150px - 68px);
 }
 
 td {
@@ -367,14 +374,14 @@ div #TranscriptionTableSpace thead tr {
   display: inline-block;
 } */
 
-div #TranscriptionTableSpace {
+/* div #TranscriptionTableSpace {
   display: flex;
   flex-flow: column;
-}
-div #TranscriptionTableSpace div[class^="TableContainer-root"] {
+} */
+/* div #TranscriptionTableSpace div[class^="TableContainer-root"] {
   overflow-x: hidden;
   overflow-y: auto;
-}
+} */
 
 /* div #TranscriptionTableSpace tbody tr {
   background-color: #abe8f8;
