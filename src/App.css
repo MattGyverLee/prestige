@@ -17,6 +17,8 @@
 }
 .AppBody {
   background-color: #525252;
+  background-image: url("https://www.transparenttextures.com/patterns/noisy.png");
+   background-blend-mode: hard-light;
   min-height: calc(100vh - 55px);
   max-height: calc(100vh - 55px);
   display: flex;
@@ -204,6 +206,9 @@ img.black {
   min-height: 18vh;
   max-height: 79vh;
   overflow: hidden;
+  border-color: rgba(155, 155, 155, 1);
+  border-width: 4px;
+  border-style: inset;
 }
 
 .react-player__preview {
@@ -430,7 +435,37 @@ div #TranscriptionTableSpace tbody td:nth-child(3) {
 
 .wave-table tr {
   min-height: 50px;
-  padding-bottom: 5px;
+  /* padding-bottom: 5px; */
+}
+
+.rowTitle {
+  display: inline-block;
+  font-weight: bold;
+  font-size: 22pt;
+  transform: scaleY(0.8);
+  position: relative;
+  top: 10px;
+  left: -5px;
+}
+table>tbody>tr>td.rowWithTitle {
+  text-align: left;
+  line-height: 0px;
+  overflow: visible;
+  vertical-align: text-top;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  font-size: 0;
+  border-collapse: collapse;
+}
+
+.waveform {
+  border-color: rgba(155, 155, 155, 1);
+  border-width: 4px;
+  border-style: inset;
+  background-color:rgb(90, 111, 87);
+  background-image: url(./assets/buttons/LCD-line.png);
+  background-size: 100% 100%;
 }
 
 .wave-table-play,
@@ -439,6 +474,7 @@ div #TranscriptionTableSpace tbody td:nth-child(3) {
 }
 .wave-table-enable {
   width: 63px;
+  /* border: 2px solid rgba(255, 255, 255, 0.3); */
 }
 
 .wave-table-volume {

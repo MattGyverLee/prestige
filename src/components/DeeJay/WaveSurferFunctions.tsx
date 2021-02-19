@@ -37,7 +37,7 @@ export function rowHeight() {
   ) {
     const idealHeight = Math.round(
       (state.system.dimensions.AppBody.height -
-        100 -
+        130 -
         state.system.dimensions.AppPlayer.height) /
         3
     );

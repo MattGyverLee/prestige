@@ -69,7 +69,7 @@ export class AnnotationTable extends Component<ComponentProps> {
     },
     {
       columnName: "audCareful",
-      width: 55,
+      width: 80,
     },
     {
       columnName: "txtTransl",
@@ -77,7 +77,7 @@ export class AnnotationTable extends Component<ComponentProps> {
     },
     {
       columnName: "audTransl",
-      width: 55,
+      width: 80,
     },
     {
       columnName: "txtTransc",
@@ -181,6 +181,57 @@ export class AnnotationTable extends Component<ComponentProps> {
 
     // Text Cells
     // oneOrTwo: One => Transcription, One => Translation
+    const StartCell = ({ value, style, row, ...restProps }: any) => (
+      <Table.Cell
+        {...restProps}
+        style={{
+          whiteSpace: "normal",
+          wordWrap: "break-word",
+          ...style,
+        }}
+        onClick={() => {
+          if (this.props.currentTimeline === -1) {
+            console.log("Empty Timeline Click");
+          } else {
+            this.props.setDispatch({
+              dispatchType: "Clip",
+              wsNum: 0,
+              clipStart: row.startTime,
+              clipStop: row.stopTime,
+            });
+          }
+        }}
+      >
+        <span
+          style={{
+            color: "blue",
+          }}
+        >
+          {value}:{"  "}
+          <button
+            onClick={() => {
+              if (this.props.currentTimeline === -1) {
+                console.log("Empty Timeline Click");
+              } else {
+                this.props.setDispatch({
+                  dispatchType: "Clip",
+                  wsNum: 0,
+                  clipStart: row.startTime,
+                  clipStop: row.stopTime,
+                });
+              }
+            }}
+          >
+            {" "}
+            ▶{" "}
+          </button>
+        </span>
+      </Table.Cell>
+    );
+    // Source
+
+    // Text Cells
+    // oneOrTwo: One => Transcription, One => Translation
     const FlowingCell = ({ oneTwo, value, style, row, ...restProps }: any) => (
       <Table.Cell
         {...restProps}
@@ -189,17 +240,19 @@ export class AnnotationTable extends Component<ComponentProps> {
           wordWrap: "break-word",
           ...style,
         }}
-        onClick={
-          this.props.currentTimeline === -1
-            ? () => console.log("Empty Timeline Click")
-            : () =>
-                this.props.setDispatch({
-                  dispatchType: "Clip",
-                  wsNum: 0,
-                  clipStart: row.startTime,
-                  clipStop: row.stopTime,
-                })
-        }
+        onClick={() => {
+          if (this.props.currentTimeline === -1) {
+            console.log("Empty Timeline Click");
+          } else {
+            this.props.setDispatch({
+              dispatchType: "Clip",
+              wsNum: 0,
+              wsNum2: oneTwo,
+              clipStart: row.startTime,
+              clipStop: row.stopTime,
+            });
+          }
+        }}
       >
         <span
           style={{
@@ -247,13 +300,14 @@ export class AnnotationTable extends Component<ComponentProps> {
             // color: value !="" ? 'lightgreen' : undefined,
           }}
         >
-          Play{" "}
+          ▶{" "}
         </button>
       </Table.Cell>
     );
+    // <br /> {oneTwo === 1 ? "Transcription" : "Translation"}
     const emptyHeaderCell = (cellProps: any) => {
       // const { column } = cellProps;
-      return <TableHeaderRow.Cell {...cellProps}>&nbsp;</TableHeaderRow.Cell>;
+      return <TableHeaderRow.Cell {...cellProps} />;
     };
     // Cells Based on Column Data
     const dataCell = (cellProps: any) => {
@@ -266,7 +320,8 @@ export class AnnotationTable extends Component<ComponentProps> {
         return <HighlightedCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
       else if (column.name === "audTransl")
         return <HighlightedCell {...{ oneTwo: column.oneTwo, ...cellProps }} />;
-
+      else if (column.name === "startTime")
+        return <StartCell {...{ ...cellProps }} />;
       return <Table.Cell {...cellProps} />;
     };
 

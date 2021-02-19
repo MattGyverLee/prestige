@@ -184,11 +184,7 @@ export class DeeJay extends Component<DeeJayProps> {
       });
     }
 
-    if (
-      this.props.isReady &&
-      this.props.playerPlaying &&
-      this.lastDimensions !== this.getDimensions()
-    ) {
+    if (this.props.isReady && this.lastDimensions !== this.getDimensions()) {
       this.lastDimensions = this.getDimensions();
       this.idxs.forEach((idx: number) => {
         this.waveSurfers[idx].setHeight(rowHeight());
@@ -233,7 +229,7 @@ export class DeeJay extends Component<DeeJayProps> {
           ? []
           : this.props.timeline[this.props.currentTimeline].milestones;
 
-      // Grab Current Milestone and Set Volum of Given WS
+      // Grab Current Milestone and Set Volume of Given WS
       const currM = getCurrentMilestone(
         idx,
         this.waveSurfers[idx].getCurrentTime()
@@ -652,7 +648,7 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Resets Volumes of and Stops all but Specified WS
-  solo = (wsNum: number, resetAll: boolean): void => {
+  solo = (wsNum: number, resetAll: boolean, wsNum2 = -1): void => {
     // If Reset All or Any High => Set Only wsNum On
     if (
       resetAll ||
@@ -666,6 +662,14 @@ export class DeeJay extends Component<DeeJayProps> {
         this.waveSurfers[idx].setVolume(+(idx === wsNum));
         this.props.setWSVolume(idx, +(idx === wsNum));
       });
+
+    // if wsNum2: turn that on, too.
+    if (wsNum2 >= 0) {
+      this.waveSurfers[wsNum].setVolume(1);
+      this.props.setWSVolume(wsNum, 1);
+      this.waveSurfers[wsNum2].setVolume(1);
+      this.props.setWSVolume(wsNum2, 1);
+    }
 
     // Stop All Not wsNum and Reset Playback Rates
     this.idxs.forEach((idx: number) => {
@@ -721,8 +725,12 @@ export class DeeJay extends Component<DeeJayProps> {
     this.props.setDispatch({ dispatchType: "" });
 
     // Necessary Switch Variables for WS, Active WSs, Milestone, and PlaybackRate
-    const wsNum =
+    let wsNum =
       this.props.dispatch.wsNum !== undefined ? this.props.dispatch.wsNum : -1;
+    const wsNum2 =
+      this.props.dispatch.wsNum2 !== undefined
+        ? this.props.dispatch.wsNum2
+        : -1;
     let actives: number[] = [];
     let currM: any = {};
     const playbackRate = 1;
@@ -816,14 +824,14 @@ export class DeeJay extends Component<DeeJayProps> {
       }
       case "Clip": {
         this.clearDispatchLeftovers();
-
+        this.solo(wsNum, true, wsNum2);
+        if (wsNum < 0) wsNum = 0;
         // Grab Current Milestone and "Solo" the Given WS
         currM = getCurrentMilestone(
           wsNum,
           this.waveSurfers[wsNum].getCurrentTime(),
           dispatch
         );
-        this.solo(wsNum, false);
         this.waveSurfers[wsNum].setVolume(1);
         this.props.setWSVolume(wsNum, 1);
 
@@ -995,7 +1003,8 @@ export class DeeJay extends Component<DeeJayProps> {
   };
   render(): JSX.Element {
     // Forms the Rows for Each WS
-    const waveTableRows = this.idxs.map((idx: number) => {
+    //const waveTableRows = this.idxs.map((idx: number) => {
+    const waveTableRows = (idx: number) => {
       return (
         <WaveTableRow
           getPlaybackRate={() =>
@@ -1015,13 +1024,32 @@ export class DeeJay extends Component<DeeJayProps> {
           }}
         />
       );
-    });
+    };
 
     return (
       <div>
         <div className="wave-table-container">
           <table className="wave-table">
-            <tbody>{waveTableRows}</tbody>
+            <tbody>
+              <tr>
+                <td colSpan={3} className="rowWithTitle">
+                  <div className="rowTitle">Original</div>
+                </td>
+              </tr>
+              {waveTableRows(0)}
+              <tr>
+                <td colSpan={3} className="rowWithTitle">
+                  <div className="rowTitle">Careful</div>
+                </td>
+              </tr>
+              {waveTableRows(1)}
+              <tr>
+                <td colSpan={3} className="rowWithTitle">
+                  <div className="rowTitle">Translation</div>
+                </td>
+              </tr>
+              {waveTableRows(2)}
+            </tbody>
           </table>
         </div>
         <button
