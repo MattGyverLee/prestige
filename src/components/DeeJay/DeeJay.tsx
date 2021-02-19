@@ -70,7 +70,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private regionsOn = 1;
   private voNum = 0;
   private waveSurfers: WaveSurfer[] = [];
-  private debugPlayback = true;
+  private debugPlayback = false;
   private lastDimensions = 477;
 
   getDimensions = (): number => {

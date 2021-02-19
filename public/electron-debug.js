@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const electron = require("electron");
 const ipcMain = electron.ipcMain;
 const app = electron.app;
@@ -21,19 +22,19 @@ function createWindow() {
     height: 800,
     title: "Prestige",
     icon: path.join(__dirname, "../src/assets/icons/png/64x64.png"),
-    webPreferences: { nodeIntegration: true, webSecurity: false }
+    webPreferences: { nodeIntegration: true, webSecurity: false },
   });
   imageWindow = new BrowserWindow({
     width: 600,
     height: 600,
     parent: mainWindow,
-    show: false
+    show: false,
   });
   settingsWindow = new BrowserWindow({
     width: 600,
     height: 600,
     parent: mainWindow,
-    show: false
+    show: false,
   });
 
   mainWindow.loadURL(
@@ -54,12 +55,12 @@ function createWindow() {
 
   mainWindow.on("closed", () => (mainWindow = null));
 
-  imageWindow.on("close", e => {
+  imageWindow.on("close", (e) => {
     e.preventDefault();
     imageWindow.hide();
   });
 
-  settingsWindow.on("close", e => {
+  settingsWindow.on("close", (e) => {
     e.preventDefault();
     settingsWindow.hide();
   });

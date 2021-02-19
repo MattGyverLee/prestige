@@ -5,6 +5,11 @@
   height: 100vh;
 }
 
+body {
+  background-color: #555;
+  color: white;
+}
+
 .AppHeader {
   background-color: #282c34;
   height: 9vh;
@@ -490,9 +495,10 @@ table>tbody>tr>td.rowWithTitle {
   border-color: rgba(155, 155, 155, 1);
   border-width: 4px;
   border-style: inset;
-  background-color:rgb(90, 111, 87);
+  background-color: #555;
   background-image: url(./assets/buttons/LCD-line.png);
   background-size: 100% 100%;
+  /* background-color:rgb(90, 111, 87);  */
 }
 
 .wave-table-play,

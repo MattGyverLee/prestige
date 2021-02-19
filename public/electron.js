@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const electron = require("electron");
 const ipcMain = electron.ipcMain;
 const app = electron.app;
@@ -15,19 +16,20 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
     height: 680,
-    webPreferences: { webSecurity: false, nodeIntegration: true }
+    webPreferences: { webSecurity: false, nodeIntegration: true },
   });
+  mainWindow.setMenuBarVisibility(false);
   imageWindow = new BrowserWindow({
     width: 600,
     height: 600,
     parent: mainWindow,
-    show: false
+    show: false,
   });
   settingsWindow = new BrowserWindow({
     width: 600,
     height: 600,
     parent: mainWindow,
-    show: false
+    show: false,
   });
 
   mainWindow.loadURL(
@@ -35,6 +37,7 @@ function createWindow() {
       ? "http://localhost:3000"
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
+  mainWindow.setMenuBarVisibility(false);
   imageWindow.loadURL(
     isDev
       ? "http://localhost:3000/image"
@@ -48,12 +51,12 @@ function createWindow() {
 
   mainWindow.on("closed", () => (mainWindow = null));
 
-  imageWindow.on("close", e => {
+  imageWindow.on("close", (e) => {
     e.preventDefault();
     imageWindow.hide();
   });
 
-  settingsWindow.on("close", e => {
+  settingsWindow.on("close", (e) => {
     e.preventDefault();
     settingsWindow.hide();
   });
