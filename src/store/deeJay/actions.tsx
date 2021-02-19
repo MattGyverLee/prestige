@@ -23,3 +23,10 @@ export function setDispatch(
     payload: type,
   };
 }
+
+export function setSubtitle(subtitle: string): types.DeeJayActionTypes {
+  return {
+    type: types.SET_SUBTITLE,
+    payload: subtitle,
+  };
+}

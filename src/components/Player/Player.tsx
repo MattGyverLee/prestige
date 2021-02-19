@@ -7,7 +7,8 @@ import React, { Component } from "react";
 import ReactPlayer from "react-player";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import { getTimelineIndex } from "../globalFunctions";
+import { getTimelineIndex, roundIt } from "../globalFunctions";
+import { LooseObject } from "../../store/annot/types";
 import ResizableDiv from "../resizableDiv";
 import ControlRow from "./ControlRow/ControlRow";
 
@@ -23,6 +24,8 @@ interface StateProps {
   url: string;
   volume: number;
   ready: boolean;
+  subtitle: string;
+  dimensions: LooseObject;
 }
 
 interface DispatchProps {
@@ -74,6 +77,20 @@ class PlayerZone extends Component<PlayerProps> {
     this.player = player;
   };
 
+  subMultiply = (dimensions: LooseObject): any => {
+    let value = 14;
+    if (
+      dimensions &&
+      dimensions.AppPlayer &&
+      dimensions.AppPlayer.width &&
+      dimensions.AppPlayer.width > -1
+    ) {
+      const currentwidth = dimensions.AppPlayer.width;
+      value = roundIt(12 + 6 * (currentwidth / 800), 0);
+    }
+    return value + "px";
+  };
+
   render() {
     return (
       <ResizableDiv className="AppPlayer">
@@ -110,15 +127,27 @@ class PlayerZone extends Component<PlayerProps> {
         </div>
         <div>
           <ControlRow />
-          <div className="current-transcription"></div>
+          <div
+            className="current-transcription"
+            style={{ fontSize: this.subMultiply(this.props.dimensions) }}
+          >
+            {this.props.subtitle ? (
+              <span className="subReal">{this.props.subtitle}</span>
+            ) : (
+              <span className="subNone">(No Subtitles)</span>
+            )}
+          </div>
         </div>
       </ResizableDiv>
     );
   }
 }
+// <span className="subNone">(No Subtitles Loaded)</span>
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   duration: state.player.duration,
+  dimensions: state.system.dimensions,
+  subtitle: state.deeJay.subtitle,
   loop: state.player.loop,
   muted: state.player.muted,
   playbackMultiplier: state.player.playbackMultiplier,

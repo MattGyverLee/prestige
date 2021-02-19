@@ -15,6 +15,7 @@ import {
   findNextMilestoneIndex,
   findLastMilestoneIndex,
   getCurrentMilestone,
+  getSubtitle,
 } from "./MilestoneFunctions";
 import { clipTime, calcPlaybackRate, calcRelativeTime } from "./TimeFunctions";
 import { syncContainsCurrent, findValidAudio } from "./FileFunctions";
@@ -47,6 +48,7 @@ interface DispatchProps {
   setDispatch: typeof actions.setDispatch;
   setPlaybackRate: typeof actions.setPlaybackRate;
   setSeek: typeof actions.setSeek;
+  setSubtitle: typeof actions.setSubtitle;
   setWSVolume: typeof actions.setWSVolume;
   togglePlay: typeof actions.togglePlay;
   waveformAdded: typeof actions.waveformAdded;
@@ -448,6 +450,18 @@ export class DeeJay extends Component<DeeJayProps> {
     }
     this.seekSyncAndPlay(idx, m);
   };
+  // 0 direct, 1 get relative time in reverse, find annotation in src milestone
+  dispatchSubtitle = (idx: number, m: any): void => {
+    if (idx <= 1) {
+      const currentSubtitle: string = getSubtitle(m.annotationID, 1);
+      this.props.setSubtitle(currentSubtitle);
+    } else if (idx === 2) {
+      const currentSubtitle: string = getSubtitle(m.annotationID, 2);
+      this.props.setSubtitle(currentSubtitle);
+    } else {
+      console.log("oopsie");
+    }
+  };
 
   seekSyncAndPlay = (idx: number, m: Milestone): void => {
     // Sync Player
@@ -478,6 +492,7 @@ export class DeeJay extends Component<DeeJayProps> {
           "x."
       );
     }
+    this.dispatchSubtitle(idx, m);
     // Play From Now Until End of Clip
     this.waveSurfers[idx].play(
       this.waveSurfers[idx].getCurrentTime(),
@@ -534,6 +549,7 @@ export class DeeJay extends Component<DeeJayProps> {
     this.waveSurfers[idx2].setPlaybackRate(
       roundIt(this.currentSpeeds[idx2], 2)
     );
+    this.dispatchSubtitle(idx2, mile2);
     this.waveSurfers[idx2].play(
       this.waveSurfers[idx2].getCurrentTime(),
       clipTime(idx2, mile2, false)
@@ -589,9 +605,18 @@ export class DeeJay extends Component<DeeJayProps> {
 
       // Start Up if WS0, Reload All Regions, and unsubscribe
       if (idx === 0) {
-        this.waveSurfers[idx].play(0);
-        this.props.setSeek(0);
-        this.props.togglePlay(true);
+        //todo: Add subtitle here.
+        if (this.props.currentTimeline >= 0) {
+          this.props.setDispatch({
+            dispatchType: "PlayerSeek",
+            wsNum: -1,
+            refStart: 0,
+          });
+        } else {
+          this.waveSurfers[idx].play(0);
+          this.props.setSeek(0);
+          this.props.togglePlay(true);
+        }
       }
       toggleAllRegions(this.regionsOn, true, this.getWSRegions());
       ws.un(sub, waveformReady);
@@ -756,16 +781,19 @@ export class DeeJay extends Component<DeeJayProps> {
         // If WS 0 => Seek To Ref
         // -> Else If Milestone Data Exists => Seek To Relative Ref
         currM = getInterMilestone(dispatch.refStart, actives[0]);
-        if (actives[0] === 0)
+        if (actives[0] === 0) {
+          this.dispatchSubtitle(0, currM);
           this.waveSurfers[0].seekTo(
             dispatch.refStart / this.waveSurfers[actives[0]].getDuration()
           );
-        else if (currM.data.length === 1)
+        } else if (currM.data.length === 1) {
+          this.dispatchSubtitle(0, currM);
           this.waveSurfers[actives[0]].seekTo(
             ((dispatch.refStart - currM.startTime) / playbackRate +
               currM.data[0].clipStart) /
               this.waveSurfers[actives[0]].getDuration()
           );
+        }
         break;
       }
       case "PlayPause": {
@@ -797,6 +825,7 @@ export class DeeJay extends Component<DeeJayProps> {
               },
               this.actingDispatch.wsNum
             );
+            this.dispatchSubtitle(this.actingDispatch.wsNum, currM);
             ppWS.play(
               ppWS.getCurrentTime(),
               clipTime(this.actingDispatch.wsNum, currM, false)
@@ -813,6 +842,7 @@ export class DeeJay extends Component<DeeJayProps> {
               },
               this.actingDispatch.wsNum2
             );
+            this.dispatchSubtitle(this.actingDispatch.wsNum2, currM);
             ppWS.play(
               ppWS.getCurrentTime(),
               clipTime(this.actingDispatch.wsNum2, currM, false)
@@ -942,6 +972,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 );
                 this.props.setSeek(m1.startTime || 0);
                 this.props.togglePlay(true);
+                this.dispatchSubtitle(highs[x], m1);
                 this.waveSurfers[highs[x]].play(m1Start, m1Stop);
                 if (x > 0)
                   this.waveSurfers[highs[x - 1]].un("pause", recentStart);
@@ -1089,6 +1120,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setDispatch: actions.setDispatch,
       setPlaybackRate: actions.setPlaybackRate,
       setSeek: actions.setSeek,
+      setSubtitle: actions.setSubtitle,
       setWSVolume: actions.setWSVolume,
       togglePlay: actions.togglePlay,
       waveformAdded: actions.waveformAdded,

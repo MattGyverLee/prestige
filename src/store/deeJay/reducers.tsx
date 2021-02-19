@@ -3,6 +3,7 @@ import * as types from "./types";
 export const deeJayCleanStore: types.DeeJayState = {
   volumes: [1, 0, 0],
   dispatch: { dispatchType: "" },
+  subtitle: "",
 };
 
 export function deeJayReducer(
@@ -28,6 +29,12 @@ export function deeJayReducer(
       return {
         ...state,
         dispatch: action.payload,
+      };
+    }
+    case types.SET_SUBTITLE: {
+      return {
+        ...state,
+        subtitle: action.payload,
       };
     }
     default: {

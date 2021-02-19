@@ -92,3 +92,23 @@ export function getCurrentMilestone(
       };
     })[0];
 }
+
+export function getSubtitle(targetAnnotationID: string, mode: number): string {
+  const state = store.getState();
+  if (state.annot.currentTimeline === -1) return "";
+  let result = "";
+  const ms = state.annot.timeline[
+    state.annot.currentTimeline
+  ].milestones.filter((m: Milestone) => {
+    return m.annotationID === targetAnnotationID ? true : false;
+  });
+  if (mode <= 1) {
+    result = ms[0].data[0].data;
+  } else {
+    result = ms[0].data[1].data;
+  }
+  if (result === undefined || result === null || result === "%ignore%") {
+    result = "";
+  }
+  return result;
+}

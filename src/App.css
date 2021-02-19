@@ -338,9 +338,23 @@ img.black {
 /* ===== Current Transcription ===== */
 
 .current-transcription {
-  background-color: white;
-  height: 15%;
-  min-height: 50px;
+  background-color: black;
+  max-height: 105px;
+  min-height: 80px;
+  text-overflow: wordWrap ;
+  overflow-y: auto;
+  font-family: 'Roboto', Arial;
+  margin-top: 5px;
+}
+
+.subNone {
+  color: darkgrey;
+  font-size: 1em;
+}
+
+.subReal {
+  color: yellow;
+  font-size: 1em;
 }
 
 /* ===== Annotation Table ===== */
