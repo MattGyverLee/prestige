@@ -204,7 +204,7 @@ export class AnnotationTable extends Component<ComponentProps> {
       >
         <span
           style={{
-            color: "blue",
+            color: "lightblue",
           }}
         >
           {value}:{"  "}
@@ -257,7 +257,12 @@ export class AnnotationTable extends Component<ComponentProps> {
         <span
           style={{
             color:
-              value !== "" ? (oneTwo === 1 ? "darkgreen" : "black") : undefined,
+              value !== ""
+                ? oneTwo === 1
+                  ? "lightgreen"
+                  : "white"
+                : undefined,
+            fontSize: "16px",
           }}
         >
           {value}

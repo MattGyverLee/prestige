@@ -370,6 +370,19 @@ img.black {
   overflow-y: visible;
   min-height: calc(100vh - 150px - 68px);
   max-height: calc(100vh - 150px - 68px);
+  background-color: #525252;
+  color: white;
+}
+
+.TableContainer-root-79 tbody , 
+.TableContainer-root-79 thead, 
+.TableContainer-root-79 thead th , 
+.MuiToolbar-root-30,
+.SearchPanelInputBase-root-34,
+.SearchPanelInputBase-root-34 input {
+  fill:white;
+  background-color: #333333;
+  color: white;
 }
 
 td {

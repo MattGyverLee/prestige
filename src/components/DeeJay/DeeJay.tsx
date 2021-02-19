@@ -452,14 +452,16 @@ export class DeeJay extends Component<DeeJayProps> {
   };
   // 0 direct, 1 get relative time in reverse, find annotation in src milestone
   dispatchSubtitle = (idx: number, m: any): void => {
-    if (idx <= 1) {
-      const currentSubtitle: string = getSubtitle(m.annotationID, 1);
-      this.props.setSubtitle(currentSubtitle);
-    } else if (idx === 2) {
-      const currentSubtitle: string = getSubtitle(m.annotationID, 2);
-      this.props.setSubtitle(currentSubtitle);
-    } else {
-      console.log("oopsie");
+    if (m.annotationID !== undefined) {
+      if (idx <= 1) {
+        const currentSubtitle: string = getSubtitle(m.annotationID, 1);
+        this.props.setSubtitle(currentSubtitle);
+      } else if (idx === 2) {
+        const currentSubtitle: string = getSubtitle(m.annotationID, 2);
+        this.props.setSubtitle(currentSubtitle);
+      } else {
+        console.log("oopsie");
+      }
     }
   };
 
