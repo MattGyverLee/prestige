@@ -1065,19 +1065,19 @@ export class DeeJay extends Component<DeeJayProps> {
           <table className="wave-table">
             <tbody>
               <tr>
-                <td colSpan={3} className="rowWithTitle">
+                <td colSpan={3} className="cellWithTitle">
                   <div className="rowTitle">Original</div>
                 </td>
               </tr>
               {waveTableRows(0)}
               <tr>
-                <td colSpan={3} className="rowWithTitle">
+                <td colSpan={3} className="cellWithTitle">
                   <div className="rowTitle">Careful</div>
                 </td>
               </tr>
               {waveTableRows(1)}
               <tr>
-                <td colSpan={3} className="rowWithTitle">
+                <td colSpan={3} className="cellWithTitle">
                   <div className="rowTitle">Translation</div>
                 </td>
               </tr>

@@ -141,15 +141,15 @@ export class App extends React.Component<AppProps> {
         </ResizableDiv>
         <div className="AppFooter">
           <SelectFolderZone />
-          <button onClick={this.clearLocalStorage}>
-            Clear Local Storage
-          </button>{" "}
-          {process.env.REACT_APP_MODE}: {process.env.NODE_ENV}
         </div>
       </div>
     );
   }
 }
+/* <button onClick={this.clearLocalStorage}>
+Clear Local Storage
+</button> {process.env.REACT_APP_MODE}:{" "}
+          {process.env.NODE_ENV} */
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   url: state.player.url,

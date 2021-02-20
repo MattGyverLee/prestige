@@ -17,6 +17,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
+    minHeight: 720,
+    minWidth: 720,
     title: "Prestige",
     icon: path.join(__dirname, "../src/assets/icons/png/64x64.png"),
     webPreferences: { nodeIntegration: true, webSecurity: false },
@@ -70,7 +72,9 @@ function createWindow() {
 }
 
 app.on("ready", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const path = require("path");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const os = require("os");
   /*
   BrowserWindow.addDevToolsExtension(

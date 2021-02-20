@@ -115,18 +115,19 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
             </div>
           </div>
         </div>
-        <div>
-          {(!this.props.volumes && "Undefined") ||
-            (this.props.volumes[this.props.index] > 0.5 ** 0.25 && "High") ||
-            (this.props.volumes[this.props.index] === 0 && "Muted") ||
-            "Low"}
-        </div>
       </td>
     );
   }
 }
 
 /*
+<div>
+          {(!this.props.volumes && "Undefined") ||
+            (this.props.volumes[this.props.index] > 0.5 ** 0.25 && "High") ||
+            (this.props.volumes[this.props.index] === 0 && "Muted") ||
+            "Low"}
+        </div>
+
 <br />
 <div className="rowTitle">{this.getName(this.props.index)}</div>
         {roundIt(this.props.getPlaybackRate(), 2)}

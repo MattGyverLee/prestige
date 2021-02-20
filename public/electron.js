@@ -5,6 +5,7 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
 const path = require("path");
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const url = require("url");
 const isDev = require("electron-is-dev");
 
@@ -14,8 +15,10 @@ let settingsWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 680,
+    width: 1000,
+    height: 800,
+    minHeight: 720,
+    minWidth: 720,
     webPreferences: { webSecurity: false, nodeIntegration: true },
   });
   mainWindow.setMenuBarVisibility(false);

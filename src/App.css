@@ -400,6 +400,25 @@ td {
   margin-right: 15px;
 }
 
+.pointer {
+  color: red;
+  animation: blinker .2s infinite;
+}
+
+@keyframes blinker {
+    0% {
+      opacity: 100%;
+    }
+  
+    50% {
+      opacity: 20%;
+    }
+  
+    100% {
+      opacity: 100%;
+    }
+}
+
 div #TranscriptionTableSpace thead tr {
   cursor: default;
   background-color: #eee;
@@ -473,13 +492,13 @@ div #TranscriptionTableSpace tbody td:nth-child(3) {
 .rowTitle {
   display: inline-block;
   font-weight: bold;
-  font-size: 22pt;
+  font-size: 20pt;
   transform: scaleY(0.8);
   position: relative;
-  top: 10px;
+  top: 6px;
   left: -5px;
 }
-table>tbody>tr>td.rowWithTitle {
+table>tbody>tr>td.cellWithTitle {
   text-align: left;
   line-height: 0px;
   overflow: visible;
@@ -519,6 +538,6 @@ table>tbody>tr>td.rowWithTitle {
 } */
 
 .wave-table-volume input[type="range"] {
-  width: 80px;
+  width: 70px;
   transform: rotate(-90deg);
 }

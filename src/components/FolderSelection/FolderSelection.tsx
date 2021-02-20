@@ -906,12 +906,15 @@ class SelectFolderZone extends Component<FolderProps> {
       },
     });
   };
-
+  showPointer = (): string => {
+    return this.props.url !== "" ? "" : "◎ ";
+  };
   render() {
     if (this.props.env === "electron") {
       // https://jaketrent.com/post/select-directory-in-electron
       return (
         <div className="folder-selection">
+          <span className="pointer">{this.showPointer()}</span>
           <input
             id="selectFolder"
             className="custom-file-input"
