@@ -19,6 +19,7 @@ function createWindow() {
     height: 800,
     minHeight: 720,
     minWidth: 720,
+    icon: path.join(__dirname, "../src/assets/icons/png/64x64.png"),
     webPreferences: { webSecurity: false, nodeIntegration: true },
   });
   mainWindow.setMenuBarVisibility(false);

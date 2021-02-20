@@ -506,6 +506,7 @@ class SelectFolderZone extends Component<FolderProps> {
     // Const Requires and Variables for Later Use
     const ctString = carefulOrTranslation ? "Careful" : "Translation";
     const ffmpegStaticElectron = require("ffmpeg-static-electron");
+    const ffprobeStaticElectron = require("ffprobe-static-electron");
 
     // Set Up Fluent FFMpeg and its Associated Paths
     const fluentFfmpeg = require("fluent-ffmpeg");
@@ -520,11 +521,9 @@ class SelectFolderZone extends Component<FolderProps> {
       fluentFfmpeg.setFfmpegPath(
         `${process.cwd()}/resources${ffmpegStaticElectron.path}`
       );
-      // __dirname + "resources" + require("ffmpeg-static-electron").path;
       fluentFfmpeg.setFfprobePath(
-        `${process.cwd()}/resources${ffmpegStaticElectron.path}`
+        `${process.cwd()}/resources${ffprobeStaticElectron.path}`
       );
-      // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
 
     // Sort FilteredAnnot Based on Start Time into InputFiles
@@ -715,6 +714,7 @@ class SelectFolderZone extends Component<FolderProps> {
   convertToMP3 = (path: string) => {
     // Set Up Fluent FFMpeg and its Associated Paths
     const ffmpegStaticElectron = require("ffmpeg-static-electron");
+    const ffprobeStaticElectron = require("ffprobe-static-electron");
     const fluentFfmpeg = require("fluent-ffmpeg");
 
     // Determines Location for Ffmpeg and Ffprobe from environment variables.
@@ -729,11 +729,9 @@ class SelectFolderZone extends Component<FolderProps> {
       fluentFfmpeg.setFfmpegPath(
         process.cwd() + "/resources" + ffmpegStaticElectron.path
       );
-      // __dirname + "resources" + require("ffmpeg-static-electron").path;
       fluentFfmpeg.setFfprobePath(
-        process.cwd() + "/resources" + ffmpegStaticElectron.path
+        process.cwd() + "/resources" + ffprobeStaticElectron.path
       );
-      // __dirname + "resources" + require("ffprobe-static-electron").path;
     }
 
     // Convert and Save File
