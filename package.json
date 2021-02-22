@@ -179,7 +179,7 @@
       },
       {
         "from": "src/assets/icons/icon.ico",
-        "to": "./icon.ico",
+        "to": "build/icon.ico",
         "filter": [
           "**/*"
         ]

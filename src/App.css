@@ -390,10 +390,15 @@ img.black {
 .SearchPanelInputBase-root-34,
 .SearchPanelInputBase-root-34 input,
 .jss34,
-.jss34 input {
+.jss34 input,
+.jss70 {
   fill:white;
   background-color: #333333;
   color: white;
+}
+
+.jss39 {
+  border-bottom-color: white !important;
 }
 
 .jss1, .annotation-table {
