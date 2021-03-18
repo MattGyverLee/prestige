@@ -104,3 +104,21 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 Webpack installed with:
 https://www.codementor.io/randyfindley/how-to-build-an-electron-app-using-create-react-app-and-electron-builder-ss1k0sfer
+
+
+### Tests to write
+
+- It Loads Blank (Electron 5)
+- It Loads French Folder
+- Player
+   - Loads all 3 Wavesurfers
+   - Plays vid and WS0
+   - Pauses
+   - Plays
+   - Seeks
+- WS0
+   - Seek on WS0
+   - Play to End
+- WS1
+   - Enable WS1
+    
