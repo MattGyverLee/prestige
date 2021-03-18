@@ -40,6 +40,7 @@
     ]
   },
   "dependencies": {
+    "@cypress/electron-plugin": "^1.1.0",
     "@types/webpack-env": "^1.14.0",
     "chokidar": "^3.0.2",
     "electron-is-dev": "^1.1.0",
@@ -107,6 +108,7 @@
     "@typescript-eslint/parser": "^4.15.1",
     "browserslist": "^4.6.2",
     "concurrently": "^4.1.0",
+    "cypress": "^6.8.0",
     "depcheck": "^0.8.2",
     "electron": "^5.0.4",
     "electron-builder": "^20.10.4",

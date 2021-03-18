@@ -832,18 +832,18 @@ export class DeeJay extends Component<DeeJayProps> {
               this.actingDispatch.wsNum
             );
             if (currM !== undefined) {
-            this.dispatchSubtitle(this.actingDispatch.wsNum, currM);
-            ppWS.play(
-              ppWS.getCurrentTime(),
-              clipTime(this.actingDispatch.wsNum, currM, false)
-            );
-            this.props.togglePlay(true);
+              this.dispatchSubtitle(this.actingDispatch.wsNum, currM);
+              ppWS.play(
+                ppWS.getCurrentTime(),
+                clipTime(this.actingDispatch.wsNum, currM, false)
+              );
+              this.props.togglePlay(true);
             } else {
               // Avoid the Crash
               this.sendSnackbar(
                 "Nothing to Play, Please click on an active timeline."
               );
-          }
+            }
           }
           if (this.actingDispatch.wsNum2 !== undefined) {
             const ppWS = this.waveSurfers[this.actingDispatch.wsNum2];
@@ -1062,11 +1062,11 @@ export class DeeJay extends Component<DeeJayProps> {
             this.waveSurfers[idx] && this.waveSurfers[idx].getPlaybackRate()
           }
           getReady={() =>
-            this.waveSurfers[idx] && this.waveSurfers[idx].isReady()
+            this.waveSurfers[idx] && this.waveSurfers[idx].isReady
           }
           index={idx}
           onClick={() => {
-            if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady()) {
+            if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady) {
               this.clearDispatchLeftovers();
               this.clicked[idx] = true;
               this.solo(idx, false);
