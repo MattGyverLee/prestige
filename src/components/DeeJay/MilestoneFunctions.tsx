@@ -93,6 +93,25 @@ export function getCurrentMilestone(
     })[0];
 }
 
+// Fetches the Current Milestone of the Specified WS
+export function getFirstMilestone(wsNum: number, filter?: number) {
+  const state = store.getState();
+  if (!filter) filter = wsNum;
+  if (state.annot.currentTimeline === -1) return -1;
+  const channel = `${filter === 1 ? "Careful" : "Translation"}Merged`;
+  return state.annot.timeline[state.annot.currentTimeline].milestones.map(
+    (m: Milestone) => {
+      return {
+        ...m,
+        data: m.data.filter(
+          (d: LooseObject) =>
+            (filter === 0 && wsNum === 0) || d.channel === channel
+        ),
+      };
+    }
+  )[0];
+}
+
 export function getSubtitle(targetAnnotationID: string, mode: number): string {
   const state = store.getState();
   if (state.annot.currentTimeline === -1) return "";

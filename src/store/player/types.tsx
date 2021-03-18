@@ -23,6 +23,7 @@ export const HARD_RESET_APP = "HARD_RESET_APP";
 export const ON_ENDED = "ON_ENDED";
 export const ON_NEW_FOLDER = "ON_NEW_FOLDER";
 export const ON_PLAY = "ON_PLAY";
+export const ON_PAUSE = "ON_PAUSE";
 export const ON_READY = "ON_READY";
 export const ON_PROGRESS = "ON_PROGESS";
 export const ON_SEEK_CHANGE = "ON_SEEK_CHANGE";
@@ -52,6 +53,10 @@ interface OnEnded {
 
 interface OnPlay {
   type: typeof ON_PLAY;
+}
+
+interface OnPause {
+  type: typeof ON_PAUSE;
 }
 
 interface OnReady {
@@ -148,6 +153,7 @@ export type PlayerActionTypes =
   | ChangeSpeedsIndex
   | OnEnded
   | OnPlay
+  | OnPause
   | OnReady
   | OnProgress
   | OnSeekChange

@@ -1,6 +1,6 @@
 {
   "name": "prestige",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "consider yourself described",
   "homepage": "./",
   "main": "public/electron.js",
@@ -15,9 +15,9 @@
     "web-dev": "env-cmd -f .env.web craco start --config craco.config.web.js",
     "web-prod": "set NODE_ENV=production && env-cmd -f .env.web craco start --config craco.config.web.js",
     "electron-dev-mac": "concurrently \"BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron-dev": "env-cmd -f .env.electron concurrently \"yarn start \" \"wait-on http://localhost:3000 && electron public/electron-dev.js\"",
+    "electron-dev": "env-cmd -f .env.electron concurrently \"craco start --config craco.config.electron.js\" \"wait-on http://localhost:3000 && electron public/electron-dev.js\"",
     "electron-debug": "env-cmd -f .env.electron craco start",
-    "electron-prod": "set NODE_ENV=production && env-cmd -f .env.electron concurrently \"yarn start \" \"wait-on http://localhost:3000 && electron public/electron.js\"",
+    "electron-prod": "set NODE_ENV=production && env-cmd -f .env.electron concurrently \"craco start --config craco.config.electron.js \" \"wait-on http://localhost:3000 && electron public/electron.js\"",
     "postinstall": "electron-builder install-app-deps",
     "electron-pack": "env-cmd -f .env.electron craco build -w --config craco.config.electron.js",
     "eslint-check": "eslint --print-config . | eslint-config-prettier-check",
@@ -119,8 +119,8 @@
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-jest": "^24.1.3",
     "eslint-plugin-prettier": "^3.3.1",
-    "ffmpeg-static": "^4.2.7",
-    "ffprobe-static": "^3.0.0",
+    "ffmpeg-static-electron": "^2.0.1",
+    "ffprobe-static-electron": "^2.0.0",
     "fibers": "^5.0.0",
     "husky": "^2.4.1",
     "lint-staged": "^9.1.0",
@@ -169,10 +169,24 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "public/silence.wav",
+        "to": "public/silence.wav",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "src/assets/icons/icon.ico",
+        "to": "build/icon.ico",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
-      "icon": "assets/icons/iceberg.ico"
+      "icon": "build/icon.ico"
     },
     "mac": {
       "category": "public.app-category.utilities"
