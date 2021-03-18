@@ -5,6 +5,11 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 const path = require("path");
 const isDev = require("electron-is-dev");
+const {
+  default: installExtension,
+  REDUX_DEVTOOLS,
+} = require("electron-devtools-installer");
+
 // TODO: Remove this and follow instructions here:
 // https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
@@ -79,7 +84,7 @@ app.on("ready", async () => {
   BrowserWindow.addDevToolsExtension(
     path.join(
       os.homedir(),
-      "/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.6.0_0"
+      "/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.10.1_0"
     )
   );
   BrowserWindow.addDevToolsExtension(
@@ -88,6 +93,9 @@ app.on("ready", async () => {
       "/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0"
     )
   );
+  installExtension(REDUX_DEVTOOLS)
+    .then((name) => console.log(`Added Extension:  ${name}`))
+    .catch((err) => console.log("An error occurred: ", err));
   createWindow();
 });
 
