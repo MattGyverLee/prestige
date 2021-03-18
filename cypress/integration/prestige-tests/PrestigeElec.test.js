@@ -3,9 +3,9 @@
 
 describe("Open App", () => {
   before(() => {
-    cy.visit("../public/electron-debug.js:9223");
+    cy.visit("http://localhost:3000/");
   });
-  it("basic tests", () => {
+  it("Web tests", () => {
     cy.contains("Prestige");
     cy.get("div.wave-table-container").should("exist");
     cy.get(".wave-table tbody").children().should("have.length", 6);
