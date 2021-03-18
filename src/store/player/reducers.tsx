@@ -86,7 +86,14 @@ export function playerReducer(
       return {
         ...state,
         // playing: true
-        // this seems circular
+        // todo: this seems circular
+      };
+    }
+    case types.ON_PAUSE: {
+      return {
+        ...state,
+        // playing: false,
+        // todo: this seems circular
       };
     }
     case types.ON_ENDED: {

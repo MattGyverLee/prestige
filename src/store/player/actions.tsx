@@ -43,6 +43,13 @@ export function onPlay(): types.PlayerActionTypes {
     type: types.ON_PLAY,
   };
 }
+
+export function onPause(): types.PlayerActionTypes {
+  return {
+    type: types.ON_PAUSE,
+  };
+}
+
 export function onReady(ready: boolean): types.PlayerActionTypes {
   return {
     type: types.ON_READY,

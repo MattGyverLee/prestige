@@ -31,6 +31,7 @@ interface StateProps {
 interface DispatchProps {
   onEnded: typeof actions.onEnded;
   onPlay: typeof actions.onPlay;
+  onPause: typeof actions.onPause;
   onReady: typeof actions.onReady;
   onProgress: typeof actions.onProgress;
   setDuration: typeof actions.setDuration;
@@ -53,6 +54,7 @@ class PlayerZone extends Component<PlayerProps> {
 
   onPause = () => {
     console.log("onPause");
+    this.props.onPause();
   };
 
   onPlay = () => {
@@ -165,6 +167,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       onEnded: actions.onEnded,
       onPlay: actions.onPlay,
+      onPause: actions.onPause,
       onReady: actions.onReady,
       onProgress: actions.onProgress,
       setDuration: actions.setDuration,
