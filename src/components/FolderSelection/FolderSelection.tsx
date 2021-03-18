@@ -892,6 +892,15 @@ class SelectFolderZone extends Component<FolderProps> {
     console.log("EAF Processed");
   }
 
+  loadWeb = () => {
+    console.log("Webbing");
+    /* this.callProcessEAF(
+      "file:///C:/Users/thoua/Documents/SayMore/French%20Transcription/Sessions/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav.annotations.eaf"
+    );
+    this.props.setTimelinesInstantiated(true); */
+    this.sendSnackbar("EAF Loaded");
+  };
+
   sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
     this.props.enqueueSnackbar({
       message: inMessage,
@@ -928,6 +937,12 @@ class SelectFolderZone extends Component<FolderProps> {
             {" "}
             Load Folder{" "}
           </button>
+        </div>
+      );
+    } else if (this.props.env === "web") {
+      return (
+        <div>
+          <button onClick={() => this.loadWeb()}>Load Media</button>
         </div>
       );
     } else {

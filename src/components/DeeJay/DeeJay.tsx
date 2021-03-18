@@ -1066,7 +1066,7 @@ export class DeeJay extends Component<DeeJayProps> {
           }
           index={idx}
           onClick={() => {
-            if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady) {
+            if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady()) {
               this.clearDispatchLeftovers();
               this.clicked[idx] = true;
               this.solo(idx, false);
