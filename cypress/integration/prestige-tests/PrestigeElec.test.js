@@ -10,4 +10,9 @@ describe("Open App", () => {
     cy.get("div.wave-table-container").should("exist");
     cy.get(".wave-table tbody").children().should("have.length", 6);
   });
+  it("Load Sample Text", () => {
+    cy.get(".mediaTest").click();
+    cy.wait(3000);
+    cy.get(".play-pause-button").click();
+  });
 });

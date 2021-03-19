@@ -3,7 +3,6 @@ import { combineReducers, compose, createStore } from "redux";
 import { deeJayCleanStore, deeJayReducer } from "./deeJay/reducers";
 import { playerCleanStore, playerReducer } from "./player/reducers";
 import { treeCleanStore, treeReducer } from "./tree/reducers";
-import { devToolsEnhancer } from "redux-devtools-extension";
 
 // import { composeWithDevTools } from "redux-devtools-extension";
 import { systemReducer } from "./system/reducers";
@@ -12,7 +11,8 @@ import { systemReducer } from "./system/reducers";
 declare global {
   interface Window {
     __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: typeof compose;
-  }}
+  }
+}
 
 // These are intentionally ordered
 export const appReducer = combineReducers({
@@ -52,7 +52,8 @@ export default function configureStore() {
   // const middleWareEnhancer = applyMiddleware(...middlewares);
   /* eslint-disable no-underscore-dangle */
 
-  const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+  const composeEnhancers =
+    window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
   const store = createStore(allReducers, composeEnhancers());
 
   return store;

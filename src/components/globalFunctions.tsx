@@ -36,6 +36,17 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
   return -1;
 }
 
+export function safeParse(inPath: string) {
+  /* if (env === "electron") {
+    const path = pathy;
+    return path.parse(inPath);
+  } else { */
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const pathParse = require("path-parse");
+  return pathParse(inPath);
+  // }
+}
+
 // allOrViewer: True -> All, False -> Filtered
 export function getSourceMedia(
   sourceMedia: LooseObject[],
@@ -46,16 +57,15 @@ export function getSourceMedia(
     .sort((a: LooseObject, b: LooseObject) =>
       sortName(a.name.toLowerCase(), b.name.toLowerCase())
     );
-  const path = pathy;
   const mp3s: string[] = [];
   const sourceAud = sourceAudio(sourceMedia, allOrViewer)
     .filter((sa: any) => {
-      const parsedPath = path.parse(sa.path);
+      const parsedPath = safeParse(sa.path);
       if (parsedPath.ext.toLowerCase() === ".mp3") mp3s.push(parsedPath.name);
       for (let i = 0, l = sourceVids.length; i < l; i++) {
         if (
           parsedPath.name ===
-          path.parse(sourceVids[i].path).name + "_StandardAudio"
+          safeParse(sourceVids[i].path).name + "_StandardAudio"
         ) {
           return false;
         }
@@ -63,7 +73,7 @@ export function getSourceMedia(
       return !parsedPath.base.endsWith("_StandardAudio_Normalized.mp3");
     })
     .filter((sa: any) => {
-      const parsedPath = path.parse(sa.path);
+      const parsedPath = safeParse(sa.path);
       return !(
         mp3s.indexOf(parsedPath.name) !== -1 &&
         parsedPath.ext.toLowerCase() === ".wav"

@@ -10,7 +10,7 @@ export interface Media {
   name: string;
   path: string;
   wsAllowed: boolean;
-  waveform: string;
+  waveform: boolean | string;
 }
 
 export interface TreeState {
@@ -28,7 +28,7 @@ export interface Wavein {
   ref: string;
   sourceAnnot: boolean;
   // True: Source
-  wavedata: string;
+  wavedata: boolean | string;
 }
 export interface Folders {
   folderName: string;
