@@ -15,7 +15,7 @@ export function findValidAudio(idx: number): string {
   return audio.length === 1 ? audio[0].blobURL : "";
 }
 
-function findValidSourceAudio(): LooseObject[] {
+export function findValidSourceAudio(): LooseObject[] {
   const state = store.getState();
   return sourceAudio(state.tree.sourceMedia, true).filter(
     (sa: LooseObject) =>

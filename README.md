@@ -121,4 +121,19 @@ https://www.codementor.io/randyfindley/how-to-build-an-electron-app-using-create
    - Play to End
 - WS1
    - Enable WS1
+   
+   
+###Main Process
+
+Load
+Click Load
+LoadLocal 
+@391 Folder Update
+@401 Folder Update
+@415 onnewfolder
+417 start Chokidar
+420 ReadyPlayURL = ""
+@577 LoadFileWS 
+
+
     

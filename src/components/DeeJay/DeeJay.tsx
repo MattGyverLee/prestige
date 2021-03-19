@@ -18,7 +18,11 @@ import {
   getSubtitle,
 } from "./MilestoneFunctions";
 import { clipTime, calcPlaybackRate, calcRelativeTime } from "./TimeFunctions";
-import { syncContainsCurrent, findValidAudio } from "./FileFunctions";
+import {
+  syncContainsCurrent,
+  findValidAudio,
+  findValidSourceAudio,
+} from "./FileFunctions";
 import {
   generateRegionColors,
   updateRegionAlpha,
@@ -201,7 +205,14 @@ export class DeeJay extends Component<DeeJayProps> {
         // If WS is Playing => Check for Playing Actions
         // -> Else If WS0, and Not Empty URL => Load and Play URL
         if (this.currentPlaying[idx]) this.checkPlayingValues(idx);
-        else if (!idx && this.props.url) this.loadFileWS(idx, this.props.url);
+        else if (!idx && this.props.url) {
+          if (this.props.url !== "") {
+            this.loadFileWS(idx, findValidAudio(idx));
+          } else {
+            // findValidAudio(idx) / this.props.url
+            this.loadFileWS(idx, this.props.url);
+          }
+        }
       } else {
         // If WS is Ready and Playing => Check for Playing Actions
         // -> Else => Search and Load
@@ -566,10 +577,28 @@ export class DeeJay extends Component<DeeJayProps> {
   loadFileWS = (idx: number, load: string): void => {
     // Grab WS, Its WF (if it exists), and Subscription Function (based on if WF exists or not)
     const ws = this.waveSurfers[idx];
-    const wave = (idx === 0
-      ? this.props.sourceMedia.filter((f: any) => f.blobURL === load)
-      : this.props.annotMedia.filter((f: any) => f.blobURL === load))[0]
-      .waveform;
+    //todo:, Waveforms not saved, so all are currently false.
+    const wave = false;
+    /* const tempWave =
+      idx === 0
+        ? this.props.sourceMedia.filter((f: any) => f.blobURL === load)
+        : this.props.annotMedia.filter((f: any) => f.blobURL === load);
+    if (tempWave[0]) {
+      wave = tempWave[0].waveform;
+    } */
+    /*
+       let wave: undefined | string = undefined;
+    if (idx === 0) {
+      wave = this.props.sourceMedia.filter((f: any) => f.blobURL === load);
+    } else {
+      const annotMed = this.props.annotMedia.filter(
+        (f: any) => f.blobURL === load
+      );
+      if (annotMed) {
+        wave = annotMed[0].waveform;
+      }
+    }
+    */
     const sub = (wave ? "" : "waveform-") + "ready";
 
     // Subscription Function to Act Whenever WS is Ready or WFReady
@@ -1066,7 +1095,7 @@ export class DeeJay extends Component<DeeJayProps> {
           }
           index={idx}
           onClick={() => {
-            if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady()) {
+            if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady) {
               this.clearDispatchLeftovers();
               this.clicked[idx] = true;
               this.solo(idx, false);

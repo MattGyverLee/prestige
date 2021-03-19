@@ -6,9 +6,13 @@ import * as tTypes from "../../store/tree/types";
 import Timelines from "./Timelines";
 import React, { Component } from "react";
 import { getSourceMedia, getTimelineIndex, roundIt } from "../globalFunctions";
-
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import {
+  testingAnnot,
+  testingAnnotMedia,
+  testingSourceMedia,
+} from "./WebExample";
 
 interface StateProps {
   annotMedia: aTypes.LooseObject[];
@@ -156,7 +160,7 @@ class SelectFolderZone extends Component<FolderProps> {
         name: parsedPath.base,
         path: path,
         wsAllowed: false,
-        waveform: "",
+        waveform: false,
       };
     };
 
@@ -894,11 +898,97 @@ class SelectFolderZone extends Component<FolderProps> {
 
   loadWeb = () => {
     console.log("Webbing");
-    /* this.callProcessEAF(
-      "file:///C:/Users/thoua/Documents/SayMore/French%20Transcription/Sessions/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav.annotations.eaf"
+    this.props.loadAnnot(testingAnnot);
+    testingSourceMedia.forEach((media) => {
+      this.props.sourceMediaAdded({ file: media });
+    });
+    testingAnnotMedia.forEach((media) => {
+      this.props.annotMediaAdded({ file: media });
+    });
+    this.props.setTimelinesInstantiated(true);
+    /* this.props.setAnnotMediaWSAllowed(
+      "savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3"
     );
-    this.props.setTimelinesInstantiated(true); */
+    this.props.setAnnotMediaWSAllowed(
+      "savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3"
+    ); */
+    this.sendSnackbar("Video Loading");
+    this.props.setURL(
+      "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01.mp4",
+      0
+    );
+    /* this.props.setURL(
+      "./savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01.mp4",
+      0
+    ); */
+    /* this.props.setURL(
+      "savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01.mp4",
+      0
+    ); */
     this.sendSnackbar("EAF Loaded");
+  };
+
+  exportSession = (parentThis: any) => {
+    // Setting up Folder
+    const fs = require("fs-extra");
+    const dir = "public/savedSession/";
+    console.log("yo");
+
+    const savedAnnot = JSON.stringify(parentThis.props.annot, null, 2);
+    fs.writeFile(dir + "annot.json", savedAnnot, (err: any) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    });
+
+    const savedSourceMedia = JSON.stringify(
+      parentThis.props.sourceMedia,
+      null,
+      2
+    );
+    fs.writeFile(dir + "sourceMedia.json", savedSourceMedia, (err: any) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    });
+
+    const savedAnnotMedia = JSON.stringify(
+      parentThis.props.annotMedia,
+      null,
+      2
+    );
+    fs.writeFile(dir + "annotMedia.json", savedAnnotMedia, (err: any) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    });
+
+    const savedTimeline = JSON.stringify(parentThis.props.timeline, null, 2);
+    fs.writeFile(dir + "Timeline.json", savedTimeline, (err: any) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    });
+    console.log("yo");
+    /* if (!require("path").existsSync(dir)) {
+      fs.mkdirSync(dir);
+    } */
+
+    /* fs.copyFile("example_file.txt", "copied_file.txt", (err) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    });
+    fs.copyFile("example_file.txt", "copied_file.txt", (err) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    });
+    fs.copyFile("example_file.txt", "copied_file.txt", (err) => {
+      if (err) {
+        console.log("Error Found:", err);
+      }
+    }); */
   };
 
   sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
@@ -936,13 +1026,14 @@ class SelectFolderZone extends Component<FolderProps> {
           >
             {" "}
             Load Folder{" "}
-          </button>
+          </button>{" "}
+          <button onClick={() => this.exportSession(this)}>Export</button>
         </div>
       );
     } else if (this.props.env === "web") {
       return (
         <div>
-          <button onClick={() => this.loadWeb()}>Load Media</button>
+          <button className="mediaTest" onClick={() => this.loadWeb()}>Load Media</button>
         </div>
       );
     } else {
