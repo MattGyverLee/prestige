@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import "./index.css";
 
 import * as serviceWorker from "./serviceWorker";
@@ -18,11 +20,17 @@ if (process.env.REACT_APP_MODE === "electron") {
 // eslint:disable-next-line
 const Root = () => (
   <Provider store={store}>
-    <SnackbarProvider maxSnack={3} autoHideDuration={2000}>
+    <SnackbarProvider maxSnack={3} autoHideDuration={1000}>
       <App />
     </SnackbarProvider>
   </Provider>
 );
+
+// expose store when run in Cypress
+// @typescript-ignore
+if (window.Cypress) {
+  window.store = store;
+}
 
 ReactDOM.render(<Root />, document.getElementById("root"));
 
