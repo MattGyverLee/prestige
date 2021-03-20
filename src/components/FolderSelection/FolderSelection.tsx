@@ -520,8 +520,6 @@ class SelectFolderZone extends Component<FolderProps> {
         `${process.cwd()}\\bin\\win\\x64\\ffprobe.exe`
       );
     } else {
-      // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
-      // Do I want a relative (__dirname) or absolute (process.cwd()) path?
       fluentFfmpeg.setFfmpegPath(
         `${process.cwd()}/resources${ffmpegStaticElectron.path}`
       );
@@ -950,6 +948,7 @@ class SelectFolderZone extends Component<FolderProps> {
       if (err) {
         console.log("Error Found:", err);
       }
+      //TODO: Filter out wavs, copy the others.
     });
 
     const savedAnnotMedia = JSON.stringify(
@@ -961,30 +960,11 @@ class SelectFolderZone extends Component<FolderProps> {
       if (err) {
         console.log("Error Found:", err);
       }
+      //TODO: Filter out wavs, copy the others.
     });
 
-    const savedTimeline = JSON.stringify(parentThis.props.timeline, null, 2);
+    /* const savedTimeline = JSON.stringify(parentThis.props.timeline, null, 2);
     fs.writeFile(dir + "Timeline.json", savedTimeline, (err: any) => {
-      if (err) {
-        console.log("Error Found:", err);
-      }
-    });
-    console.log("yo");
-    /* if (!require("path").existsSync(dir)) {
-      fs.mkdirSync(dir);
-    } */
-
-    /* fs.copyFile("example_file.txt", "copied_file.txt", (err) => {
-      if (err) {
-        console.log("Error Found:", err);
-      }
-    });
-    fs.copyFile("example_file.txt", "copied_file.txt", (err) => {
-      if (err) {
-        console.log("Error Found:", err);
-      }
-    });
-    fs.copyFile("example_file.txt", "copied_file.txt", (err) => {
       if (err) {
         console.log("Error Found:", err);
       }
