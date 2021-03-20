@@ -47,7 +47,7 @@ class PlayerZone extends Component<PlayerProps> {
 
   componentDidUpdate() {
     if (this.props.seek !== -1) {
-      this.player.seekTo(this.props.seek);
+      this.player.seekTo(this.props.seek, "seconds");
       this.props.setSeek(-1);
     }
   }

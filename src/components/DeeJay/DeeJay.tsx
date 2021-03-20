@@ -74,7 +74,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private regionsOn = 1;
   private voNum = 0;
   private waveSurfers: WaveSurfer[] = [];
-  private debugPlayback = false;
+  private debugPlayback = true;
   private lastDimensions = 477;
 
   getDimensions = (): number => {
@@ -782,6 +782,17 @@ export class DeeJay extends Component<DeeJayProps> {
       this.playPausing = false;
     } else this.playPausing = true;
     const dispatch = { ...this.props.dispatch };
+    if (this.debugPlayback) {
+      this.sendSnackbar(
+        "Playing WS" +
+          dispatch.wsNum +
+          " from " +
+          dispatch.clipStart +
+          " to " +
+          dispatch.clipStop +
+          "."
+      );
+    }
     this.props.setDispatch({ dispatchType: "" });
 
     // Necessary Switch Variables for WS, Active WSs, Milestone, and PlaybackRate

@@ -123,23 +123,6 @@ export function annotAudio(
   return [...annotAud];
 }
 
-/* export function sendSnackbar(
-  inMessage: string,
-  inKey?: string,
-  vType?: string
-): void {
-  this.props.enqueueSnackbar({
-    message: inMessage,
-    options: {
-      key: inKey || new Date().getTime() + Math.random(),
-      variant: vType || "default",
-      action: (key: aTypes.LooseObject) => (
-        <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
-      ),
-    },
-  });
-}; */
-
 function sortName(a: string, b: string): number {
   if (a < b) return -1;
   else if (a > b) return 1;
