@@ -125,10 +125,13 @@ export function onVolumeChange(volume: number): types.PlayerActionTypes {
   };
 }
 
-export function setSeek(prctTime: number): types.PlayerActionTypes {
+export function setSeek(
+  inTime: number,
+  inScale: "seconds" | "fraction" | undefined
+): types.PlayerActionTypes {
   return {
     type: types.SET_SEEK,
-    payload: prctTime,
+    payload: { time: inTime, scale: inScale },
   };
 }
 

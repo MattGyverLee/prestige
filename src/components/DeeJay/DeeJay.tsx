@@ -74,7 +74,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private regionsOn = 1;
   private voNum = 0;
   private waveSurfers: WaveSurfer[] = [];
-  private debugPlayback = true;
+  private debugPlayback = false;
   private lastDimensions = 477;
 
   getDimensions = (): number => {
@@ -491,7 +491,8 @@ export class DeeJay extends Component<DeeJayProps> {
         this.waveSurfers[0].getDuration(),
         playbackRate,
         clipTime(0, m, true)
-      )
+      ),
+      "fraction"
     );
     this.props.togglePlay(true);
 
@@ -649,7 +650,7 @@ export class DeeJay extends Component<DeeJayProps> {
           });
         } else {
           this.waveSurfers[idx].play(0);
-          this.props.setSeek(0);
+          this.props.setSeek(0, "fraction");
           this.props.togglePlay(true);
         }
       }
@@ -1030,7 +1031,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 this.props.setPlaybackRate(
                   roundIt(calcPlaybackRate(m1, dispatch), 2)
                 );
-                this.props.setSeek(m1.startTime || 0);
+                this.props.setSeek(m1.startTime || 0, "seconds");
                 this.props.togglePlay(true);
                 this.dispatchSubtitle(highs[x], m1);
                 this.waveSurfers[highs[x]].play(m1Start, m1Stop);

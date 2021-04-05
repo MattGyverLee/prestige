@@ -10,7 +10,7 @@ export interface MediaPlayerState {
   played: number;
   playing: boolean;
   ready: boolean;
-  seek: number;
+  seek: { time: number; scale: "seconds" | "fraction" | undefined };
   seeking?: boolean;
   speedsIndex: number;
   url: string;
@@ -114,7 +114,7 @@ interface SetPlaybackRate {
 
 interface SetSeek {
   type: typeof SET_SEEK;
-  payload: number;
+  payload: { time: number; scale: "seconds" | "fraction" | undefined };
 }
 
 interface SetURL {
