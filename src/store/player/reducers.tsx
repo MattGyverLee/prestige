@@ -25,7 +25,7 @@ export const playerCleanStore: types.MediaPlayerState = {
   played: 0,
   playing: false,
   ready: false,
-  seek: -1,
+  seek: { time: -1, scale: "fraction" },
   seeking: false,
   speedsIndex: 5,
   url: "",

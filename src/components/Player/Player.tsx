@@ -19,7 +19,7 @@ interface StateProps {
   playbackMultiplier: number;
   playbackRate: number;
   playing: boolean;
-  seek: number;
+  seek: { time: number; scale: "seconds" | "fraction"| undefined };
   timeline: any[];
   url: string;
   volume: number;
@@ -46,9 +46,14 @@ class PlayerZone extends Component<PlayerProps> {
   private player!: ReactPlayer;
 
   componentDidUpdate() {
-    if (this.props.seek !== -1) {
-      this.player.seekTo(this.props.seek, "seconds");
-      this.props.setSeek(-1);
+    if (this.props.seek.time !== -1) {
+      if (this.props.seek.scale) {
+        this.player.seekTo(this.props.seek.time, this.props.seek.scale);
+      } else {
+        this.player.seekTo(this.props.seek.time);
+      }
+      // TODO: Seek sends seconds, but clips send fraction. This is a hack.
+      this.props.setSeek(-1, "fraction");
     }
   }
 
