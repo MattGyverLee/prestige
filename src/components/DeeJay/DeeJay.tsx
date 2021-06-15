@@ -28,6 +28,7 @@ import {
   updateRegionAlpha,
   toggleAllRegions,
 } from "./RegionFunctions";
+import { exportVideo } from "../FolderSelection/ExportVid";
 import { createWaveSurfer, rowHeight } from "./WaveSurferFunctions";
 
 interface StateProps {
@@ -1151,6 +1152,17 @@ export class DeeJay extends Component<DeeJayProps> {
           }}
         >
           {this.regionsOn === 2 ? "Hide Regions" : "Toggle Regions"}
+        </button>
+        <button
+          onClick={() => {
+            exportVideo(
+              this.props.timeline[this.props.currentTimeline],
+              this.props.playbackMultiplier,
+              this.props.volumes
+            );
+          }}
+        >
+          Export Video
         </button>
       </div>
     );

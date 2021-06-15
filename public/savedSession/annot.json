@@ -1,0 +1,25 @@
+{
+  "annotations": [],
+  "annotationSet": [],
+  "annotationTable": [
+    {
+      "id": 0,
+      "startTime": 0,
+      "txtTransc": "Not Loaded"
+    }
+  ],
+  "audCarefulMain": false,
+  "audTranslMain": false,
+  "categories": [],
+  "fileInfoMain": false,
+  "sayMoreMetaMain": false,
+  "timeline": [],
+  "currentTimeline": -1,
+  "prevTimeline": -1,
+  "txtTranscMain": false,
+  "txtTranscSubtitle": false,
+  "txtTranslMain": false,
+  "txtTranslSubtitle": false,
+  "timelineChanged": true,
+  "timelinesInstantiated": false
+}

@@ -630,6 +630,7 @@ class SelectFolderZone extends Component<FolderProps> {
             if (!v.source.endsWith("silence.wav"))
               mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
                 // TODO: Async May Run Multiple Times in Else Statement Below
+
                 // Store a Table of Contents in InputTimes for the Milestones
                 const name = v.source.substring(
                   v.source.lastIndexOf(path.sep) + 1
@@ -1013,7 +1014,9 @@ class SelectFolderZone extends Component<FolderProps> {
     } else if (this.props.env === "web") {
       return (
         <div>
-          <button className="mediaTest" onClick={() => this.loadWeb()}>Load Media</button>
+          <button className="mediaTest" onClick={() => this.loadWeb()}>
+            Load Media
+          </button>
         </div>
       );
     } else {
