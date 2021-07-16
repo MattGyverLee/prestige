@@ -865,14 +865,20 @@ export class DeeJay extends Component<DeeJayProps> {
           this.playPausing = false;
           if (this.actingDispatch.wsNum !== undefined) {
             const ppWS = this.waveSurfers[this.actingDispatch.wsNum];
-            currM = getCurrentMilestone(
-              this.actingDispatch.wsNum,
-              this.waveSurfers[this.actingDispatch.wsNum].getCurrentTime(),
-              {
-                dispatchType: "",
-              },
-              this.actingDispatch.wsNum
-            );
+            try {
+              currM = getCurrentMilestone(
+                this.actingDispatch.wsNum,
+                this.waveSurfers[this.actingDispatch.wsNum].getCurrentTime(),
+                {
+                  dispatchType: "",
+                },
+                this.actingDispatch.wsNum
+              );
+            } catch {
+              // TODO: Make this cleaner, currently sets startingtime to zero if segment is skipped.
+              currM = undefined;
+              console.log("Time was empty, move along");
+            }
             if (currM !== undefined) {
               this.dispatchSubtitle(this.actingDispatch.wsNum, currM);
               ppWS.play(
@@ -883,7 +889,7 @@ export class DeeJay extends Component<DeeJayProps> {
             } else {
               // Avoid the Crash
               this.sendSnackbar(
-                "Nothing to Play, Please click on an active timeline."
+                "Nothing to Play at this time, Please click on an active timeline."
               );
             }
           }
