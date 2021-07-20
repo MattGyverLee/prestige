@@ -28,7 +28,7 @@ promote and develop their native languages. Most of this time has been spent wor
 communities in French-speaking African communities as I have been based at SIL Cameroon,
 but I am currently finishing my Master’s in Descriptive Linguistics at Dallas International University in Dallas, TX.
 
-Blaine Billings is a student at the University of Charleston who completed an internship with Dallas International University. During his internship, he has been intrumental in coding and prototyping Prestige.
+Blaine Billings is a student at the University of Charleston who completed an internship with Dallas International University. He was an intrumental part of coding and prototyping Prestige.
 
 ## Technical Content:
 
