@@ -122,9 +122,13 @@ export function getSubtitle(targetAnnotationID: string, mode: number): string {
     return m.annotationID === targetAnnotationID ? true : false;
   });
   if (mode <= 1) {
-    result = ms[0].data[0].data;
+    if (ms[0].data[0].channel === "Transcription") {
+      result = ms[0].data[0].data;
+    }
   } else {
-    result = ms[0].data[1].data;
+    if (ms[0].data[1].channel === "Translation") {
+      result = ms[0].data[1].data;
+    }
   }
   if (result === undefined || result === null || result === "%ignore%") {
     result = "";

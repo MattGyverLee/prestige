@@ -889,7 +889,7 @@ export class DeeJay extends Component<DeeJayProps> {
             } else {
               // Avoid the Crash
               this.sendSnackbar(
-                "Nothing to Play at this time, Please click on an active timeline."
+                "No Annotation Audio to Play at this Point, Please click on an active timeline."
               );
             }
           }
