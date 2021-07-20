@@ -1,6 +1,6 @@
 {
   "name": "prestige",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "consider yourself described",
   "homepage": "./",
   "main": "public/electron.js",
@@ -29,7 +29,7 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      ">0.3%",
       "not dead",
       "not op_mini all"
     ],

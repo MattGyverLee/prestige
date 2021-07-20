@@ -31,7 +31,7 @@ Blaine Billings is a student at the University of Charleston who completed an in
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and [craco](https://github.com/wwlib/cra-craco-electron-example) which enables file access using create-react-app. `Create-react-app` will manage dependency updates and web packaging. Then [Redux](https://www.npmjs.com/package/redux) was added. Then the scripts were upated to allow debugging and file access.
 
-### Release Version 0.2
+### Release Version 0.3
 Known Issues:
 -Loop and fullscreen buttons not implemented.
 -Recreates Merged Media Files even if existing (Wasteful)
