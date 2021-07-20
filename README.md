@@ -1,5 +1,8 @@
 # Prestige
 
+## Full Paper Below
+![Prestige: Mobilizing a Bold Corpus](https://mattgyverlee.github.io/docs/Matthew%20Lee%20Defense%20Copy.pdf)
+
 ## A distributed application for the community and researchers to interact with media recordings with audio and text annotation layers.
 
 You may already be familiar with SIL International’s Language Technology tools and practices that are designed to be user-friendly and accessible to both external researchers and community members. In addition
