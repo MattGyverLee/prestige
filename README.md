@@ -39,9 +39,9 @@ https://github.com/MattGyverLee/prestige/releases
 
 Known Issues:
 
--Loop and fullscreen buttons not implemented.
--Recreates merged media files even if existing (ineffecient)
--There is some oddness in the interface (sizing and scrolling) if the window is less than 720px tall.
+- Loop and fullscreen buttons not implemented.
+- Recreates merged media files even if existing (ineffecient)
+- There is some oddness in the interface (sizing and scrolling) if the window is less than 720px tall.
 
 ### Developer Setup
 
