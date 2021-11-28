@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "blobURL": "file:///C:/Users/thoua/Documents/SayMore/French%20Transcription/Sessions/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01.mp4",
+    "extension": ".mp4",
+    "hasAnnotation": false,
+    "isAnnotation": false,
+    "isMerged": false,
+    "inMilestones": false,
+    "mimeType": "video/mp4",
+    "name": "Pourquoi un mètre mesure 1m_Source_01.mp4",
+    "path": "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01.mp4",
+    "wsAllowed": false,
+    "waveform": false
+  },
+  {
+    "blobURL": "file:///C:/Users/thoua/Documents/SayMore/French%20Transcription/Sessions/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav",
+    "extension": ".wav",
+    "hasAnnotation": false,
+    "isAnnotation": false,
+    "isMerged": false,
+    "inMilestones": false,
+    "mimeType": "audio/wav",
+    "name": "Pourquoi un mètre mesure 1m_Source_01_StandardAudio.wav",
+    "path": "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio.wav",
+    "wsAllowed": false,
+    "waveform": false
+  },
+  {
+    "blobURL": "file:///C:/Users/thoua/Documents/SayMore/French%20Transcription/Sessions/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio_Normalized.mp3",
+    "extension": ".mp3",
+    "hasAnnotation": false,
+    "isAnnotation": false,
+    "isMerged": false,
+    "inMilestones": false,
+    "mimeType": "audio/mpeg",
+    "name": "Pourquoi un mètre mesure 1m_Source_01_StandardAudio_Normalized.mp3",
+    "path": "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio_Normalized.mp3",
+    "wsAllowed": true,
+    "waveform": {}
+  }
+]

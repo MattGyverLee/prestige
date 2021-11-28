@@ -1164,7 +1164,8 @@ export class DeeJay extends Component<DeeJayProps> {
             exportVideo(
               this.props.timeline[this.props.currentTimeline],
               this.props.playbackMultiplier,
-              this.props.volumes
+              this.props.volumes,
+              this.props.url
             );
           }}
         >

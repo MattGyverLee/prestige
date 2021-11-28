@@ -4,7 +4,8 @@ import { LooseObject } from "../../store/annot/types";
 export function exportVideo(
   timeline: LooseObject,
   multiplier: number,
-  vols: number[]
+  vols: number[],
+  outputPath: string
 ): boolean {
   const kings: number[] = [];
   const princes: number[] = [];
@@ -38,7 +39,6 @@ export function exportVideo(
   Lafvi
   https://video.stackexchange.com/questions/27773/merge-two-videos-in-ffmpeg-with-audio-from-one
   */
-
 
   /* 
   OverLays
@@ -315,7 +315,7 @@ export function exportVideo(
     });
   });
   console.log(thePlan);
-  buildVideo(theCode);
+  buildVideo(theCode, outputPath);
 
   /*
   For Each Milestone:
@@ -371,7 +371,7 @@ export function exportVideo(
   return true;
 }
 
-function buildVideo(inData: LooseObject) {
+function buildVideo(inData: LooseObject, outputPath: string) {
   const ffmpegStaticElectron = require("ffmpeg-static-electron");
   const ffprobeStaticElectron = require("ffprobe-static-electron");
 
@@ -389,15 +389,25 @@ function buildVideo(inData: LooseObject) {
     );
   }
   const mv = fluentFfmpeg();
+  let inputtedInputs = -1;
+  let cf = "";
+  let cfNote = "";
   inData.forEach((clip: LooseObject, cIndex: number) => {
     const numClips = inData.length;
+    let v1Idx = 0;
+    let a1Idx = 0;
+    let a2Idx = 0;
     // Video
-    mv.addInput(clip.V1);
-    mv.inputOptions(["-ss" + clip.V1Start, "-to " + clip.V1Stop]);
-    mv.videoFilters(["setPTS=" + clip.V1Speed + "*PTS"])
+    mv.addInput(deBlobWin(clip.V1));
+    inputtedInputs += 1;
+    v1Idx = inputtedInputs;
+    mv.inputOptions(["-ss " + clip.V1Start, "-to " + clip.V1Stop]);
+    // mv.videoFilters(["setPTS=" + clip.V1Speed + "*PTS"]);
     // A1
-    mv.addInput(clip.A1);
-    mv.inputOptions(["-ss" + clip.A1Start, "-to " + clip.A1Stop]);
+    mv.addInput(deBlobWin(clip.A1));
+    inputtedInputs += 1;
+    a1Idx = inputtedInputs;
+    mv.inputOptions(["-ss " + clip.A1Start, "-to " + clip.A1Stop]);
     let a1Filter = "";
     let a1Speed = clip.A1Speed;
     if (a1Speed > 2) {
@@ -413,7 +423,9 @@ function buildVideo(inData: LooseObject) {
     let a2Speed = -1;
     // A2
     if (clip.isA2) {
-      mv.addinput(clip.A2)
+      mv.addinput(deBlobWin(clip.A2));
+      inputtedInputs += 1;
+      a2Idx = inputtedInputs;
       mv.inputOptions(["-ss " + clip.A2Start, "-to " + clip.A2Stop]);
       a2Speed = clip.A2Speed;
       if (a2Speed > 2) {
@@ -426,11 +438,86 @@ function buildVideo(inData: LooseObject) {
       }
       a2Filter += "atempo=" + a2Speed;
     } else {
-      mv.addInput(process.cwd() + "/public/silence.wav");
+      //mv.addInput(process.cwd() + "/public/silence.wav");
     }
     // Longest??
     console.log("Pause");
+    cfNote = "Round" + cIndex.toString() + ":";
+    // Make this ++ to log
+    if (a2Idx !== 0) {
+      cfNote +=
+        "With A2, V1-[" +
+        v1Idx.toString() +
+        "], A1-[" +
+        a1Idx.toString() +
+        "], A2-[" +
+        a1Idx.toString() +
+        "];";
+      // Add cf writer here, too
+    } else {
+      // Simple case, no A2
+      cfNote +=
+        "Without A2, V1-[" +
+        v1Idx.toString() +
+        "], A1-[" +
+        a1Idx.toString() +
+        "]";
+      if (cIndex === 0) {
+        // First round
+        cf += "[" + v1Idx.toString() + ":v][" + a1Idx.toString() + ":a]";
+      } else if (cIndex === numClips) {
+        // Last Round
+        if (cIndex !== 1) {
+          cf += "[outv:v][outa:a]";
+        }
+        cf +=
+          "[" +
+          v1Idx.toString() +
+          ":v][" +
+          a1Idx.toString() +
+          ":a]concat=n=2:v=1:a=1[outv][outa];";
+        // cf += '-map "[outv]" -map "[outa]"';
+      } else {
+        // Middle Rounds
+        if (cIndex !== 1) {
+          cf += "[outv:v][outa:a]";
+        }
+        cf +=
+          "[" +
+          v1Idx.toString() +
+          ":v][" +
+          a1Idx.toString() +
+          ":a]concat=n=2:v=1:a=1[outv][outa];";
+      }
+    }
+    console.log("Pause");
   });
+  const outputURI =
+    outputPath.substring(0, outputPath.lastIndexOf(".")) + "_Compiled.mp4";
+  const outputOSPath = deBlobWin(outputURI);
+  // Convert and Save File
+  mv.complexFilter(cf)
+    .format("mp4")
+    .videoBitrate("1024k")
+    .videoCodec("mpeg4")
+    //.size("720x?")
+    .audioBitrate("128k")
+    .audioChannels(2)
+    .audioCodec("libmp3lame")
+    .outputOptions("-y")
+    .on("start", (command: any) => {
+      console.log("ffmpeg process started:", command);
+      //this.sendSnackbar("Converting Source Audio.");
+    })
+    .on("error", (err: any) => {
+      console.log("An error occurred: " + err.message);
+      //this.sendSnackbar("An error occurred: " + err.message);
+    })
+    .on("end", () => {
+      console.log("Video Export finished!");
+      //this.sendSnackbar("Source Audio Converted.");
+    })
+    .save(outputOSPath);
 }
 
 export function getAudio(chan: string, ms: LooseObject) {
@@ -445,4 +532,16 @@ export function getAudio(chan: string, ms: LooseObject) {
     }
   });
   return { file: audioFile, start: audioStart, stop: audioStop };
+}
+
+export function deBlobWin(blob: string): string {
+  const path = require("path");
+  const p = path.parse(blob.toString());
+  let target = p.dir.substring(8) + path.sep + p.base;
+  target = decodeURI(target);
+  const re = /\//gi;
+  target = '"' + target.replace(re, "\\") + '"';
+  //target = target.replace("file:\\\\", "");
+  // target = target.replaceAll("/", path.sep);
+  return target;
 }
