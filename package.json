@@ -113,7 +113,7 @@
     "concurrently": "^4.1.0",
     "cypress": "^6.8.0",
     "depcheck": "^0.8.2",
-    "electron": "^5.0.4",
+    "electron": "^13.6.6",
     "electron-builder": "^20.10.4",
     "electron-debug": "^3.0.0",
     "electron-devtools-installer": "^3.1.1",
