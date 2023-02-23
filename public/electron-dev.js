@@ -81,18 +81,18 @@ app.on("ready", async () => {
   const path = require("path");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const os = require("os");
-  BrowserWindow.addDevToolsExtension(
+  /* BrowserWindow.addDevToolsExtension(
     path.join(
       os.homedir(),
-      "/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.10.1_0"
+      "/AppData/Local/Google/Chrome/User Data/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.27.2_0"
     )
   );
   BrowserWindow.addDevToolsExtension(
     path.join(
       os.homedir(),
-      "/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0"
+      "/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.0.17_0"
     )
-  );
+  ); */
   installExtension(REDUX_DEVTOOLS)
     .then((name) => console.log(`Added Extension:  ${name}`))
     .catch((err) => console.log("An error occurred: ", err));

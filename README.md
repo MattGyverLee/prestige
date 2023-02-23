@@ -40,6 +40,14 @@ Known Issues:
 
 ### Developer Setup
 
+
+#### Prerequisite Installs
+This App was developed in VSCode.
+As a developer, you will need NodeJS (v14.15.0 from 2021)
+`npm -g i yarn`
+(Apparently you'll need Python and VS build tools to build fibers, which is required.)
+
+
 #### Getting Started
 
 The `yarn` command will install the dependencies.
