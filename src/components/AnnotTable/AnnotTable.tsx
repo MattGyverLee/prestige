@@ -387,6 +387,7 @@ export class AnnotationTable extends Component<ComponentProps> {
     return (
       <ResizableDiv className="AnnotDiv" id="TranscriptionTableSpace">
         <Paper className="annotation-table">
+          {/* @ts-expect-error - DevExpress Grid types don't properly define children */}
           <Grid
             rows={this.props.annotationTable}
             columns={annotCols}

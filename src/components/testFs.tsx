@@ -1,4 +1,4 @@
-import { electronAPI } from '../utils/electronAPI';
+import { electronAPI } from "../utils/electronAPI";
 
 export default async function getDirectoryListing(props: any): Promise<string> {
   if (process.env.REACT_APP_MODE === "electron" && props && props.length > 0) {
@@ -24,7 +24,7 @@ export default async function getDirectoryListing(props: any): Promise<string> {
     // Use secure API to read current directory
     const cwd = await electronAPI.getCwd();
     const fileStats = await electronAPI.readDirectory(cwd);
-    const files = fileStats.map(f => f.name);
+    const files = fileStats.map((f) => f.name);
     return JSON.stringify(files, undefined, 2);
   } else {
     return "Directory listing is not available in the browser.";

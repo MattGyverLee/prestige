@@ -1,4 +1,4 @@
-export interface LooseObject extends Object {
+export interface LooseObject {
   [key: string]: any;
 }
 

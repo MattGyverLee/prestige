@@ -1,15 +1,15 @@
-import React, {Component} from 'react';
-import './splash-screen.css';
+import React, { Component } from "react";
+import "./splash-screen.css";
 import logo from "../assets/icons/png/512x512.png";
 
 function LoadingMessage() {
   return (
     <div className="splash-screen">
-        <br/>
-        <img src={logo} className="AppLogo" alt="logo" />
-        <h1>
-          Welcome to <code>Prestige</code>.
-        </h1>
+      <br />
+      <img src={logo} className="AppLogo" alt="logo" />
+      <h1>
+        Welcome to <code>Prestige</code>.
+      </h1>
       <div className="loading-dot">.</div>
     </div>
   );
@@ -30,7 +30,7 @@ function withSplashScreen(WrappedComponent) {
           this.setState({
             loading: false,
           });
-        }, 1500)
+        }, 1500);
       } catch (err) {
         console.log(err);
         this.setState({

@@ -39,7 +39,6 @@ export function exportVideo(
   https://video.stackexchange.com/questions/27773/merge-two-videos-in-ffmpeg-with-audio-from-one
   */
 
-
   /* 
   OverLays
   https://stackoverflow.com/questions/49454740/multiple-overlays-using-ffmpeg
@@ -394,7 +393,7 @@ function buildVideo(inData: LooseObject) {
     // Video
     mv.addInput(clip.V1);
     mv.inputOptions(["-ss" + clip.V1Start, "-to " + clip.V1Stop]);
-    mv.videoFilters(["setPTS=" + clip.V1Speed + "*PTS"])
+    mv.videoFilters(["setPTS=" + clip.V1Speed + "*PTS"]);
     // A1
     mv.addInput(clip.A1);
     mv.inputOptions(["-ss" + clip.A1Start, "-to " + clip.A1Stop]);
@@ -413,7 +412,7 @@ function buildVideo(inData: LooseObject) {
     let a2Speed = -1;
     // A2
     if (clip.isA2) {
-      mv.addinput(clip.A2)
+      mv.addinput(clip.A2);
       mv.inputOptions(["-ss " + clip.A2Start, "-to " + clip.A2Stop]);
       a2Speed = clip.A2Speed;
       if (a2Speed > 2) {

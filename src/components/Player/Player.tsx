@@ -19,7 +19,7 @@ interface StateProps {
   playbackMultiplier: number;
   playbackRate: number;
   playing: boolean;
-  seek: { time: number; scale: "seconds" | "fraction"| undefined };
+  seek: { time: number; scale: "seconds" | "fraction" | undefined };
   timeline: any[];
   url: string;
   volume: number;

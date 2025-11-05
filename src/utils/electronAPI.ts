@@ -40,8 +40,16 @@ interface ElectronAPI {
 
   // FFmpeg
   convertVideo: (options: any) => Promise<any>;
-  convertAudioToMP3: (input: string, output: string, options?: any) => Promise<any>;
-  mergeAudioFiles: (inputs: string[], output: string, options?: any) => Promise<any>;
+  convertAudioToMP3: (
+    input: string,
+    output: string,
+    options?: any
+  ) => Promise<any>;
+  mergeAudioFiles: (
+    inputs: string[],
+    output: string,
+    options?: any
+  ) => Promise<any>;
   getMediaMetadata: (filePath: string) => Promise<any>;
   onFFmpegProgress: (callback: (data: any) => void) => void;
   removeFFmpegProgressListener: () => void;
@@ -58,7 +66,7 @@ interface ElectronAPI {
 }
 
 // Check if we're in Electron with the new secure API
-const hasSecureAPI = typeof (window as any).electronAPI !== 'undefined';
+const hasSecureAPI = typeof (window as any).electronAPI !== "undefined";
 
 /**
  * Get the appropriate API based on environment
@@ -80,12 +88,12 @@ function getAPI(): ElectronAPI {
  */
 function createLegacyAPI(): ElectronAPI {
   /* eslint-disable @typescript-eslint/no-var-requires */
-  const fs = require('fs-extra');
-  const path = require('path');
-  const fileUrl = require('file-url');
-  const mime = require('mime');
-  const xml2js = require('xml2js');
-  const chokidar = require('chokidar');
+  const fs = require("fs-extra");
+  const path = require("path");
+  const fileUrl = require("file-url");
+  const mime = require("mime");
+  const xml2js = require("xml2js");
+  const chokidar = require("chokidar");
 
   // Wrap synchronous operations in promises for API consistency
   return {
@@ -106,11 +114,11 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     readFile: async (filePath: string) => {
-      return fs.readFileSync(filePath, 'utf8');
+      return fs.readFileSync(filePath, "utf8");
     },
 
     writeFile: async (filePath: string, content: string) => {
-      fs.writeFileSync(filePath, content, 'utf8');
+      fs.writeFileSync(filePath, content, "utf8");
       return { success: true };
     },
 
@@ -155,9 +163,9 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     clearCache: async () => {
-      const electron = require('electron');
+      const electron = require("electron");
       const app = electron.remote.app;
-      const chromeCacheDir = path.join(app.getPath('userData'), 'Cache');
+      const chromeCacheDir = path.join(app.getPath("userData"), "Cache");
       if (fs.existsSync(chromeCacheDir)) {
         const files = fs.readdirSync(chromeCacheDir);
         files.forEach((file: string) => {
@@ -165,7 +173,7 @@ function createLegacyAPI(): ElectronAPI {
           try {
             fs.unlinkSync(filename);
           } catch (e) {
-            console.log('Could not delete cache file:', e);
+            console.log("Could not delete cache file:", e);
           }
         });
       }
@@ -174,7 +182,7 @@ function createLegacyAPI(): ElectronAPI {
 
     // Path Operations
     parsePath: async (filePath: string) => {
-      const pathParse = require('path-parse');
+      const pathParse = require("path-parse");
       return pathParse(filePath);
     },
 
@@ -204,39 +212,44 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     getUserDataPath: async () => {
-      const electron = require('electron');
+      const electron = require("electron");
       const app = electron.remote.app;
-      return app.getPath('userData');
+      return app.getPath("userData");
     },
 
     // File Watching - NOT IMPLEMENTED in legacy (too complex to wrap)
     // These will only work with new API
     startWatcher: async () => {
-      throw new Error('File watching requires secure API');
+      throw new Error("File watching requires secure API");
     },
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     stopWatcher: async () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     onFileSystemEvent: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     removeFileSystemEventListener: () => {},
 
     // FFmpeg - NOT IMPLEMENTED in legacy
     convertVideo: async () => {
-      throw new Error('FFmpeg requires secure API');
+      throw new Error("FFmpeg requires secure API");
     },
     convertAudioToMP3: async () => {
-      throw new Error('FFmpeg requires secure API');
+      throw new Error("FFmpeg requires secure API");
     },
     mergeAudioFiles: async () => {
-      throw new Error('FFmpeg requires secure API');
+      throw new Error("FFmpeg requires secure API");
     },
     getMediaMetadata: async () => {
-      throw new Error('FFmpeg requires secure API');
+      throw new Error("FFmpeg requires secure API");
     },
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     onFFmpegProgress: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     removeFFmpegProgressListener: () => {},
 
     // XML/EAF
     parseEAF: async (filePath: string) => {
-      const content = fs.readFileSync(filePath, 'utf8');
+      const content = fs.readFileSync(filePath, "utf8");
       return new Promise((resolve, reject) => {
         xml2js.parseString(content, (err: any, result: any) => {
           if (err) reject(err);
@@ -246,7 +259,7 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     parseXML: async (filePath: string) => {
-      const content = fs.readFileSync(filePath, 'utf8');
+      const content = fs.readFileSync(filePath, "utf8");
       return new Promise((resolve, reject) => {
         xml2js.parseString(content, (err: any, result: any) => {
           if (err) reject(err);
@@ -257,7 +270,7 @@ function createLegacyAPI(): ElectronAPI {
 
     // Utilities
     isDev: async () => {
-      const electronIsDev = require('electron-is-dev');
+      const electronIsDev = require("electron-is-dev");
       return electronIsDev;
     },
 
@@ -270,13 +283,15 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     send: (channel: string, data: any) => {
-      const electron = require('electron');
+      const electron = require("electron");
       electron.ipcRenderer.send(channel, data);
     },
 
     on: (channel: string, callback: (data: any) => void) => {
-      const electron = require('electron');
-      electron.ipcRenderer.on(channel, (event: any, data: any) => callback(data));
+      const electron = require("electron");
+      electron.ipcRenderer.on(channel, (event: any, data: any) =>
+        callback(data)
+      );
     },
   };
 }

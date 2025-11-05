@@ -5,7 +5,12 @@ import * as tTypes from "../../store/tree/types";
 
 import Timelines from "./Timelines";
 import React, { Component } from "react";
-import { getSourceMedia, getTimelineIndex, roundIt, safeParseSync } from "../globalFunctions";
+import {
+  getSourceMedia,
+  getTimelineIndex,
+  roundIt,
+  safeParseSync,
+} from "../globalFunctions";
 import { electronAPI } from "../../utils/electronAPI";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -84,7 +89,9 @@ class SelectFolderZone extends Component<FolderProps> {
   }
 
   // Helper: Processes File and Returns File Definition
-  private chokFileDescribe = async (path: string): Promise<aTypes.LooseObject> => {
+  private chokFileDescribe = async (
+    path: string
+  ): Promise<aTypes.LooseObject> => {
     // Define Fields for Returned FileDef using secure APIs
     const parsedPath = safeParseSync(path);
     const blobURL = await electronAPI.pathToFileURL(path);
@@ -142,25 +149,25 @@ class SelectFolderZone extends Component<FolderProps> {
       if (event.watcherId !== this.watcherId) return;
 
       switch (event.type) {
-        case 'add':
+        case "add":
           await this.handleFileAdd(event.path, props);
           break;
-        case 'addDir':
+        case "addDir":
           console.log(`Directory ${event.path} has been added`);
           break;
-        case 'change':
+        case "change":
           await this.handleFileChange(event.path, props);
           break;
-        case 'unlink':
+        case "unlink":
           await this.handleFileUnlink(event.path, props);
           break;
-        case 'unlinkDir':
+        case "unlinkDir":
           console.log(`Directory ${event.path} has been removed`);
           break;
-        case 'error':
+        case "error":
           console.log(`Watcher error: ${event.error}`);
           break;
-        case 'ready':
+        case "ready":
           await this.handleWatcherReady(props);
           break;
       }
@@ -252,7 +259,8 @@ class SelectFolderZone extends Component<FolderProps> {
       } else if (this.props.sourceMedia.length !== 0) {
         await this.loadAnnot(true);
         await this.loadAnnot(false);
-        const blobURL = getSourceMedia(this.props.sourceMedia, false)[0].blobURL;
+        const blobURL = getSourceMedia(this.props.sourceMedia, false)[0]
+          .blobURL;
         props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
         console.log(`Initial scan complete. Ready for changes`);
       } else {
@@ -449,7 +457,7 @@ class SelectFolderZone extends Component<FolderProps> {
     try {
       await electronAPI.clearCache();
     } catch (e) {
-      console.log('Error clearing cache:', e);
+      console.log("Error clearing cache:", e);
     }
   };
 
@@ -579,7 +587,8 @@ class SelectFolderZone extends Component<FolderProps> {
   // Convert audio file to MP3 with normalization
   convertToMP3 = async (path: string) => {
     try {
-      const outputPath = path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3";
+      const outputPath =
+        path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3";
 
       this.sendSnackbar("Converting Source Audio.");
 
@@ -621,7 +630,11 @@ class SelectFolderZone extends Component<FolderProps> {
       // Define SyncMedia for tempTimeline
       const parsedPath = safeParseSync(path);
       const syncMedia: string[] = [];
-      for (let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h < l; h++) {
+      for (
+        let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length;
+        h < l;
+        h++
+      ) {
         const mediaURL = await electronAPI.pathToFileURL(
           parsedPath.dir +
             "/" +
@@ -637,87 +650,87 @@ class SelectFolderZone extends Component<FolderProps> {
         eafFile: eafFileURL,
       });
 
-    // Inline Function Definition for findTime and findAnnotTime
-    const findTime = (myRef: string) => {
-      for (let i = 0, l = timeSlotPointer.length; i < l; i++)
-        if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef)
-          return timeSlotPointer[i].$.TIME_VALUE;
-      return -1;
-    };
-    const findAnnotTime = (myRef4: any, startStop: string) => {
-      for (let i = 0, l = miles.length; i < l; i++)
-        if (miles[i]["annotationID"] === myRef4) return miles[i][startStop];
-      return -1;
-    };
+      // Inline Function Definition for findTime and findAnnotTime
+      const findTime = (myRef: string) => {
+        for (let i = 0, l = timeSlotPointer.length; i < l; i++)
+          if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef)
+            return timeSlotPointer[i].$.TIME_VALUE;
+        return -1;
+      };
+      const findAnnotTime = (myRef4: any, startStop: string) => {
+        for (let i = 0, l = miles.length; i < l; i++)
+          if (miles[i]["annotationID"] === myRef4) return miles[i][startStop];
+        return -1;
+      };
 
-    // Process All of File's Annotations
-    for (let j = 0, l = fileData.TIER.length; j < l; j++) {
-      // Verify Current lingType is a Category and Add if Otherwise
-      const lingType = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
-      if (this.props.categories.indexOf(lingType) === -1)
-        this.props.addCategory(lingType);
+      // Process All of File's Annotations
+      for (let j = 0, l = fileData.TIER.length; j < l; j++) {
+        // Verify Current lingType is a Category and Add if Otherwise
+        const lingType = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
+        if (this.props.categories.indexOf(lingType) === -1)
+          this.props.addCategory(lingType);
 
-      // Process Annotations
-      for (let k = 0, l2 = fileData.TIER[j].ANNOTATION.length; k < l2; k++) {
-        // Process Alignable Annotations or Ref Annotations
-        if ("ALIGNABLE_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
-          // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
-          const alAnnPointer =
-            fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
-          const milestone = {
-            annotationID: alAnnPointer.$.ANNOTATION_ID,
-            data: [
-              {
-                channel: fileData.TIER[j].$.TIER_ID,
-                linguisticType:
-                  fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text",
-                data: alAnnPointer.ANNOTATION_VALUE[0],
-                locale: fileData.TIER[j].$.DEFAULT_LOCALE,
-                mimeType: "string",
-              },
-            ],
-            startTime: findTime(alAnnPointer.$.TIME_SLOT_REF1) / 1000,
-            startId: alAnnPointer.$.TIME_SLOT_REF1,
-            stopTime: findTime(alAnnPointer.$.TIME_SLOT_REF2) / 1000,
-            stopId: alAnnPointer.$.TIME_SLOT_REF2,
-            timeline: parsedPath.base,
-          };
-          miles.push(milestone);
-          tempTimeline.addMilestone(milestone);
-        } else if ("REF_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
-          const refAnnPointer =
-            fileData.TIER[j].ANNOTATION[k].REF_ANNOTATION[0];
-          // Only Process Annotation if it Has Actual Text
-          if (refAnnPointer.ANNOTATION_VALUE[0] !== "") {
+        // Process Annotations
+        for (let k = 0, l2 = fileData.TIER[j].ANNOTATION.length; k < l2; k++) {
+          // Process Alignable Annotations or Ref Annotations
+          if ("ALIGNABLE_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
             // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
-            const milestone2 = {
-              annotationID: refAnnPointer.$.ANNOTATION_ID,
+            const alAnnPointer =
+              fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
+            const milestone = {
+              annotationID: alAnnPointer.$.ANNOTATION_ID,
               data: [
                 {
-                  channel: fileData.TIER[j].$.LINGUISTIC_TYPE_REF,
-                  data: refAnnPointer.ANNOTATION_VALUE[0],
-                  linguisticType: fileData.TIER[j].$.TIER_ID + "_text",
+                  channel: fileData.TIER[j].$.TIER_ID,
+                  linguisticType:
+                    fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text",
+                  data: alAnnPointer.ANNOTATION_VALUE[0],
                   locale: fileData.TIER[j].$.DEFAULT_LOCALE,
                   mimeType: "string",
                 },
               ],
-              startId: refAnnPointer.$.TIME_SLOT_REF1,
-              startTime: findAnnotTime(
-                refAnnPointer.$.ANNOTATION_REF,
-                "startTime"
-              ),
-              stopId: refAnnPointer.$.TIME_SLOT_REF2,
-              stopTime: findAnnotTime(
-                refAnnPointer.$.ANNOTATION_REF,
-                "stopTime"
-              ),
+              startTime: findTime(alAnnPointer.$.TIME_SLOT_REF1) / 1000,
+              startId: alAnnPointer.$.TIME_SLOT_REF1,
+              stopTime: findTime(alAnnPointer.$.TIME_SLOT_REF2) / 1000,
+              stopId: alAnnPointer.$.TIME_SLOT_REF2,
               timeline: parsedPath.base,
             };
-            tempTimeline.addMilestone(milestone2);
+            miles.push(milestone);
+            tempTimeline.addMilestone(milestone);
+          } else if ("REF_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
+            const refAnnPointer =
+              fileData.TIER[j].ANNOTATION[k].REF_ANNOTATION[0];
+            // Only Process Annotation if it Has Actual Text
+            if (refAnnPointer.ANNOTATION_VALUE[0] !== "") {
+              // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
+              const milestone2 = {
+                annotationID: refAnnPointer.$.ANNOTATION_ID,
+                data: [
+                  {
+                    channel: fileData.TIER[j].$.LINGUISTIC_TYPE_REF,
+                    data: refAnnPointer.ANNOTATION_VALUE[0],
+                    linguisticType: fileData.TIER[j].$.TIER_ID + "_text",
+                    locale: fileData.TIER[j].$.DEFAULT_LOCALE,
+                    mimeType: "string",
+                  },
+                ],
+                startId: refAnnPointer.$.TIME_SLOT_REF1,
+                startTime: findAnnotTime(
+                  refAnnPointer.$.ANNOTATION_REF,
+                  "startTime"
+                ),
+                stopId: refAnnPointer.$.TIME_SLOT_REF2,
+                stopTime: findAnnotTime(
+                  refAnnPointer.$.ANNOTATION_REF,
+                  "stopTime"
+                ),
+                timeline: parsedPath.base,
+              };
+              tempTimeline.addMilestone(milestone2);
+            }
           }
         }
       }
-    }
 
       // Push TempTimeline to Timeline
       this.props.pushTimeline(tempTimeline);
