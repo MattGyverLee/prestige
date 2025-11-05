@@ -5,6 +5,10 @@
   "homepage": "./",
   "main": "public/electron.js",
   "private": true,
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "start": "vite",
     "build": "vite build",
