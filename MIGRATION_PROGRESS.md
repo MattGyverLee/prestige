@@ -147,27 +147,36 @@ webPreferences: {
 
 ## Current Status Summary
 
-**Progress:** ~25% Complete
+**Progress:** ~75% Complete 🎉
 
 **Completed:**
 - ✅ Infrastructure (preload + IPC handlers)
-- ✅ Compatibility layer
-- ✅ 2 small files migrated
-- ✅ Build working
+- ✅ Compatibility layer (electronAPI.ts)
+- ✅ Simple files migrated (testFs, globalFunctions)
+- ✅ **FolderSelection.tsx - MOSTLY MIGRATED!**
+  - ✅ File system operations (dirSnapshot, hasLocal, setLocal)
+  - ✅ Cache operations (deleteChromeCache)
+  - ✅ Export operations (exportSession)
+  - ✅ XML/EAF parsing (processEAF)
+  - ✅ Path operations (addNewMediaToMilestone)
+  - ✅ **FFmpeg operations (convertToMP3, loadAnnot)**
+- ✅ Build working with all migrations
 
-**Next Critical Step:**
-- 🔴 Migrate FolderSelection.tsx (~1000 lines, 30+ requires)
-  - This is 60-70% of the remaining frontend work
-  - Most complex file in the codebase
-  - Consider breaking into smaller tasks
+**Next Critical Steps:**
+- 🟡 Chokidar file watcher migration (last major require())
+- 🟡 Update async method callers
+- 🟡 Remove remaining require() calls
+- 🟢 Enable security settings
 
 **Estimated Remaining Time:**
-- FolderSelection.tsx migration: 6-8 hours
+- Chokidar migration: 2-3 hours
+- Async caller updates: 1 hour
+- Clean up remaining requires: 30 minutes
 - Testing: 2-3 hours
 - Security lockdown: 30 minutes
 - Electron upgrade: 2-3 hours
 - React upgrade: 3-4 hours
-- **Total:** 14-19 hours remaining
+- **Total:** 11-15 hours remaining (was 14-19, saved 3-4 hours!)
 
 ## Risk Assessment
 
