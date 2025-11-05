@@ -51,6 +51,11 @@ interface ElectronAPI {
     options?: any
   ) => Promise<any>;
   getMediaMetadata: (filePath: string) => Promise<any>;
+  exportVideo: (
+    clips: any[],
+    outputPath: string,
+    options?: any
+  ) => Promise<any>;
   onFFmpegProgress: (callback: (data: any) => void) => void;
   removeFFmpegProgressListener: () => void;
 
@@ -240,6 +245,9 @@ function createLegacyAPI(): ElectronAPI {
       throw new Error("FFmpeg requires secure API");
     },
     getMediaMetadata: async () => {
+      throw new Error("FFmpeg requires secure API");
+    },
+    exportVideo: async () => {
       throw new Error("FFmpeg requires secure API");
     },
     // eslint-disable-next-line @typescript-eslint/no-empty-function

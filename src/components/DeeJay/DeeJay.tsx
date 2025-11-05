@@ -1156,8 +1156,8 @@ export class DeeJay extends Component<DeeJayProps> {
           {this.regionsOn === 2 ? "Hide Regions" : "Toggle Regions"}
         </button>
         <button
-          onClick={() => {
-            exportVideo(
+          onClick={async () => {
+            await exportVideo(
               this.props.timeline[this.props.currentTimeline],
               this.props.playbackMultiplier,
               this.props.volumes

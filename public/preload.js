@@ -206,6 +206,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMediaMetadata: (filePath) => ipcRenderer.invoke('ffmpeg:probe', filePath),
 
   /**
+   * Export video with multiple audio tracks and clips
+   * @param {Array<object>} clips - Array of clip objects with V1, A1, A2 parameters
+   * @param {string} outputPath - Output file path
+   * @param {object} options - Export options
+   * @returns {Promise<string>} Output file path
+   */
+  exportVideo: (clips, outputPath, options) =>
+    ipcRenderer.invoke('ffmpeg:exportVideo', clips, outputPath, options),
+
+  /**
    * Listen for FFmpeg progress events
    * @param {function} callback - Progress callback
    */

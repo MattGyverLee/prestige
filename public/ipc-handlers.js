@@ -585,6 +585,230 @@ function registerIPCHandlers(mainWindow) {
     });
   });
 
+  /**
+   * Export video with multiple audio tracks and clips
+   * This function takes an array of clip objects and concatenates them into a final video
+   * Each clip can have:
+   * - V1: Video input with start/stop times and playback speed
+   * - A1: Primary audio with start/stop times and playback speed/volume
+   * - A2: Secondary audio (optional) with start/stop times and playback speed/volume
+   */
+  ipcMain.handle('ffmpeg:exportVideo', (event, clips, outputPath, options = {}) => {
+    return new Promise((resolve, reject) => {
+      console.log(`Exporting video with ${clips.length} clips to ${outputPath}`);
+
+      // Create array to hold intermediate clip files
+      const clipFiles = [];
+      const tempDir = path.join(app.getPath('temp'), 'prestige-export-' + Date.now());
+
+      // Create temp directory
+      if (!existsSync(tempDir)) {
+        require('fs').mkdirSync(tempDir, { recursive: true });
+      }
+
+      // Process each clip into an intermediate file
+      let processedClips = 0;
+
+      const processClip = (clip, clipIndex) => {
+        return new Promise((resolveClip, rejectClip) => {
+          const clipOutput = path.join(tempDir, `clip_${clipIndex}.mp4`);
+
+          const command = fluentFfmpeg();
+
+          // Add video input with trim
+          command.input(clip.V1);
+          if (clip.V1Start !== undefined && clip.V1Stop !== undefined) {
+            command.inputOptions([
+              `-ss ${clip.V1Start}`,
+              `-to ${clip.V1Stop}`
+            ]);
+          }
+
+          // Add A1 audio input with trim
+          command.input(clip.A1);
+          if (clip.A1Start !== undefined && clip.A1Stop !== undefined) {
+            command.inputOptions([
+              `-ss ${clip.A1Start}`,
+              `-to ${clip.A1Stop}`
+            ]);
+          }
+
+          // Build filter complex for video speed, audio tempo, and mixing
+          const filters = [];
+
+          // Video speed filter (setpts)
+          if (clip.V1Speed && clip.V1Speed !== 1) {
+            filters.push(`[0:v]setpts=${1/clip.V1Speed}*PTS[v]`);
+          } else {
+            filters.push(`[0:v]copy[v]`);
+          }
+
+          // A1 audio tempo filter (handle speeds > 2 by stacking atempo filters)
+          let a1Filter = '[1:a]';
+          if (clip.A1Speed && clip.A1Speed !== 1) {
+            let speed = clip.A1Speed;
+            let tempoFilters = [];
+
+            // Stack atempo filters for speeds > 2
+            while (speed > 2) {
+              tempoFilters.push('atempo=2.0');
+              speed = speed / 2;
+            }
+            if (speed > 0.2) {
+              tempoFilters.push(`atempo=${speed}`);
+            }
+
+            a1Filter += tempoFilters.join(',');
+          }
+
+          // Apply volume to A1
+          if (clip.A1Vol !== undefined && clip.A1Vol !== 1) {
+            a1Filter += `,volume=${clip.A1Vol}`;
+          }
+          a1Filter += '[a1]';
+          filters.push(a1Filter);
+
+          // Handle A2 (secondary audio) if present
+          if (clip.isA2 && clip.A2) {
+            // Add A2 input
+            command.input(clip.A2);
+            if (clip.A2Start !== undefined && clip.A2Stop !== undefined) {
+              command.inputOptions([
+                `-ss ${clip.A2Start}`,
+                `-to ${clip.A2Stop}`
+              ]);
+            }
+
+            // A2 audio tempo filter
+            let a2Filter = '[2:a]';
+            if (clip.A2Speed && clip.A2Speed !== 1) {
+              let speed = clip.A2Speed;
+              let tempoFilters = [];
+
+              while (speed > 2) {
+                tempoFilters.push('atempo=2.0');
+                speed = speed / 2;
+              }
+              if (speed > 0.2) {
+                tempoFilters.push(`atempo=${speed}`);
+              }
+
+              a2Filter += tempoFilters.join(',');
+            }
+
+            // Apply volume to A2
+            if (clip.A2Vol !== undefined && clip.A2Vol !== 1) {
+              a2Filter += `,volume=${clip.A2Vol}`;
+            }
+            a2Filter += '[a2]';
+            filters.push(a2Filter);
+
+            // Mix A1 and A2
+            filters.push('[a1][a2]amix=inputs=2:duration=longest[a]');
+          } else {
+            // No A2, just use A1
+            filters.push('[a1]copy[a]');
+          }
+
+          command.complexFilter(filters.join(';'));
+          command.outputOptions([
+            '-map [v]',
+            '-map [a]',
+            '-c:v libx264',
+            '-preset fast',
+            '-crf 23',
+            '-c:a aac',
+            '-b:a 192k'
+          ]);
+
+          command
+            .on('start', (cmd) => {
+              console.log(`Processing clip ${clipIndex + 1}/${clips.length}`);
+              console.log('FFmpeg command:', cmd);
+            })
+            .on('progress', (progress) => {
+              mainWindow.webContents.send('ffmpeg:progress', {
+                phase: 'clip',
+                clipIndex,
+                totalClips: clips.length,
+                percent: progress.percent || 0
+              });
+            })
+            .on('end', () => {
+              console.log(`Clip ${clipIndex + 1} processed`);
+              clipFiles.push(clipOutput);
+              processedClips++;
+              resolveClip(clipOutput);
+            })
+            .on('error', (err) => {
+              console.error(`Error processing clip ${clipIndex}:`, err);
+              rejectClip(err);
+            })
+            .save(clipOutput);
+        });
+      };
+
+      // Process all clips sequentially
+      (async () => {
+        try {
+          for (let i = 0; i < clips.length; i++) {
+            await processClip(clips[i], i);
+          }
+
+          // Now concatenate all clips
+          console.log('Concatenating clips...');
+
+          // Create concat file
+          const concatFile = path.join(tempDir, 'concat.txt');
+          const concatContent = clipFiles.map(f => `file '${f}'`).join('\n');
+          require('fs').writeFileSync(concatFile, concatContent);
+
+          const finalCommand = fluentFfmpeg();
+          finalCommand
+            .input(concatFile)
+            .inputOptions(['-f concat', '-safe 0'])
+            .outputOptions(['-c copy'])
+            .on('start', (cmd) => {
+              console.log('Concatenating clips');
+              console.log('FFmpeg command:', cmd);
+            })
+            .on('progress', (progress) => {
+              mainWindow.webContents.send('ffmpeg:progress', {
+                phase: 'concat',
+                percent: progress.percent || 0
+              });
+            })
+            .on('end', () => {
+              console.log('Video export complete');
+
+              // Clean up temp files
+              try {
+                clipFiles.forEach(f => {
+                  if (existsSync(f)) require('fs').unlinkSync(f);
+                });
+                if (existsSync(concatFile)) require('fs').unlinkSync(concatFile);
+                if (existsSync(tempDir)) require('fs').rmdirSync(tempDir);
+              } catch (cleanupErr) {
+                console.warn('Cleanup error:', cleanupErr);
+              }
+
+              resolve({
+                output: outputPath,
+                clips: clips.length
+              });
+            })
+            .on('error', (err) => {
+              console.error('Error concatenating clips:', err);
+              reject(err);
+            })
+            .save(outputPath);
+        } catch (err) {
+          reject(err);
+        }
+      })();
+    });
+  });
+
   // ==========================================================================
   // XML/EAF Processing
   // ==========================================================================
