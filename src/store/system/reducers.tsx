@@ -7,7 +7,6 @@ export const systemCleanStore: types.SystemState = {
   loggedIn: false,
   session: "",
   userName: "",
-  notifications: [],
   dimensions: {
     AppDetails: { width: -1, height: -1 },
     AppPlayer: { width: -1, height: -1 },
@@ -27,36 +26,6 @@ export function systemReducer(
       return {
         ...state,
         ...action.payload,
-      };
-    }
-    case types.ENQUEUE_SNACKBAR: {
-      return {
-        ...state,
-        notifications: [
-          ...state.notifications,
-          {
-            key: action.key,
-            ...action.notification,
-          },
-        ],
-      };
-    }
-    case types.CLOSE_SNACKBAR: {
-      return {
-        ...state,
-        notifications: state.notifications.map((notification) =>
-          action.dismissAll || notification.key === action.key
-            ? { ...notification, dismissed: true }
-            : { ...notification }
-        ),
-      };
-    }
-    case types.REMOVE_SNACKBAR: {
-      return {
-        ...state,
-        notifications: state.notifications.filter(
-          (notification) => notification.key !== action.key
-        ),
       };
     }
     case types.UPDATE_DIMENSIONS: {
@@ -131,23 +100,6 @@ export function systemReducer(
         default:
           return state;
       }
-    }
-    case types.UPDATE_SNACKBAR: {
-      // TODO: Finish This
-      state.notifications.filter(
-        (notification) => notification.key === action.key
-      );
-      return {
-        ...state,
-        notifications: [
-          ...state.notifications.filter(
-            (notification) => notification.key !== action.key
-          ),
-          state.notifications.filter(
-            (notification) => notification.key === action.key
-          ),
-        ],
-      };
     }
     default:
       return state;

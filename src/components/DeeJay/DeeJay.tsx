@@ -9,6 +9,7 @@ import { LooseObject, Milestone } from "../../store/annot/types";
 import WaveSurfer from "wavesurfer.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import toast from "react-hot-toast";
 import WaveTableRow from "./WaveTableRow/WaveTableRow";
 import {
   getInterMilestone,
@@ -47,8 +48,6 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  closeSnackbar: typeof actions.closeSnackbar;
-  enqueueSnackbar: typeof actions.enqueueSnackbar;
   onReady: typeof actions.onReady;
   setDispatch: typeof actions.setDispatch;
   setPlaybackRate: typeof actions.setPlaybackRate;
@@ -1089,16 +1088,13 @@ export class DeeJay extends Component<DeeJayProps> {
   };
   // TODO: Make this a global function
   sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
-    this.props.enqueueSnackbar({
-      message: inMessage,
-      options: {
-        key: inKey || new Date().getTime() + Math.random(),
-        variant: vType || "default",
-        action: (key: aTypes.LooseObject) => (
-          <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
-        ),
-      },
-    });
+    if (vType === "error") {
+      toast.error(inMessage);
+    } else if (vType === "success") {
+      toast.success(inMessage);
+    } else {
+      toast(inMessage);
+    }
   };
   render(): JSX.Element {
     // Forms the Rows for Each WS
@@ -1193,8 +1189,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      closeSnackbar: actions.closeSnackbar,
-      enqueueSnackbar: actions.enqueueSnackbar,
       onReady: actions.onReady,
       setDispatch: actions.setDispatch,
       setPlaybackRate: actions.setPlaybackRate,
@@ -1207,8 +1201,5 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     dispatch
   ),
 });
-//Todo: Try to import Snackbar.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-export default require("notistack").withSnackbar(
-  connect(mapStateToProps, mapDispatchToProps)(DeeJay)
-);
+
+export default connect(mapStateToProps, mapDispatchToProps)(DeeJay);

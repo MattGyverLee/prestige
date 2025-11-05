@@ -10,7 +10,6 @@ import React from "react";
 import SelectFolderZone from "./components/FolderSelection/FolderSelection";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
-import Notifier from "./components/notifier";
 import ResizableDiv from "./components/resizableDiv";
 
 export type UpdatePlayerParam = React.SyntheticEvent<{
@@ -25,8 +24,6 @@ interface StateProps {
 
 interface DispatchProps {
   updateSession: typeof actions.updateSession;
-  enqueueSnackbar: typeof actions.enqueueSnackbar;
-  closeSnackbar: typeof actions.closeSnackbar;
 
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
@@ -66,7 +63,6 @@ export class App extends React.Component<AppProps> {
       session: "my_session",
       userName: "Class",
       clicks: 0,
-      notifications: [],
       dimensions: {
         AppDetails: {
           width: -1,
@@ -127,7 +123,6 @@ export class App extends React.Component<AppProps> {
     return (
       <div className="App">
         <ResizableDiv className="AppBody">
-          <Notifier />
           <div className="AppSidebar">
             <PlayerZone />
             <ResizableDiv className="AppDeeJay">
@@ -162,10 +157,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       addOralAnnotation: actions.addOralAnnotation,
       addCategory: actions.addCategory,
-      closeSnackbar: actions.closeSnackbar,
       pushAnnotation: actions.pushAnnotation,
       toggleAudtranscMain: actions.toggleAudtranscMain,
-      enqueueSnackbar: actions.enqueueSnackbar,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
@@ -190,10 +183,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     dispatch
   ),
 });
-// Todo: Try to import notistack
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const withSnackbar = require("notistack").withSnackbar;
 
 export default withSplashScreen(
-  withSnackbar(connect(mapStateToProps, mapDispatchToProps)(App))
+  connect(mapStateToProps, mapDispatchToProps)(App)
 );

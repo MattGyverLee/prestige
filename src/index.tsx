@@ -8,7 +8,7 @@ import App from "./App";
 import { Provider } from "react-redux";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { SnackbarProvider } from "notistack";
+import { Toaster } from "react-hot-toast";
 import store from "./store/store";
 
 console.log(`process.env: `, process.env);
@@ -20,9 +20,17 @@ if (process.env.REACT_APP_MODE === "electron") {
 // eslint:disable-next-line
 const Root = () => (
   <Provider store={store}>
-    <SnackbarProvider maxSnack={3} autoHideDuration={1000}>
-      <App />
-    </SnackbarProvider>
+    <App />
+    <Toaster
+      position="bottom-right"
+      toastOptions={{
+        duration: 3000,
+        style: {
+          background: '#363636',
+          color: '#fff',
+        },
+      }}
+    />
   </Provider>
 );
 

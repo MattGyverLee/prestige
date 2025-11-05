@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import * as actions from "../../../../store";
 import { bindActionCreators } from "redux";
-import { LooseObject } from "../../../../store/annot/types";
 import { roundIt } from "../../../globalFunctions";
 import { connect } from "react-redux";
+import toast from "react-hot-toast";
 
 interface PassProps {
   index: number;
@@ -16,8 +16,6 @@ interface StateProps {
 }
 
 interface DispatchProps {
-  closeSnackbar: typeof actions.closeSnackbar;
-  enqueueSnackbar: typeof actions.enqueueSnackbar;
   setWSVolume: typeof actions.setWSVolume;
 }
 
@@ -25,17 +23,15 @@ interface VolumeButtonProps extends StateProps, DispatchProps {}
 
 export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
   // Enqueues the Next Snackbar Mesage
-  sendSnackbar = (inMessage: string, inKey?: string, vType?: string) =>
-    this.props.enqueueSnackbar({
-      message: inMessage,
-      options: {
-        key: inKey || new Date().getTime() + Math.random(),
-        variant: vType || "default",
-        action: (key: LooseObject) => (
-          <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
-        ),
-      },
-    });
+  sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
+    if (vType === "error") {
+      toast.error(inMessage);
+    } else if (vType === "success") {
+      toast.success(inMessage);
+    } else {
+      toast(inMessage);
+    }
+  };
   getName = (index: number): string => {
     switch (index) {
       case 0:
@@ -140,8 +136,6 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ...bindActionCreators(
     {
-      closeSnackbar: actions.closeSnackbar,
-      enqueueSnackbar: actions.enqueueSnackbar,
       setWSVolume: actions.setWSVolume,
     },
     dispatch

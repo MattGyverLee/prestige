@@ -14,6 +14,7 @@ import {
 import { electronAPI } from "../../utils/electronAPI";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
+import toast from "react-hot-toast";
 import {
   testingAnnot,
   testingAnnotMedia,
@@ -41,8 +42,6 @@ interface DispatchProps {
   addOralAnnotation: typeof actions.addOralAnnotation;
   annotMediaAdded: typeof actions.annotMediaAdded;
   annotMediaChanged: typeof actions.annotMediaChanged;
-  enqueueSnackbar: typeof actions.enqueueSnackbar;
-  closeSnackbar: typeof actions.closeSnackbar;
   fileAdded: typeof actions.fileAdded;
   fileChanged: typeof actions.fileChanged;
   fileDeleted: typeof actions.fileDeleted;
@@ -805,16 +804,13 @@ class SelectFolderZone extends Component<FolderProps> {
   };
 
   sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
-    this.props.enqueueSnackbar({
-      message: inMessage,
-      options: {
-        key: inKey || new Date().getTime() + Math.random(),
-        variant: vType || "default",
-        action: (key: aTypes.LooseObject) => (
-          <button onClick={() => this.props.closeSnackbar(key)}>Dismiss</button>
-        ),
-      },
-    });
+    if (vType === "error") {
+      toast.error(inMessage);
+    } else if (vType === "success") {
+      toast.success(inMessage);
+    } else {
+      toast(inMessage);
+    }
   };
   showPointer = (): string => {
     return this.props.url !== "" ? "" : "◎ ";
@@ -880,8 +876,6 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       addOralAnnotation: actions.addOralAnnotation,
       annotMediaAdded: actions.annotMediaAdded,
       annotMediaChanged: actions.annotMediaChanged,
-      closeSnackbar: actions.closeSnackbar,
-      enqueueSnackbar: actions.enqueueSnackbar,
       fileAdded: actions.fileAdded,
       fileChanged: actions.fileChanged,
       fileDeleted: actions.fileDeleted,
@@ -902,7 +896,5 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     dispatch
   ),
 });
-const withSnackbar = require("notistack").withSnackbar;
-export default withSnackbar(
-  connect(mapStateToProps, mapDispatchToProps)(SelectFolderZone)
-);
+
+export default connect(mapStateToProps, mapDispatchToProps)(SelectFolderZone);
