@@ -24,18 +24,14 @@ function createWindow() {
     minWidth: 720,
     icon: path.join(__dirname, "../src/assets/icons/png/64x64.png"),
     webPreferences: {
-      // TODO: Phase 6 - Enable security settings:
-      // contextIsolation: true,
-      // nodeIntegration: false,
-      // enableRemoteModule: false,
-      // sandbox: true,
-      // webSecurity: true,
+      // ✅ SECURITY ENABLED - Phase 6 Complete!
+      contextIsolation: true,      // Isolate preload from renderer
+      nodeIntegration: false,       // Disable Node.js in renderer
+      enableRemoteModule: false,    // Disable remote module
+      sandbox: false,               // Keep false for now (preload needs it)
+      webSecurity: true,           // Enable web security
 
-      // TEMPORARY: Keep old settings for compatibility during migration
-      webSecurity: false,
-      nodeIntegration: true,
-
-      // Add preload script for secure IPC access
+      // Secure IPC via preload script
       preload: path.join(__dirname, "preload.js"),
     },
   });
@@ -45,12 +41,28 @@ function createWindow() {
     height: 600,
     parent: mainWindow,
     show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      enableRemoteModule: false,
+      sandbox: false,
+      webSecurity: true,
+      preload: path.join(__dirname, "preload.js"),
+    },
   });
   settingsWindow = new BrowserWindow({
     width: 600,
     height: 600,
     parent: mainWindow,
     show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      enableRemoteModule: false,
+      sandbox: false,
+      webSecurity: true,
+      preload: path.join(__dirname, "preload.js"),
+    },
   });
 
   mainWindow.loadURL(
