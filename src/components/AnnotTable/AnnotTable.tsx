@@ -18,7 +18,7 @@ import {
 } from "@devexpress/dx-react-grid-material-ui";
 import React, { Component } from "react";
 
-import Paper from "@material-ui/core/Paper";
+import Paper from "@mui/material/Paper";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { getTimelineIndex } from "../globalFunctions";

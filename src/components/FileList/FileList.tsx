@@ -4,7 +4,7 @@ import React, { Component } from "react";
 import { getSourceMedia, getTimelineIndex } from "../globalFunctions";
 
 import { LooseObject } from "../../store/annot/types";
-import Paper from "@material-ui/core/Paper";
+import Paper from "@mui/material/Paper";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import ResizableDiv from "../../components/resizableDiv";
