@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders without crashing 1`] = `
+<div
+  className="splash-screen"
+>
+  <br />
+  <img
+    alt="logo"
+    className="AppLogo"
+    src="512x512.png"
+  />
+  <h1>
+    Welcome to 
+    <code>
+      Prestige
+    </code>
+    .
+  </h1>
+  <div
+    className="loading-dot"
+  >
+    .
+  </div>
+</div>
+`;

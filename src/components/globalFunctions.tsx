@@ -1,5 +1,5 @@
 import { LooseObject } from "../store/annot/types";
-import pathy from "path";
+import { electronAPI } from "../utils/electronAPI";
 
 interface tempTimeline {
   syncMedia: string[];
@@ -36,15 +36,23 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
   return -1;
 }
 
-export function safeParse(inPath: string) {
-  /* if (env === "electron") {
-    const path = pathy;
-    return path.parse(inPath);
-  } else { */
+/**
+ * Parse a file path in a safe, cross-platform way
+ * This now uses the secure Electron API
+ */
+export async function safeParse(inPath: string): Promise<any> {
+  // Use the secure Electron API
+  return await electronAPI.parsePath(inPath);
+}
+
+/**
+ * Synchronous version for backward compatibility (uses legacy require)
+ * TODO: Remove this once all callers are updated to use async version
+ */
+export function safeParseSync(inPath: string): any {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const pathParse = require("path-parse");
   return pathParse(inPath);
-  // }
 }
 
 // allOrViewer: True -> All, False -> Filtered
@@ -60,12 +68,12 @@ export function getSourceMedia(
   const mp3s: string[] = [];
   const sourceAud = sourceAudio(sourceMedia, allOrViewer)
     .filter((sa: any) => {
-      const parsedPath = safeParse(sa.path);
+      const parsedPath = safeParseSync(sa.path);
       if (parsedPath.ext.toLowerCase() === ".mp3") mp3s.push(parsedPath.name);
       for (let i = 0, l = sourceVids.length; i < l; i++) {
         if (
           parsedPath.name ===
-          safeParse(sourceVids[i].path).name + "_StandardAudio"
+          safeParseSync(sourceVids[i].path).name + "_StandardAudio"
         ) {
           return false;
         }
@@ -73,7 +81,7 @@ export function getSourceMedia(
       return !parsedPath.base.endsWith("_StandardAudio_Normalized.mp3");
     })
     .filter((sa: any) => {
-      const parsedPath = safeParse(sa.path);
+      const parsedPath = safeParseSync(sa.path);
       return !(
         mp3s.indexOf(parsedPath.name) !== -1 &&
         parsedPath.ext.toLowerCase() === ".wav"

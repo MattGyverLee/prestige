@@ -1,11 +1,6 @@
-let fs: any;
-if (process.env.REACT_APP_MODE === "electron") {
-  console.log(`REQUIRING fs-extra`);
-  fs = require("fs-extra");
-  // fs = require('fs');
-}
+import { electronAPI } from '../utils/electronAPI';
 
-export default function getDirectoryListing(props: any): string {
+export default async function getDirectoryListing(props: any): Promise<string> {
   if (process.env.REACT_APP_MODE === "electron" && props && props.length > 0) {
     let tempList: string[] = [];
     props.forEach((media: any) => {
@@ -26,7 +21,10 @@ export default function getDirectoryListing(props: any): string {
     });
     return tempList.join("\n");
   } else if (process.env.REACT_APP_MODE === "electron") {
-    const files = fs.readdirSync(".");
+    // Use secure API to read current directory
+    const cwd = await electronAPI.getCwd();
+    const fileStats = await electronAPI.readDirectory(cwd);
+    const files = fileStats.map(f => f.name);
     return JSON.stringify(files, undefined, 2);
   } else {
     return "Directory listing is not available in the browser.";
