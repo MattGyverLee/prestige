@@ -1,4 +1,2 @@
-import Adapter from "enzyme-adapter-react-16";
-import { configure } from "enzyme";
-
-configure({ adapter: new Adapter() });
+// React Testing Library is already configured via @testing-library/jest-dom
+import "@testing-library/jest-dom";
