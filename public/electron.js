@@ -9,6 +9,9 @@ const path = require("path");
 const url = require("url");
 const isDev = require("electron-is-dev");
 
+// Import IPC handlers
+const { registerIPCHandlers, cleanup } = require("./ipc-handlers");
+
 let mainWindow;
 let imageWindow;
 let settingsWindow;
@@ -20,7 +23,21 @@ function createWindow() {
     minHeight: 720,
     minWidth: 720,
     icon: path.join(__dirname, "../src/assets/icons/png/64x64.png"),
-    webPreferences: { webSecurity: false, nodeIntegration: true },
+    webPreferences: {
+      // TODO: Phase 6 - Enable security settings:
+      // contextIsolation: true,
+      // nodeIntegration: false,
+      // enableRemoteModule: false,
+      // sandbox: true,
+      // webSecurity: true,
+
+      // TEMPORARY: Keep old settings for compatibility during migration
+      webSecurity: false,
+      nodeIntegration: true,
+
+      // Add preload script for secure IPC access
+      preload: path.join(__dirname, "preload.js"),
+    },
   });
   mainWindow.setMenuBarVisibility(false);
   imageWindow = new BrowserWindow({
@@ -64,11 +81,17 @@ function createWindow() {
     e.preventDefault();
     settingsWindow.hide();
   });
+
+  // Register all IPC handlers
+  registerIPCHandlers(mainWindow);
 }
 
 app.on("ready", createWindow);
 
 app.on("window-all-closed", () => {
+  // Cleanup watchers and other resources
+  cleanup();
+
   if (process.platform !== "darwin") {
     app.quit();
   }
