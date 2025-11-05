@@ -483,265 +483,152 @@ class SelectFolderZone extends Component<FolderProps> {
 
   // Merges Annotation Sound Files (Careful/Translation)
   // carefulOrTranslation: True -> careful, False -> Translation
-  loadAnnot = (carefulOrTranslation: boolean) => {
-    // Const Requires and Variables for Later Use
-    const ctString = carefulOrTranslation ? "Careful" : "Translation";
-    const ffmpegStaticElectron = require("ffmpeg-static-electron");
-    const ffprobeStaticElectron = require("ffprobe-static-electron");
+  loadAnnot = async (carefulOrTranslation: boolean) => {
+    try {
+      const ctString = carefulOrTranslation ? "Careful" : "Translation";
 
-    // Set Up Fluent FFMpeg and its Associated Paths
-    const fluentFfmpeg = require("fluent-ffmpeg");
-    if (require("electron-is-dev")) {
-      fluentFfmpeg.setFfmpegPath(`${process.cwd()}\\bin\\win\\x64\\ffmpeg.exe`);
-      fluentFfmpeg.setFfprobePath(
-        `${process.cwd()}\\bin\\win\\x64\\ffprobe.exe`
-      );
-    } else {
-      fluentFfmpeg.setFfmpegPath(
-        `${process.cwd()}/resources${ffmpegStaticElectron.path}`
-      );
-      fluentFfmpeg.setFfprobePath(
-        `${process.cwd()}/resources${ffprobeStaticElectron.path}`
-      );
-    }
+      // Sort FilteredAnnot Based on Start Time into InputFiles
+      const inputFiles: any[] = this.props.annotMedia
+        .filter((am: any) => am.name.includes("_" + ctString))
+        .sort((a1: any, a2: any) => {
+          return (
+            parseFloat(a1.name.substring(0, a1.name.indexOf("_"))) -
+            parseFloat(a2.name.substring(0, a2.name.indexOf("_")))
+          );
+        })
+        .map((a: any) => a.path);
 
-    // Sort FilteredAnnot Based on Start Time into InputFiles
-    let annotDir = "";
-    const path = require("path");
-    const inputFiles: any[] = this.props.annotMedia
-      .filter((am: any) => am.name.includes("_" + ctString))
-      .sort((a1: any, a2: any) => {
-        return (
-          parseFloat(a1.name.substring(0, a1.name.indexOf("_"))) -
-          parseFloat(a2.name.substring(0, a2.name.indexOf("_")))
-        );
-      })
-      .map((a: any) => a.path);
-    if (inputFiles.length > 0) {
-      annotDir = inputFiles[0].substring(
+      if (inputFiles.length === 0) {
+        return;
+      }
+
+      // Get directory separator and annotation directory
+      const pathSep = await electronAPI.getPathSeparator();
+      const annotDir = inputFiles[0].substring(
         0,
-        inputFiles[0].lastIndexOf(path.sep) + 1
+        inputFiles[0].lastIndexOf(pathSep) + 1
       );
 
-      // Builds MergedAudio Object with Inputs and the Concatenation Command.
-      let mergedAudio = fluentFfmpeg();
-      let cf = "";
-      mergedAudio.options.stdoutLines = 0;
-      mergedAudio.addInput(process.cwd() + "/public/silence.wav");
-      inputFiles.forEach((v: string, idx: number) => {
-        mergedAudio = mergedAudio.addInput(v);
-        cf += `[${(
-          idx + 1
-        ).toString()}]loudnorm=I=-16:TP=-1.5:LRA=11[n];[n]silenceremove=start_periods=1:start_duration=0.1:start_threshold=-40dB[${
-          idx ? "b" : "out"
-        }];`;
-        if (idx) cf += "[out][0][b]concat=v=0:n=3:a=1[out];";
-        else cf += "[0][out]concat=v=0:a=1[out];";
-        idx++;
-      });
-      cf = cf.substring(0, cf.lastIndexOf(";"));
+      const outputPath = annotDir + ctString + "_Merged.mp3";
+      const cwd = await electronAPI.getCwd();
 
-      // Writes Concatenated Audio to Compressed MP3
-      mergedAudio
-        .format("mp3")
-        .audioBitrate("128k")
-        .audioChannels(1)
-        .audioCodec("libmp3lame")
-        .audioFrequency(44100)
-        .outputOptions(["-map [out]", "-y", "-v verbose"])
-        .complexFilter(cf)
-        .on("start", (command: any) => {
-          console.log("ffmpeg process started:", command);
-          // Todo: Log IDs of FFMPEg Process so we can kill them FFMpeg on Unload.
-          // https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/138#issuecomment-53767068
-          this.sendSnackbar(
-            "Merging " +
-              (carefulOrTranslation ? "Careful Speech" : "Translation") +
-              " files."
-          );
-        })
-        .on("error", (err: any) => {
-          this.sendSnackbar(
-            "File Access error: " + err.message,
-            undefined,
-            "error"
-          );
-        })
-        .on("end", (err: any, stdout: any) => {
-          const fileURL = require("file-url");
-          const path = require("path");
+      this.sendSnackbar(
+        "Merging " +
+          (carefulOrTranslation ? "Careful Speech" : "Translation") +
+          " files."
+      );
 
-          console.log("Merging finished!");
-          const relevantlines: number[] = stdout
-            .split("\n")
-            .filter(
-              (line: string) =>
-                line.startsWith("[Parsed_concat") && line.includes("=")
-            )
-            .map((line: string) =>
-              // Note: Conversion to MP3 always adds 0.05 second delay to start of audio and miniscule amount to end.
-              // The below calculation accounts for it. The 0.1 seconds we are adding will help space them.
-              roundIt(
-                parseFloat(line.substring(line.indexOf("=") + 1)) / 1000000 +
-                  0.05,
-                3
-              )
-            );
-          if (err) console.error(err);
-          const timecodes: number[] = [];
-          const len = relevantlines.length - 1;
-          if (len >= 0) {
-            for (let i = 0; i < len; i++) {
-              if (relevantlines[i] !== relevantlines[i + 1]) {
-                timecodes.push(relevantlines[i]);
-              }
-            }
-            timecodes.push(relevantlines[len]);
-          }
+      // Use secure API to merge audio files
+      const mergeResult = await electronAPI.mergeAudioFiles(
+        inputFiles,
+        outputPath,
+        {
+          bitrate: "128k",
+          channels: 1,
+          silencePath: cwd + "/public/silence.wav",
+        }
+      );
 
-          // Creates and Add Oral Milestones to Timeline
-          const TOGGLE_TIMES = true;
-          let primaryIdx = 0;
-          const inputTimes: any[] = [];
-          mergedAudio._inputs.forEach((v: any, idx: number) => {
-            if (!v.source.endsWith("silence.wav"))
-              mergedAudio.ffprobe(idx, (err: any, metadata: any) => {
-                // TODO: Async May Run Multiple Times in Else Statement Below
+      console.log("Merging finished!");
+      const timecodes = mergeResult.timecodes;
 
-                // Store a Table of Contents in InputTimes for the Milestones
-                const name = v.source.substring(
-                  v.source.lastIndexOf(path.sep) + 1
-                );
-                inputTimes.push({
-                  file: v.source,
-                  name,
-                  duration: roundIt(metadata.streams[0].duration, 3),
-                  refStart: name.split("_")[0],
-                  refStop: name.split("_")[2],
-                });
+      // Get metadata for each input file to create milestones
+      const inputTimes: any[] = [];
+      for (const filePath of inputFiles) {
+        const metadata = await electronAPI.getMediaMetadata(filePath);
+        const parsedPath = safeParseSync(filePath);
+        const name = parsedPath.base;
 
-                // Create Milestones if Last FFProbe Has Been Called
-                primaryIdx++;
-                if (primaryIdx === mergedAudio._inputs.length - 1) {
-                  // Sort InputTimes Based on Start Time
-                  inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
+        inputTimes.push({
+          file: filePath,
+          name,
+          duration: roundIt(metadata.streams[0].duration, 3),
+          refStart: name.split("_")[0],
+          refStop: name.split("_")[2],
+        });
+      }
 
-                  // Add All Oral Annotations of the Files
-                  let oralMilestone: aTypes.Milestone;
-                  for (let i = 0, l = inputTimes.length; i < l; i++) {
-                    if (v.source.endsWith("silence.wav")) continue;
-                    // Create Merged Audio Milestone
-                    oralMilestone = {
-                      annotationID: "",
-                      data: [
-                        {
-                          channel: `${ctString}Merged`,
-                          data: fileURL(`${annotDir}${ctString}_Merged.mp3`),
-                          linguisticType: `${ctString}Merged`,
-                          locale: "",
-                          mimeType: "audio-mp3",
-                          clipStart: TOGGLE_TIMES
-                            ? i === 0
-                              ? 0
-                              : timecodes[2 * i - 1]
-                            : timecodes[2 * i],
-                          // Accounts for Excessive Time Padding
-                          clipStop: timecodes[2 * i + 1],
-                        },
-                      ],
-                      startTime: parseFloat(inputTimes[i].refStart),
-                      stopTime: parseFloat(inputTimes[i].refStop),
-                    };
+      // Sort InputTimes Based on Start Time
+      inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
 
-                    // Add Milestone to Timeline
-                    this.props.addOralAnnotation(
-                      oralMilestone,
-                      getTimelineIndex(
-                        this.props.timeline,
-                        fileURL(
-                          annotDir.substring(
-                            0,
-                            annotDir.indexOf("_Annotations")
-                          )
-                        )
-                      )
-                    );
-                    this.props.setTimelineChanged(true);
-                  }
-                }
+      // Create and Add Oral Milestones to Timeline
+      const TOGGLE_TIMES = true;
+      const mergedFileURL = await electronAPI.pathToFileURL(outputPath);
 
-                // ffProbe Error Handling
-                if (err) {
-                  console.log("Error: " + err);
-                }
-              });
-          });
+      for (let i = 0, l = inputTimes.length; i < l; i++) {
+        const oralMilestone: aTypes.Milestone = {
+          annotationID: "",
+          data: [
+            {
+              channel: `${ctString}Merged`,
+              data: mergedFileURL,
+              linguisticType: `${ctString}Merged`,
+              locale: "",
+              mimeType: "audio-mp3",
+              clipStart: TOGGLE_TIMES
+                ? i === 0
+                  ? 0
+                  : timecodes[2 * i - 1]
+                : timecodes[2 * i],
+              clipStop: timecodes[2 * i + 1],
+            },
+          ],
+          startTime: parseFloat(inputTimes[i].refStart),
+          stopTime: parseFloat(inputTimes[i].refStop),
+        };
 
-          this.sendSnackbar(
-            (carefulOrTranslation ? "Careful Speech" : "Translation") +
-              " annotations merged!"
-          );
-          this.props.setAnnotMediaWSAllowed(
-            fileURL(annotDir + ctString + "_Merged.mp3")
-          );
-          this.setLocal(this.currentFolder);
-        })
-        .save(annotDir + ctString + "_Merged.mp3");
+        // Add Milestone to Timeline
+        const timelineURL = await electronAPI.pathToFileURL(
+          annotDir.substring(0, annotDir.indexOf("_Annotations"))
+        );
+        this.props.addOralAnnotation(
+          oralMilestone,
+          getTimelineIndex(this.props.timeline, timelineURL)
+        );
+        this.props.setTimelineChanged(true);
+      }
+
+      this.sendSnackbar(
+        (carefulOrTranslation ? "Careful Speech" : "Translation") +
+          " annotations merged!"
+      );
+      this.props.setAnnotMediaWSAllowed(mergedFileURL);
+      await this.setLocal(this.currentFolder);
+    } catch (err) {
+      console.error("Error in loadAnnot:", err);
+      this.sendSnackbar(
+        "File Access error: " + (err as any).message,
+        undefined,
+        "error"
+      );
     }
   };
 
-  // alert(result); // "done!"
-  convertToMP3 = (path: string) => {
-    // Set Up Fluent FFMpeg and its Associated Paths
-    const ffmpegStaticElectron = require("ffmpeg-static-electron");
-    const ffprobeStaticElectron = require("ffprobe-static-electron");
-    const fluentFfmpeg = require("fluent-ffmpeg");
+  // Convert audio file to MP3 with normalization
+  convertToMP3 = async (path: string) => {
+    try {
+      const outputPath = path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3";
 
-    // Determines Location for Ffmpeg and Ffprobe from environment variables.
-    if (require("electron-is-dev")) {
-      fluentFfmpeg.setFfmpegPath(process.cwd() + "\\bin\\win\\x64\\ffmpeg.exe");
-      fluentFfmpeg.setFfprobePath(
-        process.cwd() + "\\bin\\win\\x64\\ffprobe.exe"
-      );
-    } else {
-      // https://stackoverflow.com/questions/33152533/bundling-precompiled-binary-into-electron-app Tsuringa's answer
-      // Do I want a relative (__dirname) or absolute (process.cwd()) path?
-      fluentFfmpeg.setFfmpegPath(
-        process.cwd() + "/resources" + ffmpegStaticElectron.path
-      );
-      fluentFfmpeg.setFfprobePath(
-        process.cwd() + "/resources" + ffprobeStaticElectron.path
-      );
+      this.sendSnackbar("Converting Source Audio.");
+
+      // Use secure API for FFmpeg conversion
+      const result = await electronAPI.convertAudioToMP3(path, outputPath, {
+        bitrate: "128k",
+        channels: 2,
+        normalize: true,
+      });
+
+      console.log("MP3 Conversion finished!");
+      this.sendSnackbar("Source Audio Converted.");
+
+      const fileURL = await electronAPI.pathToFileURL(outputPath);
+      this.props.setSourceMediaWSAllowed(fileURL);
+
+      await this.setLocal(this.currentFolder);
+    } catch (err) {
+      console.log("An error occurred: " + (err as any).message);
+      this.sendSnackbar("An error occurred: " + (err as any).message);
     }
-
-    // Convert and Save File
-    fluentFfmpeg()
-      .addInput(path)
-      .format("mp3")
-      .audioBitrate("128k")
-      .audioChannels(2)
-      .audioCodec("libmp3lame")
-      .audioFilters("loudnorm=I=-16:TP=-1.5:LRA=11")
-      .outputOptions("-y")
-      .on("start", (command: any) => {
-        console.log("ffmpeg process started:", command);
-        this.sendSnackbar("Converting Source Audio.");
-      })
-      .on("error", (err: any) => {
-        console.log("An error occurred: " + err.message);
-        this.sendSnackbar("An error occurred: " + err.message);
-      })
-      .on("end", () => {
-        console.log("MP3 Conversion finished!");
-        this.sendSnackbar("Source Audio Converted.");
-        this.props.setSourceMediaWSAllowed(
-          require("file-url")(
-            path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3"
-          )
-        );
-        this.setLocal(this.currentFolder);
-      })
-      .save(path.substring(0, path.lastIndexOf(".")) + "_Normalized.mp3");
   };
 
   callProcessEAF = (inputFile: string) => {
