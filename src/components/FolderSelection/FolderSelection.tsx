@@ -5,7 +5,8 @@ import * as tTypes from "../../store/tree/types";
 
 import Timelines from "./Timelines";
 import React, { Component } from "react";
-import { getSourceMedia, getTimelineIndex, roundIt } from "../globalFunctions";
+import { getSourceMedia, getTimelineIndex, roundIt, safeParseSync } from "../globalFunctions";
+import { electronAPI } from "../../utils/electronAPI";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import {
@@ -302,26 +303,13 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   }
 
-  private dirSnapshot(dir: string): any {
-    // Returns Stringified DIR Object
-    const fs = require("fs");
-    const path = require("path");
-    const walkSync = (inDir: string, filelist = []) =>
-      fs.readdirSync(inDir).map((file: any) =>
-        // Todo: Flatten this in process.
-        fs.statSync(path.join(inDir, file)).isDirectory()
-          ? walkSync(path.join(inDir, file), filelist)
-          : filelist.concat(
-              path.join(inDir, file) +
-                [", "] +
-                fs.statSync(path.join(inDir, file)).mtime
-            )[0]
-      );
-    return JSON.stringify(walkSync(dir).flat(2));
+  private async dirSnapshot(dir: string): Promise<string> {
+    // Returns Stringified DIR Object using secure API
+    return await electronAPI.getDirectorySnapshot(dir);
   }
 
-  hasLocal = (dir: string) => {
-    const currentDir = this.dirSnapshot(dir);
+  hasLocal = async (dir: string): Promise<boolean> => {
+    const currentDir = await this.dirSnapshot(dir);
     if (
       localStorage.getItem(`Prestige.${dir}`) !== undefined &&
       localStorage.getItem(`Prestige.${dir}`) !== null &&
@@ -359,12 +347,13 @@ class SelectFolderZone extends Component<FolderProps> {
     return false;
   };
 
-  setLocal = (dir: string) => {
+  setLocal = async (dir: string): Promise<boolean> => {
     if (
       this.props.timeline.length > 0 &&
       this.props.tree.sourceMedia.length !== 0
     ) {
-      localStorage.setItem(`Prestige.${dir}`, this.dirSnapshot(dir));
+      const snapshot = await this.dirSnapshot(dir);
+      localStorage.setItem(`Prestige.${dir}`, snapshot);
       localStorage.setItem(
         `Prestige.tree.${dir}`,
         JSON.stringify(this.props.tree)
@@ -432,8 +421,8 @@ class SelectFolderZone extends Component<FolderProps> {
   }
 
   // Adds All Oral Annotations not Yet in Milestones into Milestones
-  addNewMediaToMilestone() {
-    this.props.annotMedia.forEach((mediaFile) => {
+  async addNewMediaToMilestone() {
+    for (const mediaFile of this.props.annotMedia) {
       if (
         mediaFile.isAnnotation &&
         !mediaFile.name.includes("oralAnnotation") &&
@@ -441,7 +430,8 @@ class SelectFolderZone extends Component<FolderProps> {
         !mediaFile.isMerged
       ) {
         // Define Fields for oralMilestone
-        const splitPath = require("path").parse(mediaFile.path).name.split("_");
+        const parsedPath = safeParseSync(mediaFile.path);
+        const splitPath = parsedPath.name.split("_");
         const tier = `${splitPath[3]}_audio`;
 
         // Create oralMilestone
@@ -466,41 +456,28 @@ class SelectFolderZone extends Component<FolderProps> {
 
         // Set mediaFile in Milestones and Add oralMilestone to OralAnnotations
         this.props.setAnnotMediaInMilestones(mediaFile.blobURL);
+
+        const annotationPath = mediaFile.path.substring(
+          0,
+          mediaFile.path.indexOf("_Annotations")
+        );
+        const fileURL = await electronAPI.pathToFileURL(annotationPath);
+
         this.props.addOralAnnotation(
           oralMilestone,
-          getTimelineIndex(
-            this.props.timeline,
-            require("file-url")(
-              mediaFile.path.substring(
-                0,
-                mediaFile.path.indexOf("_Annotations")
-              )
-            )
-          )
+          getTimelineIndex(this.props.timeline, fileURL)
         );
       }
-    });
+    }
   }
 
   // Resets Electron Cache
   // https://github.com/electron/electron/issues/4903#issuecomment-201835018
-  deleteChromeCache = () => {
-    const fs = require("fs-extra");
-    const path = require("path");
-    const app = require("electron").remote.app;
-    const chromeCacheDir = path.join(app.getPath("userData"), "Cache");
-    if (fs.existsSync(chromeCacheDir)) {
-      const files = fs.readdirSync(chromeCacheDir);
-      for (let i = 0; i < files.length; i++) {
-        const filename = path.join(chromeCacheDir, files[i]);
-        if (fs.existsSync(filename)) {
-          try {
-            fs.unlinkSync(filename);
-          } catch (e) {
-            console.log(e);
-          }
-        }
-      }
+  deleteChromeCache = async () => {
+    try {
+      await electronAPI.clearCache();
+    } catch (e) {
+      console.log('Error clearing cache:', e);
     }
   };
 
@@ -772,40 +749,34 @@ class SelectFolderZone extends Component<FolderProps> {
     console.log("#Scanning EAF", inputFile);
   };
 
-  processEAF(path: string) {
-    // Define Content
-    let content: any = "";
-    require("xml2js").parseString(
-      require("fs-extra").readFileSync(path),
-      function (err: Error, result: any) {
-        if (!err) content = result;
-        else console.log(err.stack);
-      }
-    );
+  async processEAF(path: string) {
+    try {
+      // Parse EAF file using secure API
+      const content = await electronAPI.parseEAF(path);
 
-    // Miscellaneous Local Variables
-    const fileData = content.ANNOTATION_DOCUMENT;
-    const timeSlotPointer = fileData.TIME_ORDER[0].TIME_SLOT;
-    const miles: any[] = [];
+      // Miscellaneous Local Variables
+      const fileData = content.ANNOTATION_DOCUMENT;
+      const timeSlotPointer = fileData.TIME_ORDER[0].TIME_SLOT;
+      const miles: any[] = [];
 
-    // Define SyncMedia for tempTimeline
-    const parsedPath = require("path").parse(path);
-    const fileURL = require("file-url");
-    const syncMedia: string[] = [];
-    for (let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h < l; h++)
-      syncMedia.push(
-        fileURL(
+      // Define SyncMedia for tempTimeline
+      const parsedPath = safeParseSync(path);
+      const syncMedia: string[] = [];
+      for (let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length; h < l; h++) {
+        const mediaURL = await electronAPI.pathToFileURL(
           parsedPath.dir +
             "/" +
             fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL
-        )
-      );
+        );
+        syncMedia.push(mediaURL);
+      }
 
-    // Instantiate tempTimeline
-    const tempTimeline = new Timelines({
-      syncMedia: syncMedia,
-      eafFile: fileURL(path),
-    });
+      // Instantiate tempTimeline
+      const eafFileURL = await electronAPI.pathToFileURL(path);
+      const tempTimeline = new Timelines({
+        syncMedia: syncMedia,
+        eafFile: eafFileURL,
+      });
 
     // Inline Function Definition for findTime and findAnnotTime
     const findTime = (myRef: string) => {
@@ -889,10 +860,12 @@ class SelectFolderZone extends Component<FolderProps> {
       }
     }
 
-    // Push TempTimeline to Timeline
-    // FIXME: ASYNC Unsafe
-    this.props.pushTimeline(tempTimeline);
-    console.log("EAF Processed");
+      // Push TempTimeline to Timeline
+      this.props.pushTimeline(tempTimeline);
+      console.log("EAF Processed");
+    } catch (err) {
+      console.error("Error processing EAF:", err);
+    }
   }
 
   loadWeb = () => {
@@ -927,49 +900,36 @@ class SelectFolderZone extends Component<FolderProps> {
     this.sendSnackbar("EAF Loaded");
   };
 
-  exportSession = (parentThis: any) => {
+  exportSession = async (parentThis: any) => {
     // Setting up Folder
-    const fs = require("fs-extra");
     const dir = "public/savedSession/";
     console.log("yo");
 
-    const savedAnnot = JSON.stringify(parentThis.props.annot, null, 2);
-    fs.writeFile(dir + "annot.json", savedAnnot, (err: any) => {
-      if (err) {
-        console.log("Error Found:", err);
-      }
-    });
+    try {
+      const savedAnnot = JSON.stringify(parentThis.props.annot, null, 2);
+      await electronAPI.writeFile(dir + "annot.json", savedAnnot);
 
-    const savedSourceMedia = JSON.stringify(
-      parentThis.props.sourceMedia,
-      null,
-      2
-    );
-    fs.writeFile(dir + "sourceMedia.json", savedSourceMedia, (err: any) => {
-      if (err) {
-        console.log("Error Found:", err);
-      }
+      const savedSourceMedia = JSON.stringify(
+        parentThis.props.sourceMedia,
+        null,
+        2
+      );
+      await electronAPI.writeFile(dir + "sourceMedia.json", savedSourceMedia);
       //TODO: Filter out wavs, copy the others.
-    });
 
-    const savedAnnotMedia = JSON.stringify(
-      parentThis.props.annotMedia,
-      null,
-      2
-    );
-    fs.writeFile(dir + "annotMedia.json", savedAnnotMedia, (err: any) => {
-      if (err) {
-        console.log("Error Found:", err);
-      }
+      const savedAnnotMedia = JSON.stringify(
+        parentThis.props.annotMedia,
+        null,
+        2
+      );
+      await electronAPI.writeFile(dir + "annotMedia.json", savedAnnotMedia);
       //TODO: Filter out wavs, copy the others.
-    });
 
-    /* const savedTimeline = JSON.stringify(parentThis.props.timeline, null, 2);
-    fs.writeFile(dir + "Timeline.json", savedTimeline, (err: any) => {
-      if (err) {
-        console.log("Error Found:", err);
-      }
-    }); */
+      /* const savedTimeline = JSON.stringify(parentThis.props.timeline, null, 2);
+      await electronAPI.writeFile(dir + "Timeline.json", savedTimeline); */
+    } catch (err) {
+      console.log("Error Found:", err);
+    }
   };
 
   sendSnackbar = (inMessage: string, inKey?: string, vType?: string) => {
