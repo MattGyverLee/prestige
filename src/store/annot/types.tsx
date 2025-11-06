@@ -1,7 +1,66 @@
+// =============================================================================
+// Core Type Definitions
+// =============================================================================
+
+/**
+ * @deprecated Use specific types instead of LooseObject where possible.
+ * Only use for truly dynamic data like EAF content.
+ */
 export interface LooseObject {
   [key: string]: any;
 }
 
+/**
+ * Component dimension tracking
+ */
+export interface ComponentDimensions {
+  width: number;
+  height: number;
+}
+
+/**
+ * Map of component names to their dimensions
+ */
+export type DimensionsMap = Record<string, ComponentDimensions>;
+
+/**
+ * Annotation data within a milestone
+ */
+export interface MilestoneData {
+  channel: string;
+  data: any; // EAF content is truly dynamic, 'any' is acceptable here
+  linguisticType: string;
+  locale: string;
+  mimeType: string;
+  clipStart?: number;
+  clipStop?: number;
+  duration?: number;
+}
+
+/**
+ * Milestone represents a time segment with associated annotation data
+ */
+export interface Milestone {
+  annotationID: string;
+  data: MilestoneData[];
+  startTime: number;
+  stopTime: number;
+  startId?: string;
+}
+
+/**
+ * Timeline contains milestones and sync media references
+ */
+export interface Timeline {
+  milestones: Milestone[];
+  syncMedia: string[]; // Array of file paths [videoPath, audioPath]
+  name?: string;
+  id?: string;
+}
+
+/**
+ * Annotation row in the table view
+ */
 export interface AnnotationRow {
   id: number;
   startTime: number;
@@ -12,25 +71,41 @@ export interface AnnotationRow {
   txtTransl: string;
 }
 
-export interface Milestone {
-  annotationID: string;
-  data: {
-    channel: string;
-    data: any;
-    linguisticType: string;
-    locale: string;
-    mimeType: string;
-    clipStart?: number;
-    clipStop?: number;
-    duration?: number;
-  }[];
-  startTime: number;
-  stopTime: number;
+/**
+ * Video clip definition for export
+ */
+export interface VideoClip {
+  // Video track
+  V1: string;
+  V1Start: number;
+  V1Stop: number;
+  V1Speed: number;
+
+  // Primary audio track
+  A1: string;
+  A1Start: number;
+  A1Stop: number;
+  A1Speed: number;
+  A1Vol: number;
+
+  // Secondary audio track (optional voiceover)
+  isA2: boolean;
+  A2?: string;
+  A2Start?: number;
+  A2Stop?: number;
+  A2Speed?: number;
+  A2Vol?: number;
+
+  // Metadata
+  Comment?: string;
 }
 
+/**
+ * Annotation module state
+ */
 export interface AnnotationState {
   annotationSet: any[];
-  annotationTable: any[];
+  annotationTable: AnnotationRow[];
   annotations: any[];
   audCarefulMain: boolean;
   audTranslMain: boolean;
@@ -39,7 +114,7 @@ export interface AnnotationState {
   fileInfoMain: boolean;
   prevTimeline: number;
   sayMoreMetaMain: boolean;
-  timeline: LooseObject[];
+  timeline: Timeline[];
   timelineChanged: boolean;
   timelinesInstantiated: boolean;
   txtTranscMain: boolean;
@@ -110,7 +185,7 @@ interface PushAnnotationTable {
 
 interface PushTimeline {
   type: typeof PUSH_TIMELINE;
-  payload: LooseObject;
+  payload: Timeline;
 }
 
 interface AddCategory {

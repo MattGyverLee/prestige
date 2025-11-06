@@ -52,7 +52,24 @@ interface ElectronAPI {
   ) => Promise<any>;
   getMediaMetadata: (filePath: string) => Promise<any>;
   exportVideo: (
-    clips: any[],
+    clips: Array<{
+      V1: string;
+      V1Start: number;
+      V1Stop: number;
+      V1Speed: number;
+      A1: string;
+      A1Start: number;
+      A1Stop: number;
+      A1Speed: number;
+      A1Vol: number;
+      isA2: boolean;
+      A2?: string;
+      A2Start?: number;
+      A2Stop?: number;
+      A2Speed?: number;
+      A2Vol?: number;
+      Comment?: string;
+    }>,
     outputPath: string,
     options?: any
   ) => Promise<any>;

@@ -1,4 +1,9 @@
-import { LooseObject } from "../../store/annot/types";
+import {
+  Timeline,
+  Milestone,
+  VideoClip,
+  MilestoneData,
+} from "../../store/annot/types";
 import { electronAPI } from "../../utils/electronAPI";
 import toast from "react-hot-toast";
 
@@ -16,7 +21,7 @@ import toast from "react-hot-toast";
  * - Optional secondary audio (prince/voiceover)
  */
 export async function exportVideo(
-  timeline: LooseObject,
+  timeline: Timeline,
   multiplier: number,
   vols: number[]
 ): Promise<boolean> {
@@ -35,12 +40,12 @@ export async function exportVideo(
 
     const vidSource = timeline.syncMedia[0];
     const audSource = timeline.syncMedia[1];
-    const clips: LooseObject[] = [];
+    const clips: VideoClip[] = [];
 
     toast.loading("Building export plan...", { id: "export-video" });
 
     // Build clip objects for each milestone
-    timeline.milestones.forEach((ms: LooseObject, msIndex: number) => {
+    timeline.milestones.forEach((ms: Milestone, msIndex: number) => {
       const V1 = vidSource;
       const V1Start = ms.startTime;
       const V1Stop = ms.stopTime;
@@ -274,16 +279,16 @@ export async function exportVideo(
 /**
  * Helper function to find audio clip data for a given channel in a milestone
  */
-export function getAudio(chan: string, ms: LooseObject) {
+export function getAudio(chan: string, ms: Milestone) {
   let audioFile = "";
   let audioStart = -1;
   let audioStop = -1;
 
-  ms.data.forEach((d: LooseObject) => {
+  ms.data.forEach((d: MilestoneData) => {
     if (d.channel === chan) {
       audioFile = d.data;
-      audioStart = d.clipStart;
-      audioStop = d.clipStop;
+      audioStart = d.clipStart ?? -1;
+      audioStop = d.clipStop ?? -1;
     }
   });
 

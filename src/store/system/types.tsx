@@ -1,4 +1,4 @@
-import { LooseObject } from "../annot/types";
+import { DimensionsMap } from "../annot/types";
 
 // Describing the shape of the system's slice of state
 
@@ -7,7 +7,7 @@ export interface SystemState {
   loggedIn: boolean;
   session: string;
   userName: string;
-  dimensions: LooseObject;
+  dimensions: DimensionsMap;
 }
 
 export interface DimensionObject {
