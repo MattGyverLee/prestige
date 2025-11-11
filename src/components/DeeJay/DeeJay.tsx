@@ -183,7 +183,8 @@ export class DeeJay extends Component<DeeJayProps> {
         this.loadQueue[idx] = "";
         this.waveSurfers[idx].destroy();
         this.createWaveSurfer(idx);
-        this.waveSurfers[idx].backend.peaks = [];
+        // WaveSurfer v7 no longer exposes backend.peaks directly
+        // Peaks are managed internally - empty() is called in createWaveSurfer
         this.waveSurfers[idx].clearRegions();
         this.currentPlaying[idx] = "";
         this.actingDispatch = { dispatchType: "" };
