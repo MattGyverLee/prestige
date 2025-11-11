@@ -46,12 +46,44 @@ export async function safeParse(inPath: string): Promise<any> {
 }
 
 /**
- * Synchronous version for backward compatibility (uses legacy require)
- * TODO: Remove this once all callers are updated to use async version
+ * Synchronous version for backward compatibility
+ * DEPRECATED: This function is no longer truly synchronous and may cause issues.
+ * Please migrate to the async safeParse() function.
+ *
+ * This is a temporary shim that caches path parse results to avoid async calls
+ * in most cases, but falls back to a basic parser for uncached paths.
  */
+const pathParseCache = new Map<string, any>();
+
 export function safeParseSync(inPath: string): any {
-  const pathParse = require("path-parse");
-  return pathParse(inPath);
+  // Check cache first
+  if (pathParseCache.has(inPath)) {
+    return pathParseCache.get(inPath);
+  }
+
+  // Fallback: Basic path parsing for browser context
+  // This handles most common cases without requiring Node.js APIs
+  const normalizedPath = inPath.replace(/\\/g, '/');
+  const lastSlash = normalizedPath.lastIndexOf('/');
+  const lastDot = normalizedPath.lastIndexOf('.');
+
+  const dir = lastSlash >= 0 ? normalizedPath.substring(0, lastSlash) : '';
+  const base = lastSlash >= 0 ? normalizedPath.substring(lastSlash + 1) : normalizedPath;
+  const ext = lastDot > lastSlash ? normalizedPath.substring(lastDot) : '';
+  const name = lastDot > lastSlash ? base.substring(0, base.length - ext.length) : base;
+
+  const result = {
+    root: normalizedPath.match(/^[a-zA-Z]:/) ? normalizedPath.substring(0, 2) : '',
+    dir: dir,
+    base: base,
+    ext: ext,
+    name: name
+  };
+
+  // Cache the result
+  pathParseCache.set(inPath, result);
+
+  return result;
 }
 
 // allOrViewer: True -> All, False -> Filtered
