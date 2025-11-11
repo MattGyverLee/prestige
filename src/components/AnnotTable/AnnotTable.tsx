@@ -60,7 +60,11 @@ interface DispatchProps {
 
 interface ComponentProps extends StateProps, DispatchProps {}
 
-export class AnnotationTable extends Component<ComponentProps> {
+interface ComponentState {
+  columnWidths: Array<{ columnName: string; width: number }>;
+}
+
+export class AnnotationTable extends Component<ComponentProps, ComponentState> {
   private redrawCount = 0;
   private defaultColumnWidths = [
     {
@@ -84,6 +88,13 @@ export class AnnotationTable extends Component<ComponentProps> {
       width: 200,
     },
   ];
+
+  constructor(props: ComponentProps) {
+    super(props);
+    this.state = {
+      columnWidths: this.defaultColumnWidths,
+    };
+  }
 
   componentWillUnmount(): void {
     console.log("UnMounting Annot");
@@ -401,7 +412,7 @@ export class AnnotationTable extends Component<ComponentProps> {
             <IntegratedSorting />
             <VirtualTable rowComponent={TableRow} cellComponent={dataCell} />
             <TableColumnResizing
-              defaultColumnWidths={this.defaultColumnWidths}
+              columnWidths={this.state.columnWidths}
               minColumnWidth={50}
               onColumnWidthsChange={this.setColumnWidths}
             />

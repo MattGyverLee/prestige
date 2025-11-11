@@ -112,10 +112,66 @@ function getAPI(): ElectronAPI {
 }
 
 /**
+ * Create stub API that throws informative errors
+ * Used when neither secure API nor legacy API is available
+ */
+function createStubAPI(): ElectronAPI {
+  const notAvailable = (methodName: string) => async () => {
+    throw new Error(
+      `${methodName} is not available. Please ensure the Electron preload script is loaded properly.`
+    );
+  };
+
+  return {
+    readDirectory: notAvailable('readDirectory'),
+    readFile: notAvailable('readFile'),
+    writeFile: notAvailable('writeFile'),
+    exists: notAvailable('exists'),
+    deleteFile: notAvailable('deleteFile'),
+    getDirectorySnapshot: notAvailable('getDirectorySnapshot'),
+    getFileStats: notAvailable('getFileStats'),
+    clearCache: notAvailable('clearCache'),
+    selectDirectory: notAvailable('selectDirectory'),
+    parsePath: notAvailable('parsePath'),
+    joinPath: notAvailable('joinPath'),
+    getPathSeparator: notAvailable('getPathSeparator'),
+    pathToFileURL: notAvailable('pathToFileURL'),
+    getMimeType: notAvailable('getMimeType'),
+    getCwd: notAvailable('getCwd'),
+    getUserDataPath: notAvailable('getUserDataPath'),
+    startWatcher: notAvailable('startWatcher'),
+    stopWatcher: notAvailable('stopWatcher'),
+    onFileSystemEvent: () => {},
+    removeFileSystemEventListener: () => {},
+    convertVideo: notAvailable('convertVideo'),
+    convertAudioToMP3: notAvailable('convertAudioToMP3'),
+    mergeAudioFiles: notAvailable('mergeAudioFiles'),
+    getMediaMetadata: notAvailable('getMediaMetadata'),
+    exportVideo: notAvailable('exportVideo'),
+    onFFmpegProgress: () => {},
+    removeFFmpegProgressListener: () => {},
+    parseEAF: notAvailable('parseEAF'),
+    parseXML: notAvailable('parseXML'),
+    isDev: notAvailable('isDev'),
+    getPlatform: notAvailable('getPlatform'),
+    send: () => {},
+    on: () => {},
+  };
+}
+
+/**
  * Create legacy API using require() (TEMPORARY)
  * This will be removed once full migration is complete
  */
 function createLegacyAPI(): ElectronAPI {
+  // Check if we're in a Node.js environment where require is available
+  // This prevents "require is not defined" errors in browser contexts
+  if (typeof require === 'undefined') {
+    console.error('Legacy API cannot be used: require is not defined. Ensure preload.js is loaded properly.');
+    // Return a stub API that throws errors when used
+    return createStubAPI();
+  }
+
   const fs = require("fs-extra");
   const path = require("path");
   const fileUrl = require("file-url");
