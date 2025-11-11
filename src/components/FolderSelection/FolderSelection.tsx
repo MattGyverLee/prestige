@@ -362,7 +362,7 @@ class SelectFolderZone extends Component<FolderProps> {
     if (folderPath !== this.currentFolder) {
       this.prevPath = this.currentFolder ? this.currentFolder : "";
       this.currentFolder = folderPath;
-      this.forceUpdate();
+      // Removed forceUpdate() - Redux actions below will trigger re-renders
     }
 
     // Process the folder

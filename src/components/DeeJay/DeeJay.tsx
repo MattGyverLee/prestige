@@ -168,9 +168,9 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   // Processes Reaction to State Updates
-  componentDidUpdate(): void {
-    // If currentURL and StateURL Don't Match
-    if (this.currBlob !== this.props.url) {
+  componentDidUpdate(prevProps: StateProps): void {
+    // If currentURL and StateURL Don't Match (use prevProps for comparison)
+    if (prevProps.url !== this.props.url) {
       // Add Colors for Possible Regions if Necessary
       this.regionColors = generateRegionColors();
 
@@ -191,7 +191,12 @@ export class DeeJay extends Component<DeeJayProps> {
       });
     }
 
-    if (this.props.isReady && this.lastDimensions !== this.getDimensions()) {
+    // Only update dimensions if they actually changed
+    if (
+      this.props.isReady &&
+      prevProps.isReady &&
+      this.lastDimensions !== this.getDimensions()
+    ) {
       this.lastDimensions = this.getDimensions();
       this.idxs.forEach((idx: number) => {
         this.waveSurfers[idx].setHeight(rowHeight());

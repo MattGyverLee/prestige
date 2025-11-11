@@ -45,8 +45,13 @@ interface PlayerProps extends StateProps, DispatchProps {}
 class PlayerZone extends Component<PlayerProps> {
   private player!: ReactPlayer;
 
-  componentDidUpdate() {
-    if (this.props.seek.time !== -1) {
+  componentDidUpdate(prevProps: StateProps) {
+    // Only seek if the seek prop actually changed
+    if (
+      this.props.seek.time !== -1 &&
+      (this.props.seek.time !== prevProps.seek.time ||
+        this.props.seek.scale !== prevProps.seek.scale)
+    ) {
       if (this.props.seek.scale) {
         this.player.seekTo(this.props.seek.time, this.props.seek.scale);
       } else {

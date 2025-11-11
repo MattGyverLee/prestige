@@ -100,12 +100,15 @@ export class AnnotationTable extends Component<ComponentProps, ComponentState> {
     console.log("UnMounting Annot");
   }
 
-  componentDidUpdate(): void {
+  componentDidUpdate(prevProps: StateProps): void {
     const newIndex = getTimelineIndex(this.props.timelines, this.props.url);
+    const prevIndex = getTimelineIndex(prevProps.timelines, prevProps.url);
+
+    // Only update if the timeline actually changed (comparing with prevProps, not internal state)
     if (
       this.props.timelinesInstantiated &&
-      (this.props.currentTimeline !== this.props.prevTimeline ||
-        this.props.timelineChanged)
+      (newIndex !== prevIndex ||
+        (this.props.timelineChanged && !prevProps.timelineChanged))
     ) {
       this.formatTimeline(this.props.timelines[newIndex]);
       this.props.updatePrevTimeline(newIndex);

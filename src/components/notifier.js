@@ -21,10 +21,7 @@ class Notifier extends Component {
     let notExists = false;
     for (let i = 0; i < newSnacks.length; i += 1) {
       const newSnack = newSnacks[i];
-      if (newSnack.dismissed) {
-        this.props.closeSnackbar(newSnack.key);
-        this.props.removeSnackbar(newSnack.key);
-      }
+      // Note: Moved action dispatching to componentDidUpdate to avoid side effects in shouldComponentUpdate
 
       if (notExists) continue;
       notExists =
@@ -37,9 +34,19 @@ class Notifier extends Component {
   componentDidUpdate() {
     const { notifications = [] } = this.props;
 
-    notifications.forEach(({ key, message, options = {} }) => {
+    notifications.forEach((notification) => {
+      const { key, message, options = {}, dismissed } = notification;
+
+      // Handle dismissed notifications
+      if (dismissed) {
+        this.props.closeSnackbar(key);
+        this.props.removeSnackbar(key);
+        return;
+      }
+
       // Do nothing if snackbar is already displayed
       if (this.displayed.includes(key)) return;
+
       // Display snackbar using notistack
       this.props.enqueueSnackbar(message, {
         ...options,
