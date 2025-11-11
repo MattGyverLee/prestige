@@ -185,7 +185,7 @@ export class DeeJay extends Component<DeeJayProps> {
         this.createWaveSurfer(idx);
         // WaveSurfer v7 no longer exposes backend.peaks directly
         // Peaks are managed internally - empty() is called in createWaveSurfer
-        this.waveSurfers[idx].clearRegions();
+        // Regions are also cleared when the wavesurfer is destroyed and recreated
         this.currentPlaying[idx] = "";
         this.actingDispatch = { dispatchType: "" };
       });
