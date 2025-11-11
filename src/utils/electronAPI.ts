@@ -20,6 +20,7 @@ interface ElectronAPI {
   getDirectorySnapshot: (dirPath: string) => Promise<string>;
   getFileStats: (filePath: string) => Promise<any>;
   clearCache: () => Promise<any>;
+  selectDirectory: () => Promise<string | null>;
 
   // Path Operations
   parsePath: (filePath: string) => Promise<any>;
@@ -90,17 +91,23 @@ interface ElectronAPI {
 // Check if we're in Electron with the new secure API
 const hasSecureAPI = typeof (window as any).electronAPI !== "undefined";
 
+console.log('=== Electron API Check ===');
+console.log('window.electronAPI exists:', hasSecureAPI);
+console.log('window.electronAPI:', (window as any).electronAPI);
+
 /**
  * Get the appropriate API based on environment
  */
 function getAPI(): ElectronAPI {
   // If secure API is available via contextBridge, use it
   if (hasSecureAPI) {
+    console.log('Using secure API from preload.js');
     return (window as any).electronAPI;
   }
 
   // Fallback to old require() approach (to be phased out)
   // This allows gradual migration
+  console.log('Using legacy API - preload.js not loaded');
   return createLegacyAPI();
 }
 
@@ -199,6 +206,12 @@ function createLegacyAPI(): ElectronAPI {
         });
       }
       return { success: true };
+    },
+
+    selectDirectory: async () => {
+      // This is a legacy fallback - should use secure API via preload
+      console.warn('Using legacy selectDirectory - should be using secure API');
+      return null;
     },
 
     // Path Operations

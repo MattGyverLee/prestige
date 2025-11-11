@@ -6,7 +6,7 @@
  * previously in the renderer are now handled here.
  */
 
-const { ipcMain, app } = require('electron');
+const { ipcMain, app, dialog } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 const isDev = require('electron-is-dev');
@@ -190,6 +190,25 @@ function registerIPCHandlers(mainWindow) {
       console.error('Error clearing cache:', error);
       throw error;
     }
+  });
+
+  // ==========================================================================
+  // Dialog Operations
+  // ==========================================================================
+
+  /**
+   * Show directory selection dialog
+   */
+  ipcMain.handle('dialog:selectDirectory', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    });
+
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return null;
+    }
+
+    return result.filePaths[0];
   });
 
   // ==========================================================================

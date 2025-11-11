@@ -79,6 +79,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   clearCache: () => ipcRenderer.invoke('fs:clearCache'),
 
   // ============================================================================
+  // Dialog Operations
+  // ============================================================================
+
+  /**
+   * Show directory selection dialog
+   * @returns {Promise<string|null>} Selected directory path or null if cancelled
+   */
+  selectDirectory: () => ipcRenderer.invoke('dialog:selectDirectory'),
+
+  // ============================================================================
   // Path Operations
   // ============================================================================
 

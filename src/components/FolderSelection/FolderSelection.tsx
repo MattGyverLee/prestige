@@ -63,7 +63,7 @@ interface FolderProps extends StateProps, DispatchProps {}
 
 class SelectFolderZone extends Component<FolderProps> {
   private isChokReady = false;
-  private currentFolder: any;
+  private currentFolder: string = "";
   private prevPath = "";
   private readyPlayURL = "";
   private usingStoredData = false;
@@ -274,15 +274,11 @@ class SelectFolderZone extends Component<FolderProps> {
     this.props.setTimelinesInstantiated(true);
   };
 
-  private _addDirectory(node: any): any {
-    if (node) {
-      node.directory = true;
-      node.webkitdirectory = true;
-    }
-  }
-
   private async dirSnapshot(dir: string): Promise<string> {
     // Returns Stringified DIR Object using secure API
+    if (!dir) {
+      throw new Error("Directory path is required for snapshot");
+    }
     return await electronAPI.getDirectorySnapshot(dir);
   }
 
@@ -326,6 +322,9 @@ class SelectFolderZone extends Component<FolderProps> {
   };
 
   setLocal = async (dir: string): Promise<boolean> => {
+    if (!dir) {
+      return false;
+    }
     if (
       this.props.timeline.length > 0 &&
       this.props.tree.sourceMedia.length !== 0
@@ -349,22 +348,25 @@ class SelectFolderZone extends Component<FolderProps> {
   };
 
   // Loads a Local Folder from its Path
-  async loadLocalFolder(inputElement: any) {
+  async loadLocalFolder(folderPath: string) {
+    console.log("=== loadLocalFolder called ===");
+    console.log("folderPath:", folderPath);
+
+    // Validate we have a path
+    if (!folderPath) {
+      console.log("Undefined Directory Selected - no folderPath");
+      return;
+    }
+
     // Reset the Current Folder
-    if (
-      inputElement.files[0] !== undefined &&
-      inputElement.files[0].path !== this.currentFolder
-    ) {
+    if (folderPath !== this.currentFolder) {
       this.prevPath = this.currentFolder ? this.currentFolder : "";
-      this.currentFolder = inputElement.files[0].path;
+      this.currentFolder = folderPath;
       this.forceUpdate();
     }
-    // If Undefined Selection => Log
-    // -> If First Path Not Same as Previous => Start
-    // -> If First Path Same as Previous and Chok => Start
-    if (inputElement.files.length === 0) {
-      console.log("Undefined Directory Selected");
-    } else if (this.currentFolder !== this.prevPath) {
+
+    // Process the folder
+    if (this.currentFolder !== this.prevPath) {
       console.log(`Setting Folder to: ${this.currentFolder}`);
       // here
       if (await this.hasLocal(this.currentFolder)) {
@@ -814,27 +816,23 @@ class SelectFolderZone extends Component<FolderProps> {
   showPointer = (): string => {
     return this.props.url !== "" ? "" : "◎ ";
   };
+
+  handleSelectDirectory = async () => {
+    const selectedPath = await electronAPI.selectDirectory();
+    if (selectedPath) {
+      console.log("Selected directory:", selectedPath);
+      this.loadLocalFolder(selectedPath);
+    } else {
+      console.log("Directory selection cancelled");
+    }
+  };
+
   render() {
     if (this.props.env === "electron") {
-      // https://jaketrent.com/post/select-directory-in-electron
       return (
         <div className="folder-selection">
           <span className="pointer">{this.showPointer()}</span>
-          <input
-            id="selectFolder"
-            className="custom-file-input"
-            ref={(node) => this._addDirectory(node)}
-            type="file"
-            placeholder="Select Folder"
-          />
-          <button
-            onClick={() =>
-              this.loadLocalFolder(document.querySelector("[id=selectFolder]"))
-            }
-          >
-            {" "}
-            Load Folder{" "}
-          </button>{" "}
+          <button onClick={this.handleSelectDirectory}>Select Folder</button>
           <button onClick={() => this.exportSession(this)}>Export</button>
         </div>
       );

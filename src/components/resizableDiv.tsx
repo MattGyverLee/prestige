@@ -3,11 +3,11 @@ import { useResizeDetector } from "react-resize-detector";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import * as actions from "../store";
-import { LooseObject } from "../store/annot/types";
+import { DimensionsMap } from "../store/annot/types";
 
 interface StateProps {
   // These come from the stores.
-  dimensions: LooseObject;
+  dimensions: DimensionsMap;
 }
 
 interface DispatchProps {

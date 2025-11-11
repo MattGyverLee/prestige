@@ -5,9 +5,8 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 const path = require("path");
 
-// TODO: Remove this and follow instructions here:
-// https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings
-process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
+// Import IPC handlers
+const { registerIPCHandlers, cleanup } = require("./ipc-handlers");
 
 let mainWindow;
 let imageWindow;
@@ -28,10 +27,12 @@ function createWindow() {
     title: "Prestige",
     icon: path.join(__dirname, "../src/assets/icons/png/64x64.png"),
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false, // Required for nodeIntegration to work
-      webSecurity: false,
-      sandbox: false, // Disable sandbox to fix the error
+      contextIsolation: true,      // Isolate preload from renderer
+      nodeIntegration: false,       // Disable Node.js in renderer
+      enableRemoteModule: false,    // Disable remote module
+      sandbox: false,               // Keep false for now (preload needs it)
+      webSecurity: true,            // Enable web security
+      preload: path.join(__dirname, "preload.js"),
     },
   });
   imageWindow = new BrowserWindow({
@@ -40,10 +41,12 @@ function createWindow() {
     parent: mainWindow,
     show: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webSecurity: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      enableRemoteModule: false,
       sandbox: false,
+      webSecurity: true,
+      preload: path.join(__dirname, "preload.js"),
     },
   });
   settingsWindow = new BrowserWindow({
@@ -52,10 +55,12 @@ function createWindow() {
     parent: mainWindow,
     show: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webSecurity: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      enableRemoteModule: false,
       sandbox: false,
+      webSecurity: true,
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 
@@ -114,9 +119,15 @@ app.on("ready", async () => {
   }
 
   createWindow();
+
+  // Register IPC handlers after creating window
+  registerIPCHandlers(mainWindow);
 });
 
 app.on("window-all-closed", () => {
+  // Cleanup watchers
+  cleanup();
+
   if (process.platform !== "darwin") {
     app.quit();
   }
