@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { Component } from "react";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -70,5 +69,5 @@ const mapDispatchToProps = (dispatch) =>
   bindActionCreators({ removeSnackbar }, dispatch);
 
 export default withSnackbar(
-  connect(mapStateToProps, mapDispatchToProps)(Notifier)
+  connect(mapStateToProps, mapDispatchToProps)(Notifier),
 );
