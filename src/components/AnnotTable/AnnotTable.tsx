@@ -173,16 +173,30 @@ export class AnnotationTable extends Component<ComponentProps, ComponentState> {
   setColumnWidths = (
     columnWidths: LooseObject[] = this.defaultColumnWidths,
   ) => {
-    // this.props.getSize();
-    const lastCol =
-      this.props.dimensions.AppDetails.width -
-      columnWidths[0].width -
-      columnWidths[1].width -
-      columnWidths[3].width -
-      columnWidths[4].width -
-      5;
-    columnWidths[2].width = lastCol;
-    this.setState({ columnWidths });
+    // Create a copy to avoid mutating the input array
+    const newColumnWidths = [...columnWidths];
+
+    // Defensive check for dimensions
+    if (
+      this.props.dimensions &&
+      this.props.dimensions.AppDetails &&
+      typeof this.props.dimensions.AppDetails.width === 'number'
+    ) {
+      const lastCol =
+        this.props.dimensions.AppDetails.width -
+        newColumnWidths[0].width -
+        newColumnWidths[1].width -
+        newColumnWidths[3].width -
+        newColumnWidths[4].width -
+        5;
+
+      // Ensure lastCol is a valid positive number
+      if (lastCol > 50) {
+        newColumnWidths[2].width = lastCol;
+      }
+    }
+
+    this.setState({ columnWidths: newColumnWidths });
   };
 
   render() {
