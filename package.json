@@ -72,7 +72,7 @@
     "react-hot-toast": "^2.6.0",
     "react-player": "^2.16.0",
     "react-redux": "^7.1.0",
-    "react-sizeme": "^3.0.2",
+    "react-resize-detector": "^12.3.0",
     "react-test-renderer": "^16.8.6",
     "react-xml-parser": "^1.1.8",
     "redux": "^5.0.1",

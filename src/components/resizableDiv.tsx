@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { withSize } from "react-sizeme";
+import React, { useEffect, useRef } from "react";
+import { useResizeDetector } from "react-resize-detector";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import * as actions from "../store";
@@ -18,40 +18,55 @@ interface DispatchProps {
 interface ComponentProps extends StateProps, DispatchProps {
   // These come from the local functions
   children: any;
-  size: { width: number; height: number };
   style?: any;
-  monitorHeight?: boolean;
   className: string;
   id?: string;
-  refreshMode?: string;
 }
 
-export class ResizableDiv extends Component<ComponentProps> {
-  componentDidUpdate() {
+export const ResizableDiv: React.FC<ComponentProps> = ({
+  children,
+  className,
+  dimensions,
+  updateDimensions,
+}) => {
+  const { width = 0, height = 0, ref } = useResizeDetector({
+    handleHeight: true,
+    refreshMode: "debounce",
+    refreshRate: 16,
+  });
+
+  const prevSizeRef = useRef({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const roundedWidth = Math.round(width);
+    const roundedHeight = Math.round(height);
+
     if (
-      this.props.dimensions[this.props.className].width !==
-        Math.round(this.props.size.width) ||
-      this.props.dimensions[this.props.className].height !==
-        Math.round(this.props.size.height)
+      dimensions[className] &&
+      (dimensions[className].width !== roundedWidth ||
+        dimensions[className].height !== roundedHeight)
     ) {
-      this.props.updateDimensions({
-        width: Math.round(this.props.size.width),
-        height: Math.round(this.props.size.height),
-        target: this.props.className,
-      });
+      // Only update if dimensions actually changed
+      if (
+        prevSizeRef.current.width !== roundedWidth ||
+        prevSizeRef.current.height !== roundedHeight
+      ) {
+        updateDimensions({
+          width: roundedWidth,
+          height: roundedHeight,
+          target: className,
+        });
+        prevSizeRef.current = { width: roundedWidth, height: roundedHeight };
+      }
     }
-  }
+  }, [width, height, dimensions, className, updateDimensions]);
 
-  render() {
-    return (
-      /* The inside of this section is temporary */
-      /* {Math.round(this.props.size.width)}x
-        {Math.round(this.props.size.height)}
-        <br /> */
-      <div className={this.props.className || ""}>{this.props.children}</div>
-    );
-  }
-}
+  return (
+    <div ref={ref} className={className || ""}>
+      {children}
+    </div>
+  );
+};
 
 const mapStateToProps = (state: actions.StateProps): StateProps => ({
   dimensions: state.system.dimensions,
@@ -66,7 +81,4 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
   ),
 });
 
-export default withSize({
-  monitorHeight: true,
-  refreshMode: "debounce",
-})(connect(mapStateToProps, mapDispatchToProps)(ResizableDiv));
+export default connect(mapStateToProps, mapDispatchToProps)(ResizableDiv);
