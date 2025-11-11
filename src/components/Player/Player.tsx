@@ -121,8 +121,8 @@ class PlayerZone extends Component<PlayerProps> {
               this.props.playbackRate * this.props.playbackMultiplier >= 15
                 ? 14.5
                 : this.props.playbackRate * this.props.playbackMultiplier <= 0.2
-                ? 0.2
-                : this.props.playbackRate * this.props.playbackMultiplier
+                  ? 0.2
+                  : this.props.playbackRate * this.props.playbackMultiplier
             }
             playing={this.props.playing}
             progressInterval={200}
@@ -180,7 +180,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setURL: actions.setURL,
       togglePlay: actions.togglePlay,
     },
-    dispatch
+    dispatch,
   ),
 });
 export default connect(mapStateToProps, mapDispatchToProps)(PlayerZone);

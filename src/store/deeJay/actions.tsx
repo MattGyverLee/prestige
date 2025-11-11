@@ -8,7 +8,7 @@ export function resetDeeJay(): types.DeeJayActionTypes {
 
 export function setWSVolume(
   idx: number,
-  volume: number
+  volume: number,
 ): types.DeeJayActionTypes {
   return {
     type: types.SET_WS_VOLUME,
@@ -16,7 +16,7 @@ export function setWSVolume(
   };
 }
 export function setDispatch(
-  type: types.DeeJayDispatch
+  type: types.DeeJayDispatch,
 ): types.DeeJayActionTypes {
   return {
     type: types.SET_DISPATCH,

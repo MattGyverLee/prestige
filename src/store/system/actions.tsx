@@ -12,7 +12,7 @@ export function sysHardResetApp(inString: string): types.SystemActionTypes {
   };
 }
 export function updateSession(
-  newSession: types.SystemState
+  newSession: types.SystemState,
 ): types.SystemActionTypes {
   return {
     type: types.UPDATE_SESSION,

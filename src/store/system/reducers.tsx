@@ -19,7 +19,7 @@ export const systemCleanStore: types.SystemState = {
 
 export function systemReducer(
   state = systemCleanStore,
-  action: types.SystemActionTypes
+  action: types.SystemActionTypes,
 ): types.SystemState {
   switch (action.type) {
     case types.UPDATE_SESSION: {

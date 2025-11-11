@@ -33,7 +33,7 @@ export class VolumeBar extends Component<VolumeBarProps & PassProps> {
           onChange={(e) =>
             this.props.setWSVolume(
               parseInt(e.target.id),
-              parseFloat(e.target.value) ** 0.25
+              parseFloat(e.target.value) ** 0.25,
             )
           }
           disabled={!this.props.getReady()}
@@ -52,7 +52,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       setWSVolume: actions.setWSVolume,
     },
-    dispatch
+    dispatch,
   ),
 });
 

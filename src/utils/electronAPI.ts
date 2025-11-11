@@ -43,12 +43,12 @@ interface ElectronAPI {
   convertAudioToMP3: (
     input: string,
     output: string,
-    options?: any
+    options?: any,
   ) => Promise<any>;
   mergeAudioFiles: (
     inputs: string[],
     output: string,
-    options?: any
+    options?: any,
   ) => Promise<any>;
   getMediaMetadata: (filePath: string) => Promise<any>;
   exportVideo: (
@@ -71,7 +71,7 @@ interface ElectronAPI {
       Comment?: string;
     }>,
     outputPath: string,
-    options?: any
+    options?: any,
   ) => Promise<any>;
   onFFmpegProgress: (callback: (data: any) => void) => void;
   removeFFmpegProgressListener: () => void;
@@ -109,7 +109,6 @@ function getAPI(): ElectronAPI {
  * This will be removed once full migration is complete
  */
 function createLegacyAPI(): ElectronAPI {
-  /* eslint-disable @typescript-eslint/no-var-requires */
   const fs = require("fs-extra");
   const path = require("path");
   const fileUrl = require("file-url");
@@ -244,11 +243,11 @@ function createLegacyAPI(): ElectronAPI {
     startWatcher: async () => {
       throw new Error("File watching requires secure API");
     },
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     stopWatcher: async () => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     onFileSystemEvent: () => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     removeFileSystemEventListener: () => {},
 
     // FFmpeg - NOT IMPLEMENTED in legacy
@@ -267,9 +266,9 @@ function createLegacyAPI(): ElectronAPI {
     exportVideo: async () => {
       throw new Error("FFmpeg requires secure API");
     },
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     onFFmpegProgress: () => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     removeFFmpegProgressListener: () => {},
 
     // XML/EAF
@@ -315,7 +314,7 @@ function createLegacyAPI(): ElectronAPI {
     on: (channel: string, callback: (data: any) => void) => {
       const electron = require("electron");
       electron.ipcRenderer.on(channel, (event: any, data: any) =>
-        callback(data)
+        callback(data),
       );
     },
   };

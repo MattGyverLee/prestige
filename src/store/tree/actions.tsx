@@ -52,7 +52,7 @@ export function fileAdded(inFile: types.FileDesc): types.TreeActionTypes {
   };
 }
 export function sourceMediaAdded(
-  inFile: types.FileDesc
+  inFile: types.FileDesc,
 ): types.TreeActionTypes {
   return {
     type: types.SOURCE_MEDIA_ADDED,
@@ -72,7 +72,7 @@ export function fileChanged(inFile: types.FileDesc): types.TreeActionTypes {
   };
 }
 export function sourceMediaChanged(
-  inFile: types.FileDesc
+  inFile: types.FileDesc,
 ): types.TreeActionTypes {
   return {
     type: types.SOURCE_MEDIA_CHANGED,
@@ -86,7 +86,7 @@ export function waveformAdded(waveIn: types.Wavein): types.TreeActionTypes {
   };
 }
 export function annotMediaChanged(
-  inFile: types.FileDesc
+  inFile: types.FileDesc,
 ): types.TreeActionTypes {
   return {
     type: types.ANNOT_MEDIA_CHANGED,
@@ -106,7 +106,7 @@ export function changePrevPath(inPath: string): types.TreeActionTypes {
   };
 }
 export function setAnnotMediaInMilestones(
-  blobURL: string
+  blobURL: string,
 ): types.TreeActionTypes {
   return {
     type: types.SET_ANNOT_MEDIA_IN_MILESTONES,
@@ -120,7 +120,7 @@ export function setAnnotMediaWSAllowed(blobURL: string): types.TreeActionTypes {
   };
 }
 export function setSourceMediaWSAllowed(
-  blobURL: string
+  blobURL: string,
 ): types.TreeActionTypes {
   return {
     type: types.SET_SOURCE_MEDIA_WS_ALLOWED,

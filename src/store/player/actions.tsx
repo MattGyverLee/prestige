@@ -1,7 +1,7 @@
 import * as types from "./types";
 
 export function updatePlayerAction(
-  newPlayerState: types.MediaPlayerState
+  newPlayerState: types.MediaPlayerState,
 ): types.PlayerActionTypes {
   return {
     type: types.UPDATE_PLAYER_SESSION,
@@ -11,7 +11,7 @@ export function updatePlayerAction(
 
 export function setURL(
   blobURL: string,
-  timelineIndex: number
+  timelineIndex: number,
 ): types.PlayerActionTypes {
   return {
     type: types.SET_URL,
@@ -85,7 +85,7 @@ export function setPlaybackRate(speed: number): types.PlayerActionTypes {
 }
 
 export function setPlaybackMultiplier(
-  multiplier: number
+  multiplier: number,
 ): types.PlayerActionTypes {
   return {
     type: types.SET_PLAYBACK_MULTIPLIER,
@@ -127,7 +127,7 @@ export function onVolumeChange(volume: number): types.PlayerActionTypes {
 
 export function setSeek(
   inTime: number,
-  inScale: "seconds" | "fraction" | undefined
+  inScale: "seconds" | "fraction" | undefined,
 ): types.PlayerActionTypes {
   return {
     type: types.SET_SEEK,

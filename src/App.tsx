@@ -180,10 +180,10 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       hardResetApp: actions.hardResetApp,
       onNewFolder: actions.onNewFolder,
     },
-    dispatch
+    dispatch,
   ),
 });
 
 export default withSplashScreen(
-  connect(mapStateToProps, mapDispatchToProps)(App)
+  connect(mapStateToProps, mapDispatchToProps)(App),
 );

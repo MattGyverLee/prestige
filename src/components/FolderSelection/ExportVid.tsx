@@ -23,7 +23,7 @@ import toast from "react-hot-toast";
 export async function exportVideo(
   timeline: Timeline,
   multiplier: number,
-  vols: number[]
+  vols: number[],
 ): Promise<boolean> {
   try {
     const kings: number[] = [];
@@ -259,19 +259,24 @@ export async function exportVideo(
     console.log(clips);
 
     // Get output path from user
-    const outputPath = await electronAPI.getCwd() + "/export-" + Date.now() + ".mp4";
+    const outputPath =
+      (await electronAPI.getCwd()) + "/export-" + Date.now() + ".mp4";
 
     toast.loading(`Exporting ${clips.length} clips...`, { id: "export-video" });
 
     // Call IPC method to execute ffmpeg export
     const result = await electronAPI.exportVideo(clips, outputPath);
 
-    toast.success(`Video exported successfully to ${result.output}`, { id: "export-video" });
+    toast.success(`Video exported successfully to ${result.output}`, {
+      id: "export-video",
+    });
 
     return true;
   } catch (error) {
     console.error("Export video error:", error);
-    toast.error(`Export failed: ${(error as Error).message}`, { id: "export-video" });
+    toast.error(`Export failed: ${(error as Error).message}`, {
+      id: "export-video",
+    });
     return false;
   }
 }

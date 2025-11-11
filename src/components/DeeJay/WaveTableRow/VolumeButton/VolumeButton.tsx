@@ -4,6 +4,8 @@ import { bindActionCreators } from "redux";
 import { roundIt } from "../../../globalFunctions";
 import { connect } from "react-redux";
 import toast from "react-hot-toast";
+import disabled50 from "../../../../assets/buttons/disabled50.png";
+import enabled50 from "../../../../assets/buttons/enabled50.png";
 
 interface PassProps {
   index: number;
@@ -51,25 +53,25 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
         !this.props.index
           ? "Original"
           : this.props.index === 1
-          ? "Careful"
-          : "Translation"
+            ? "Careful"
+            : "Translation"
       } Audio Set to `;
       if (this.props.volumes[this.props.index] > 0.5 ** 0.25) {
         this.sendSnackbar(
           name + "50% (Background)",
-          "vol" + this.props.index.toString()
+          "vol" + this.props.index.toString(),
         );
         this.props.setWSVolume(this.props.index, 0.5 ** 0.25);
       } else if (this.props.volumes[this.props.index] === 0) {
         this.sendSnackbar(
           name + "100% (Main)",
-          "vol" + this.props.index.toString()
+          "vol" + this.props.index.toString(),
         );
         this.props.setWSVolume(this.props.index, 1);
       } else if (this.props.volumes[this.props.index] <= 0.5 ** 0.25) {
         this.sendSnackbar(
           name + "0% (Muted)",
-          "vol" + this.props.index.toString()
+          "vol" + this.props.index.toString(),
         );
         this.props.setWSVolume(this.props.index, 0);
       }
@@ -90,7 +92,7 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
               width={50}
               height={50}
               alt=""
-              src={require("../../../../assets/buttons/disabled50.png")}
+              src={disabled50}
             />
             <div className="overlay">
               <img
@@ -103,10 +105,10 @@ export class VolumeButton extends Component<VolumeButtonProps & PassProps> {
                     this.props.getReady()
                       ? this.props.volumes[this.props.index]
                       : 0,
-                    2
+                    2,
                   ),
                 }}
-                src={require("../../../../assets/buttons/enabled50.png")}
+                src={enabled50}
               />
             </div>
           </div>
@@ -138,7 +140,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       setWSVolume: actions.setWSVolume,
     },
-    dispatch
+    dispatch,
   ),
 });
 

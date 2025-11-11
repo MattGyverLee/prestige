@@ -132,23 +132,20 @@ export const testingAnnot = {
             {
               channel: "Transcription",
               linguisticType: "Transcription_text",
-              data:
-                "Salut à tous. Dans cette nouvelle et petite serie d'episodes nous allons faire ensemble le tour de ce qu'on appelle le système Internationale d'unité, ou S.I.",
+              data: "Salut à tous. Dans cette nouvelle et petite serie d'episodes nous allons faire ensemble le tour de ce qu'on appelle le système Internationale d'unité, ou S.I.",
               locale: "ipa-ext",
               mimeType: "string",
             },
             {
               channel: "Translation",
-              data:
-                "Hello everyone, in this new and short series of episodes, we will do together a tour of what is called the Internationial System of Units, or SI.",
+              data: "Hello everyone, in this new and short series of episodes, we will do together a tour of what is called the Internationial System of Units, or SI.",
               linguisticType: "Phrase Free Translation_text",
               locale: "en",
               mimeType: "string",
             },
             {
               channel: "TranslationMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
               linguisticType: "TranslationMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -157,8 +154,7 @@ export const testingAnnot = {
             },
             {
               channel: "CarefulMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
               linguisticType: "CarefulMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -179,23 +175,20 @@ export const testingAnnot = {
             {
               channel: "Transcription",
               linguisticType: "Transcription_text",
-              data:
-                "Il s'agit d'un standard universel unitaire afin que partout dans le monde on peut s'appeler un chat un chat.",
+              data: "Il s'agit d'un standard universel unitaire afin que partout dans le monde on peut s'appeler un chat un chat.",
               locale: "ipa-ext",
               mimeType: "string",
             },
             {
               channel: "Translation",
-              data:
-                'It is a universal standard so that everywhere in the world we can call "a cat a cat".',
+              data: 'It is a universal standard so that everywhere in the world we can call "a cat a cat".',
               linguisticType: "Phrase Free Translation_text",
               locale: "en",
               mimeType: "string",
             },
             {
               channel: "TranslationMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
               linguisticType: "TranslationMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -204,8 +197,7 @@ export const testingAnnot = {
             },
             {
               channel: "CarefulMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
               linguisticType: "CarefulMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -226,23 +218,20 @@ export const testingAnnot = {
             {
               channel: "Transcription",
               linguisticType: "Transcription_text",
-              data:
-                "Et ceux quleques-soit sa langue, eh bien sûr, quand je dit partout dans le monde, c'est sans compter le Myanmar, le Liberia,",
+              data: "Et ceux quleques-soit sa langue, eh bien sûr, quand je dit partout dans le monde, c'est sans compter le Myanmar, le Liberia,",
               locale: "ipa-ext",
               mimeType: "string",
             },
             {
               channel: "Translation",
-              data:
-                "and these no matter their language, and of course when I say everywhere in the world, that's without counting Myanmar, Liberia, ",
+              data: "and these no matter their language, and of course when I say everywhere in the world, that's without counting Myanmar, Liberia, ",
               linguisticType: "Phrase Free Translation_text",
               locale: "en",
               mimeType: "string",
             },
             {
               channel: "TranslationMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
               linguisticType: "TranslationMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -251,8 +240,7 @@ export const testingAnnot = {
             },
             {
               channel: "CarefulMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
               linguisticType: "CarefulMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -286,8 +274,7 @@ export const testingAnnot = {
             },
             {
               channel: "TranslationMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
               linguisticType: "TranslationMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -296,8 +283,7 @@ export const testingAnnot = {
             },
             {
               channel: "CarefulMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
               linguisticType: "CarefulMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -318,23 +304,20 @@ export const testingAnnot = {
             {
               channel: "Transcription",
               linguisticType: "Transcription_text",
-              data:
-                "Et pour ce premier episode, on va commencer par le commencement ",
+              data: "Et pour ce premier episode, on va commencer par le commencement ",
               locale: "ipa-ext",
               mimeType: "string",
             },
             {
               channel: "Translation",
-              data:
-                "And for this first episode, we will start at the beginning, ",
+              data: "And for this first episode, we will start at the beginning, ",
               linguisticType: "Phrase Free Translation_text",
               locale: "en",
               mimeType: "string",
             },
             {
               channel: "TranslationMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
               linguisticType: "TranslationMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -343,8 +326,7 @@ export const testingAnnot = {
             },
             {
               channel: "CarefulMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Careful_Merged.mp3",
               linguisticType: "CarefulMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -378,8 +360,7 @@ export const testingAnnot = {
             },
             {
               channel: "TranslationMerged",
-              data:
-                "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
+              data: "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01_StandardAudio.wav_Annotations/Translation_Merged.mp3",
               linguisticType: "TranslationMerged",
               locale: "",
               mimeType: "audio-mp3",
@@ -436,8 +417,7 @@ export const testingAnnotMedia = [
     inMilestones: false,
     mimeType: "audio/mpeg",
     name: "Translation_Merged.mp3",
-    path:
-      "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio.wav_Annotations\\Translation_Merged.mp3",
+    path: "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio.wav_Annotations\\Translation_Merged.mp3",
     wsAllowed: true,
     waveform: false,
   },
@@ -451,8 +431,7 @@ export const testingAnnotMedia = [
     inMilestones: false,
     mimeType: "audio/mpeg",
     name: "Careful_Merged.mp3",
-    path:
-      "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio.wav_Annotations\\Careful_Merged.mp3",
+    path: "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio.wav_Annotations\\Careful_Merged.mp3",
     wsAllowed: true,
     waveform: false,
   },
@@ -469,8 +448,7 @@ export const testingSourceMedia = [
     inMilestones: false,
     mimeType: "video/mp4",
     name: "Pourquoi un mètre mesure 1m_Source_01.mp4",
-    path:
-      "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01.mp4",
+    path: "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01.mp4",
     wsAllowed: false,
     waveform: false,
   },
@@ -484,8 +462,7 @@ export const testingSourceMedia = [
     inMilestones: false,
     mimeType: "audio/mpeg",
     name: "Pourquoi un mètre mesure 1m_Source_01_StandardAudio_Normalized.mp3",
-    path:
-      "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio_Normalized.mp3",
+    path: "C:\\Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Pourquoi un mètre mesure 1m\\Pourquoi un mètre mesure 1m_Source_01_StandardAudio_Normalized.mp3",
     wsAllowed: true,
     waveform: false,
   },

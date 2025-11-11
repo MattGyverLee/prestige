@@ -42,7 +42,7 @@ export function updateRegionAlpha(
   regions: any,
   alpha: number,
   start: number,
-  end: number
+  end: number,
 ): void {
   const id = findRegion(regions, start, end);
   if (id) {
@@ -66,7 +66,7 @@ function findRegion(regions: any, start: number, end: number): string {
 export function toggleAllRegions(
   regionsOn: number,
   noIncrement: boolean,
-  wsRegions: any[]
+  wsRegions: any[],
 ): void {
   const state = store.getState();
 
@@ -83,7 +83,7 @@ export function toggleAllRegions(
           if (wsNum)
             updateRegionAlpha(wsRegions[wsNum], alpha, d.clipStart, d.clipStop);
         });
-      }
+      },
     );
   }
 }

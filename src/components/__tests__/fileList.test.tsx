@@ -22,10 +22,8 @@ const sourceMedia = [
     isAnnotation: false,
     isMerged: false,
     mimeType: "audio/mpeg",
-    name:
-      "Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
-    path:
-      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
+    name: "Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
+    path: "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio_Normalized.mp3",
     wsAllowed: true,
   },
   {
@@ -39,8 +37,7 @@ const sourceMedia = [
     isMerged: false,
     mimeType: "audio/wav",
     name: "Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav",
-    path:
-      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav",
+    path: "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source_StandardAudio.wav",
     wsAllowed: false,
   },
   {
@@ -54,8 +51,7 @@ const sourceMedia = [
     isMerged: false,
     mimeType: "video/mp4",
     name: "Messsage for Cameroon Branch - lo res_Source.mp4",
-    path:
-      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source.mp4",
+    path: "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\Messsage for Cameroon Branch - lo res_Source.mp4",
     wsAllowed: false,
   },
   {
@@ -69,8 +65,7 @@ const sourceMedia = [
     isMerged: false,
     mimeType: "video/mp4",
     name: "zPearfilm.mp4",
-    path:
-      "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\zPearfilm.mp4",
+    path: "C:Users\\thoua\\Documents\\SayMore\\French Transcription\\Sessions\\Michel\\zPearfilm.mp4",
     wsAllowed: false,
   },
 ];

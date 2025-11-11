@@ -24,7 +24,7 @@ export class Timelines {
       ) {
         dup = true;
         newMilestone.data.forEach((annot: LooseObject) =>
-          currMil.data.push(annot)
+          currMil.data.push(annot),
         );
       }
     }

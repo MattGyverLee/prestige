@@ -28,7 +28,7 @@ export const annCleanStore: types.AnnotationState = {
 
 export function annotationReducer(
   state = annCleanStore,
-  action: types.AnnotationActionTypes
+  action: types.AnnotationActionTypes,
 ): types.AnnotationState {
   switch (action.type) {
     // case types.HARD_RESET_APP: {
@@ -75,7 +75,7 @@ export function annotationReducer(
           } else {
             return m;
           }
-        }
+        },
       );
       const newM = action.payload.newMilestone;
       if (!added) {
@@ -84,7 +84,7 @@ export function annotationReducer(
       return {
         ...state,
         timeline: state.timeline.map((t: types.LooseObject, i: number) =>
-          i === action.payload.idx ? { ...t, milestones } : t
+          i === action.payload.idx ? { ...t, milestones } : t,
         ),
       };
     }
@@ -177,7 +177,7 @@ export function annotationReducer(
                       !(
                         t.eafFile === action.payload &&
                         !md.data.startsWith("file:///")
-                      )
+                      ),
                   ),
                 };
               })
@@ -197,7 +197,7 @@ export function annotationReducer(
               return { ...annot, audTransl: "" };
             }
             return annot;
-          }
+          },
         ),
         timeline: tempTimeline,
         timelineChanged: true,

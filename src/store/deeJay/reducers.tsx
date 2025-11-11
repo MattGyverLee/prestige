@@ -8,7 +8,7 @@ export const deeJayCleanStore: types.DeeJayState = {
 
 export function deeJayReducer(
   state = deeJayCleanStore,
-  action: types.DeeJayActionTypes
+  action: types.DeeJayActionTypes,
 ): types.DeeJayState {
   switch (action.type) {
     case types.RESET_DEE_JAY: {
@@ -21,7 +21,7 @@ export function deeJayReducer(
       return {
         ...state,
         volumes: state.volumes.map((v: number, idx: number) =>
-          idx === action.payload.idx ? action.payload.volume : v
+          idx === action.payload.idx ? action.payload.volume : v,
         ),
       };
     }

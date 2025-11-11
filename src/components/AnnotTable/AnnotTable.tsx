@@ -160,7 +160,7 @@ export class AnnotationTable extends Component<ComponentProps> {
     }
   };
   setColumnWidths = (
-    columnWidths: LooseObject[] = this.defaultColumnWidths
+    columnWidths: LooseObject[] = this.defaultColumnWidths,
   ) => {
     // this.props.getSize();
     const lastCol =
@@ -438,7 +438,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setDispatch: actions.setDispatch,
       setTimelineChanged: actions.setTimelineChanged,
     },
-    dispatch
+    dispatch,
   ),
 });
 export default connect(mapStateToProps, mapDispatchToProps)(AnnotationTable);

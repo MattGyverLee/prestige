@@ -8,7 +8,7 @@ export function hardResetApp(inString: string): types.AnnotationActionTypes {
 }
 
 export function loadAnnot(
-  inState: types.AnnotationState
+  inState: types.AnnotationState,
 ): types.AnnotationActionTypes {
   return {
     type: types.LOAD_ANNOT,
@@ -18,7 +18,7 @@ export function loadAnnot(
 
 export function onNewFolder(
   inString: string,
-  blobURL?: string
+  blobURL?: string,
 ): types.AnnotationActionTypes {
   return {
     type: types.ON_NEW_FOLDER,
@@ -35,7 +35,7 @@ export function onReloadFolder(inString: string): types.AnnotationActionTypes {
 
 export function addOralAnnotation(
   newMilestone: types.Milestone,
-  idx: number
+  idx: number,
 ): types.AnnotationActionTypes {
   return {
     type: types.ADD_ORAL_ANNOTATION,
@@ -49,7 +49,7 @@ export function addCategory(inString: string): types.AnnotationActionTypes {
   };
 }
 export function pushAnnotation(
-  milestones: types.Milestone[]
+  milestones: types.Milestone[],
 ): types.AnnotationActionTypes {
   return {
     type: types.PUSH_ANNOTATION,
@@ -57,7 +57,7 @@ export function pushAnnotation(
   };
 }
 export function pushAnnotationTable(
-  inTable: types.AnnotationRow[]
+  inTable: types.AnnotationRow[],
 ): types.AnnotationActionTypes {
   return {
     type: types.PUSH_ANNOTATION_TABLE,
@@ -65,7 +65,7 @@ export function pushAnnotationTable(
   };
 }
 export function pushTimeline(
-  timeline: types.LooseObject
+  timeline: types.LooseObject,
 ): types.AnnotationActionTypes {
   return {
     type: types.PUSH_TIMELINE,
@@ -73,7 +73,7 @@ export function pushTimeline(
   };
 }
 export function toggleAudcarefulMain(
-  toggle?: boolean
+  toggle?: boolean,
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDCAREFUL_MAIN,
@@ -81,7 +81,7 @@ export function toggleAudcarefulMain(
   };
 }
 export function toggleAudtranslMain(
-  toggle?: boolean
+  toggle?: boolean,
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDTRANSL_MAIN,
@@ -89,7 +89,7 @@ export function toggleAudtranslMain(
   };
 }
 export function toggleAudtranscMain(
-  toggle?: boolean
+  toggle?: boolean,
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDTRANSC_MAIN,
@@ -103,7 +103,7 @@ export function toggleTranscSub(toggle?: boolean): types.AnnotationActionTypes {
   };
 }
 export function toggleTxttranslMain(
-  toggle?: boolean
+  toggle?: boolean,
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_TXTTRANSL_MAIN,
@@ -111,7 +111,7 @@ export function toggleTxttranslMain(
   };
 }
 export function toggleAudtranslSub(
-  toggle?: boolean
+  toggle?: boolean,
 ): types.AnnotationActionTypes {
   return {
     type: types.TOGGLE_AUDTRANSL_SUB,
@@ -137,7 +137,7 @@ export function updatePrevTimeline(idx: number): types.AnnotationActionTypes {
   };
 }
 export function setTimelinesInstantiated(
-  bln: boolean
+  bln: boolean,
 ): types.AnnotationActionTypes {
   return {
     type: types.SET_TIMELINES_INSTANTIATED,

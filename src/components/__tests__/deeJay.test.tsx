@@ -56,7 +56,7 @@ it("renders deeJay without crashing", () => {
     deejayMaster = renderer.create(
       <Provider store={store}>
         <ConnectedDeeJay {...props} />
-      </Provider>
+      </Provider>,
     );
   });
   expect(deejayMaster).toMatchSnapshot();

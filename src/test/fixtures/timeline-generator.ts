@@ -1,4 +1,4 @@
-import { Timeline, Milestone, MilestoneData } from '../../store/annot/types';
+import { Timeline, Milestone, MilestoneData } from "../../store/annot/types";
 
 export interface TimelineGeneratorOptions {
   numMilestones: number;
@@ -23,7 +23,9 @@ export interface TimelineGeneratorOptions {
  *   hasTranslation: true
  * });
  */
-export function generateTestTimeline(options: TimelineGeneratorOptions): Timeline {
+export function generateTestTimeline(
+  options: TimelineGeneratorOptions,
+): Timeline {
   const {
     numMilestones,
     videoPath,
@@ -32,7 +34,7 @@ export function generateTestTimeline(options: TimelineGeneratorOptions): Timelin
     hasTranslation = true,
     avgDuration = 5,
     withClipTimes = true,
-    speedVariation = false
+    speedVariation = false,
   } = options;
 
   const milestones: Milestone[] = [];
@@ -44,17 +46,17 @@ export function generateTestTimeline(options: TimelineGeneratorOptions): Timelin
       annotationID: `a${i + 1}`,
       startTime: currentTime,
       stopTime: currentTime + duration,
-      data: []
+      data: [],
     };
 
     // Add CarefulMerged if enabled (this is the "careful" annotation track)
     if (hasCareful) {
       const carefulData: MilestoneData = {
-        channel: 'CarefulMerged',
+        channel: "CarefulMerged",
         data: `${audioPath}_Annotations/Careful_Merged.mp3`,
-        linguisticType: 'default-lt',
-        locale: 'fr',
-        mimeType: 'audio/mpeg'
+        linguisticType: "default-lt",
+        locale: "fr",
+        mimeType: "audio/mpeg",
       };
 
       if (withClipTimes) {
@@ -69,11 +71,11 @@ export function generateTestTimeline(options: TimelineGeneratorOptions): Timelin
     // Add TranslationMerged if enabled (this is the "translation" track)
     if (hasTranslation) {
       const translationData: MilestoneData = {
-        channel: 'TranslationMerged',
+        channel: "TranslationMerged",
         data: `${audioPath}_Annotations/Translation_Merged.mp3`,
-        linguisticType: 'default-lt',
-        locale: 'en',
-        mimeType: 'audio/mpeg'
+        linguisticType: "default-lt",
+        locale: "en",
+        mimeType: "audio/mpeg",
       };
 
       if (withClipTimes) {
@@ -93,7 +95,7 @@ export function generateTestTimeline(options: TimelineGeneratorOptions): Timelin
     milestones,
     syncMedia: [videoPath, audioPath],
     name: `Test Timeline (${numMilestones} milestones)`,
-    id: 'test-timeline-' + Date.now()
+    id: "test-timeline-" + Date.now(),
   };
 }
 
@@ -104,50 +106,54 @@ export const testScenarios = {
   /**
    * Simple: 3 milestones, video + audio only (no voiceovers)
    */
-  simple: (): Timeline => generateTestTimeline({
-    numMilestones: 3,
-    videoPath: '/test/fixtures/media/test-video-5s.mp4',
-    audioPath: '/test/fixtures/media/test-audio-5s.wav',
-    hasCareful: false,
-    hasTranslation: false,
-    avgDuration: 1.5
-  }),
+  simple: (): Timeline =>
+    generateTestTimeline({
+      numMilestones: 3,
+      videoPath: "/test/fixtures/media/test-video-5s.mp4",
+      audioPath: "/test/fixtures/media/test-audio-5s.wav",
+      hasCareful: false,
+      hasTranslation: false,
+      avgDuration: 1.5,
+    }),
 
   /**
    * Complex: 10 milestones with multilingual audio tracks
    */
-  complex: (): Timeline => generateTestTimeline({
-    numMilestones: 10,
-    videoPath: '/test/fixtures/media/test-video-30s.mp4',
-    audioPath: '/test/fixtures/media/test-audio-30s.wav',
-    hasCareful: true,
-    hasTranslation: true,
-    avgDuration: 3
-  }),
+  complex: (): Timeline =>
+    generateTestTimeline({
+      numMilestones: 10,
+      videoPath: "/test/fixtures/media/test-video-30s.mp4",
+      audioPath: "/test/fixtures/media/test-audio-30s.wav",
+      hasCareful: true,
+      hasTranslation: true,
+      avgDuration: 3,
+    }),
 
   /**
    * Edge case: Single very long milestone
    */
-  singleLong: (): Timeline => generateTestTimeline({
-    numMilestones: 1,
-    videoPath: '/test/fixtures/media/test-video-30s.mp4',
-    audioPath: '/test/fixtures/media/test-audio-30s.wav',
-    hasCareful: true,
-    hasTranslation: true,
-    avgDuration: 30
-  }),
+  singleLong: (): Timeline =>
+    generateTestTimeline({
+      numMilestones: 1,
+      videoPath: "/test/fixtures/media/test-video-30s.mp4",
+      audioPath: "/test/fixtures/media/test-audio-30s.wav",
+      hasCareful: true,
+      hasTranslation: true,
+      avgDuration: 30,
+    }),
 
   /**
    * Stress test: Many short milestones
    */
-  manyShort: (): Timeline => generateTestTimeline({
-    numMilestones: 50,
-    videoPath: '/test/fixtures/media/test-video-30s.mp4',
-    audioPath: '/test/fixtures/media/test-audio-30s.wav',
-    hasCareful: true,
-    hasTranslation: false,
-    avgDuration: 0.6
-  }),
+  manyShort: (): Timeline =>
+    generateTestTimeline({
+      numMilestones: 50,
+      videoPath: "/test/fixtures/media/test-video-30s.mp4",
+      audioPath: "/test/fixtures/media/test-audio-30s.wav",
+      hasCareful: true,
+      hasTranslation: false,
+      avgDuration: 0.6,
+    }),
 
   /**
    * Kings and Princes: Timeline for testing volume logic
@@ -156,26 +162,27 @@ export const testScenarios = {
   kingsAndPrinces: (): { timeline: Timeline; volumes: number[] } => ({
     timeline: generateTestTimeline({
       numMilestones: 5,
-      videoPath: '/test/fixtures/media/test-video-30s.mp4',
-      audioPath: '/test/fixtures/media/test-audio-30s.wav',
+      videoPath: "/test/fixtures/media/test-video-30s.mp4",
+      audioPath: "/test/fixtures/media/test-audio-30s.wav",
       hasCareful: true,
       hasTranslation: true,
-      avgDuration: 5
+      avgDuration: 5,
     }),
-    volumes: [0.8, 0.3, 0] // King=video audio (0.8), Prince=careful voiceover (0.3), Silent=translation (0)
+    volumes: [0.8, 0.3, 0], // King=video audio (0.8), Prince=careful voiceover (0.3), Silent=translation (0)
   }),
 
   /**
    * No clips: Timeline with missing clip times (edge case)
    */
-  noClipTimes: (): Timeline => generateTestTimeline({
-    numMilestones: 3,
-    videoPath: '/test/fixtures/media/test-video-5s.mp4',
-    audioPath: '/test/fixtures/media/test-audio-5s.wav',
-    hasCareful: true,
-    hasTranslation: false,
-    withClipTimes: false
-  })
+  noClipTimes: (): Timeline =>
+    generateTestTimeline({
+      numMilestones: 3,
+      videoPath: "/test/fixtures/media/test-video-5s.mp4",
+      audioPath: "/test/fixtures/media/test-audio-5s.wav",
+      hasCareful: true,
+      hasTranslation: false,
+      withClipTimes: false,
+    }),
 };
 
 /**
@@ -192,8 +199,8 @@ export function generateAnnotationTable(numRows: number = 5) {
       stopTime: time + 3,
       txtTransc: `Annotation ${i + 1}`,
       txtTransl: `Translation ${i + 1}`,
-      audCareful: i % 2 === 0 ? 'careful-audio.mp3' : undefined,
-      audTransl: i % 3 === 0 ? 'transl-audio.mp3' : undefined
+      audCareful: i % 2 === 0 ? "careful-audio.mp3" : undefined,
+      audTransl: i % 3 === 0 ? "transl-audio.mp3" : undefined,
     });
     time += 3.5;
   }

@@ -5,22 +5,22 @@ import { roundIt } from "../globalFunctions";
 export function clipTime(
   idx: number,
   milestone: any,
-  startOrStop: boolean
+  startOrStop: boolean,
 ): number {
   return idx === 0
     ? startOrStop
       ? milestone.startTime
       : milestone.stopTime
     : startOrStop
-    ? milestone.data[0].clipStart
-    : milestone.data[0].clipStop;
+      ? milestone.data[0].clipStart
+      : milestone.data[0].clipStop;
 }
 
 // Calculates PlaybackRate for Source/Video Based on Milestone or Milestone and Dispatch
 export function calcPlaybackRate(
   milestone: any,
   dispatch?: DeeJayDispatch,
-  dispatch2?: DeeJayDispatch
+  dispatch2?: DeeJayDispatch,
 ): number {
   const playbackRate =
     ((dispatch2 ? dispatch2.clipStop : milestone.stopTime) -
@@ -36,10 +36,10 @@ export function calcRelativeTime(
   clipStart1: number,
   duration: number,
   playbackRate: number,
-  clipStart2: number
+  clipStart2: number,
 ): number {
   return roundIt(
     ((currTime1 - clipStart1) * playbackRate + clipStart2) / duration,
-    3
+    3,
   );
 }

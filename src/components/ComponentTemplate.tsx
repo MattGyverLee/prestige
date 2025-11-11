@@ -46,7 +46,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       // annotations: state.annot.annotations,
     },
-    dispatch
+    dispatch,
   ),
 });
 export default connect(mapStateToProps, mapDispatchToProps)(ComponentZone);

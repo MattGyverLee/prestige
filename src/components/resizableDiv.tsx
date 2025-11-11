@@ -62,7 +62,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
     {
       updateDimensions: actions.updateDimensions,
     },
-    dispatch
+    dispatch,
   ),
 });
 

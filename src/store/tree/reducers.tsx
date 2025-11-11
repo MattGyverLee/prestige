@@ -17,7 +17,7 @@ export const treeCleanStore: types.TreeState = {
 
 export function treeReducer(
   state = treeCleanStore,
-  action: types.TreeActionTypes
+  action: types.TreeActionTypes,
 ): types.TreeState {
   switch (action.type) {
     case types.ON_NEW_FOLDER: {
@@ -58,7 +58,7 @@ export function treeReducer(
     }
     case types.FILE_CHANGED: {
       const tempState = state.availableFiles.filter(
-        (file) => file.name !== action.payload.file.name
+        (file) => file.name !== action.payload.file.name,
       );
       // let tempState: any[] = []
       return {
@@ -68,7 +68,7 @@ export function treeReducer(
     }
     case types.SOURCE_MEDIA_CHANGED: {
       const tempState = state.sourceMedia.filter(
-        (file) => file.name !== action.payload.file.name
+        (file) => file.name !== action.payload.file.name,
       );
       return {
         ...state,
@@ -77,7 +77,7 @@ export function treeReducer(
     }
     case types.ANNOT_MEDIA_CHANGED: {
       const tempState = state.annotMedia.filter(
-        (file) => file.name !== action.payload.file.name
+        (file) => file.name !== action.payload.file.name,
       );
       return {
         ...state,
@@ -89,7 +89,7 @@ export function treeReducer(
         ...state,
         sourceMedia: [
           ...state.sourceMedia.filter(
-            (file) => file.blobURL !== action.payload
+            (file) => file.blobURL !== action.payload,
           ),
         ],
         annotMedia: [
@@ -97,19 +97,18 @@ export function treeReducer(
         ],
         availableFiles: [
           ...state.availableFiles.filter(
-            (file) => file.blobURL !== action.payload
+            (file) => file.blobURL !== action.payload,
           ),
         ],
       };
     }
     case types.WAVEFORM_ADDED: {
-      const tempFiltered = (action.payload.sourceAnnot
-        ? state.sourceMedia
-        : state.annotMedia
+      const tempFiltered = (
+        action.payload.sourceAnnot ? state.sourceMedia : state.annotMedia
       ).map((file) =>
         file.blobURL === action.payload.ref
           ? { ...file, waveform: action.payload.wavedata }
-          : file
+          : file,
       );
       if (action.payload.sourceAnnot) {
         return {

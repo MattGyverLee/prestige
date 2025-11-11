@@ -66,7 +66,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       togglePlay: actions.togglePlay,
       setURL: actions.setURL,
     },
-    dispatch
+    dispatch,
   ),
 });
 

@@ -17,7 +17,8 @@ export function getInterMilestone(time: number, wsNum?: number): number {
             data: m.data.filter(
               (d: LooseObject) =>
                 wsNum === 0 ||
-                d.channel === `${wsNum === 1 ? "Careful" : "Translation"}Merged`
+                d.channel ===
+                  `${wsNum === 1 ? "Careful" : "Translation"}Merged`,
             ),
           };
         })[0];
@@ -30,7 +31,7 @@ export function findNextMilestoneIndex(milestone: any): number {
   return state.annot.currentTimeline === -1
     ? -1
     : state.annot.timeline[state.annot.currentTimeline].milestones.findIndex(
-        (m: any) => m.startTime === milestone.startTime
+        (m: any) => m.startTime === milestone.startTime,
       );
 }
 
@@ -46,10 +47,10 @@ export function findLastMilestoneIndex(wsNum: number): number {
         .map((m: any, idx: number) =>
           m.data.findIndex(
             (d: any) =>
-              d.channel === `${wsNum === 1 ? "Careful" : "Translation"}Merged`
+              d.channel === `${wsNum === 1 ? "Careful" : "Translation"}Merged`,
           ) === -1
             ? 0
-            : idx
+            : idx,
         )
         .reduce((a: number, b: number) => (a > b ? a : b), 0);
 }
@@ -59,7 +60,7 @@ export function getCurrentMilestone(
   wsNum: number,
   currTime: number,
   dispatch: DeeJayDispatch = { dispatchType: "" },
-  filter?: number
+  filter?: number,
 ) {
   const state = store.getState();
   if (!filter) filter = wsNum;
@@ -87,7 +88,7 @@ export function getCurrentMilestone(
         ...m,
         data: m.data.filter(
           (d: LooseObject) =>
-            (filter === 0 && wsNum === 0) || d.channel === channel
+            (filter === 0 && wsNum === 0) || d.channel === channel,
         ),
       };
     })[0];
@@ -105,10 +106,10 @@ export function getFirstMilestone(wsNum: number, filter?: number) {
         ...m,
         data: m.data.filter(
           (d: LooseObject) =>
-            (filter === 0 && wsNum === 0) || d.channel === channel
+            (filter === 0 && wsNum === 0) || d.channel === channel,
         ),
       };
-    }
+    },
   )[0];
 }
 

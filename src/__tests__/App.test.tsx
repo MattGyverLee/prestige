@@ -46,7 +46,7 @@ it("renders without crashing", () => {
     appMaster = renderer.create(
       <Provider store={store}>
         <ConnectedApp />
-      </Provider>
+      </Provider>,
     );
   });
   expect(appMaster).toMatchSnapshot();

@@ -1,9 +1,8 @@
 import WaveSurfer from "wavesurfer.js";
+import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import store from "../../store/store";
 
 export function createWaveSurfer(idx: number): WaveSurfer {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const regionsPlugin = require("../../../node_modules/wavesurfer.js/dist/plugin/wavesurfer.regions");
   const newWS = WaveSurfer.create({
     container: "#waveform" + idx.toString(),
     barWidth: 1,
@@ -11,11 +10,10 @@ export function createWaveSurfer(idx: number): WaveSurfer {
     backend: "MediaElement",
     progressColor: "#fff",
     cursorColor: "#4a74a5",
-    responsive: true,
     waveColor: "#00ccff",
     hideScrollbar: true,
     height: 128,
-    plugins: [regionsPlugin.create()],
+    plugins: [RegionsPlugin.create()],
   });
   newWS.empty();
   newWS.setVolume(+(idx === 0));
@@ -39,7 +37,7 @@ export function rowHeight() {
       (state.system.dimensions.AppBody.height -
         130 -
         state.system.dimensions.AppPlayer.height) /
-        3
+        3,
     );
     return idealHeight;
   } else {

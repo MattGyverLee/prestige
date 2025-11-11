@@ -21,8 +21,8 @@ export function findValidSourceAudio(): LooseObject[] {
     (sa: LooseObject) =>
       sa.blobURL.includes("_StandardAudio_Normalized.mp3") &&
       getSyncMedia().indexOf(
-        sa.blobURL.substring(0, sa.blobURL.indexOf("_Normalized.mp3")) + ".wav"
-      ) !== -1
+        sa.blobURL.substring(0, sa.blobURL.indexOf("_Normalized.mp3")) + ".wav",
+      ) !== -1,
   );
 }
 
@@ -32,9 +32,9 @@ function findValidAnnotAudio(idx: number): LooseObject[] {
     state.tree.annotMedia,
     true,
     state.annot.currentTimeline,
-    state.annot.timeline
+    state.annot.timeline,
   ).filter((aa: LooseObject) =>
-    aa.blobURL.includes((idx - 1 ? "Translation" : "Careful") + "_Merged.mp3")
+    aa.blobURL.includes((idx - 1 ? "Translation" : "Careful") + "_Merged.mp3"),
   );
 }
 

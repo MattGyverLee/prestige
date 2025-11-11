@@ -1,17 +1,7 @@
 import * as types from "./types";
 
 export const speeds: number[] = [
-  0.2,
-  0.33,
-  0.5,
-  0.66,
-  0.8,
-  1,
-  1.25,
-  1.5,
-  2,
-  3,
-  5,
+  0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5, 2, 3, 5,
 ];
 
 export const playerCleanStore: types.MediaPlayerState = {
@@ -34,7 +24,7 @@ export const playerCleanStore: types.MediaPlayerState = {
 
 export function playerReducer(
   state = playerCleanStore,
-  action: types.PlayerActionTypes
+  action: types.PlayerActionTypes,
 ): types.MediaPlayerState {
   switch (action.type) {
     case types.HARD_RESET_APP: {
@@ -131,8 +121,8 @@ export function playerReducer(
           action.payload >= 15
             ? 14.5
             : action.payload <= 0.2
-            ? 0.2
-            : action.payload,
+              ? 0.2
+              : action.payload,
       };
     }
     case types.SET_PLAYBACK_MULTIPLIER: {

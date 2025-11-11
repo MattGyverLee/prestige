@@ -48,12 +48,11 @@ it("renders annotTable without crashing", () => {
     annotationTableMaster = renderer.create(
       <Provider store={store}>
         <ConnectedAnnotationTable {...props} />
-      </Provider>
+      </Provider>,
     );
   });
   expect(annotationTableMaster).toMatchSnapshot();
-  const annotationTableHandle: AnnotationTable = annotationTableMaster.root.findByType(
-    AnnotationTable
-  ).instance;
+  const annotationTableHandle: AnnotationTable =
+    annotationTableMaster.root.findByType(AnnotationTable).instance;
   expect(annotationTableHandle).toBeVisible();
 });

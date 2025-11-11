@@ -152,7 +152,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setDispatch: actions.setDispatch,
       toggleLoop: actions.toggleLoop,
     },
-    dispatch
+    dispatch,
   ),
 });
 

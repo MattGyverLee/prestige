@@ -27,7 +27,7 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
   for (let i = 0, l = timelines.length; i < l; i++) {
     if (
       timelines[i].eafFile.includes(
-        blobURL.substring(0, blobURL.lastIndexOf("."))
+        blobURL.substring(0, blobURL.lastIndexOf(".")),
       )
     ) {
       return i;
@@ -50,7 +50,6 @@ export async function safeParse(inPath: string): Promise<any> {
  * TODO: Remove this once all callers are updated to use async version
  */
 export function safeParseSync(inPath: string): any {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const pathParse = require("path-parse");
   return pathParse(inPath);
 }
@@ -58,12 +57,12 @@ export function safeParseSync(inPath: string): any {
 // allOrViewer: True -> All, False -> Filtered
 export function getSourceMedia(
   sourceMedia: LooseObject[],
-  allOrViewer: boolean
+  allOrViewer: boolean,
 ): LooseObject[] {
   const sourceVids = sourceMedia
     .filter((file) => !file.isAnnotation && file.mimeType.startsWith("video"))
     .sort((a: LooseObject, b: LooseObject) =>
-      sortName(a.name.toLowerCase(), b.name.toLowerCase())
+      sortName(a.name.toLowerCase(), b.name.toLowerCase()),
     );
   const mp3s: string[] = [];
   const sourceAud = sourceAudio(sourceMedia, allOrViewer)
@@ -92,17 +91,17 @@ export function getSourceMedia(
 
 export function sourceAudio(
   sourceMedia: LooseObject[],
-  allOrViewer: boolean
+  allOrViewer: boolean,
 ): LooseObject[] {
   const sourceAud = sourceMedia
     .filter(
       (file) =>
         !file.isAnnotation &&
         file.mimeType.startsWith("audio") &&
-        (!file.isMerged || allOrViewer)
+        (!file.isMerged || allOrViewer),
     )
     .sort((a: LooseObject, b: LooseObject) =>
-      sortName(a.name.toLowerCase(), b.name.toLowerCase())
+      sortName(a.name.toLowerCase(), b.name.toLowerCase()),
     );
   return [...sourceAud];
 }
@@ -111,7 +110,7 @@ export function annotAudio(
   annotMedia: LooseObject[],
   splitOrMerged: boolean,
   timelineIdx: number,
-  timelines: any[]
+  timelines: any[],
   // true: merged only, false: split only
 ): LooseObject[] {
   const annotAud = annotMedia
@@ -122,11 +121,11 @@ export function annotAudio(
         (splitOrMerged ? file.isMerged : !file.isMerged) &&
         getTimelineIndex(
           timelines,
-          file.blobURL.substring(0, file.blobURL.indexOf("_Annotations"))
-        ) === timelineIdx
+          file.blobURL.substring(0, file.blobURL.indexOf("_Annotations")),
+        ) === timelineIdx,
     )
     .sort((a: LooseObject, b: LooseObject) =>
-      sortName(a.name.toLowerCase(), b.name.toLowerCase())
+      sortName(a.name.toLowerCase(), b.name.toLowerCase()),
     );
   return [...annotAud];
 }

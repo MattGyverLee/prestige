@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import * as aTypes from "../../store/annot/types";
 import * as actions from "../../store";
 import * as tTypes from "../../store/tree/types";
@@ -89,7 +88,7 @@ class SelectFolderZone extends Component<FolderProps> {
 
   // Helper: Processes File and Returns File Definition
   private chokFileDescribe = async (
-    path: string
+    path: string,
   ): Promise<aTypes.LooseObject> => {
     // Define Fields for Returned FileDef using secure APIs
     const parsedPath = safeParseSync(path);
@@ -252,7 +251,7 @@ class SelectFolderZone extends Component<FolderProps> {
       if (this.readyPlayURL !== "") {
         props.setURL(
           this.readyPlayURL,
-          getTimelineIndex(this.props.timeline, this.readyPlayURL)
+          getTimelineIndex(this.props.timeline, this.readyPlayURL),
         );
         this.readyPlayURL = "";
       } else if (this.props.sourceMedia.length !== 0) {
@@ -335,11 +334,11 @@ class SelectFolderZone extends Component<FolderProps> {
       localStorage.setItem(`Prestige.${dir}`, snapshot);
       localStorage.setItem(
         `Prestige.tree.${dir}`,
-        JSON.stringify(this.props.tree)
+        JSON.stringify(this.props.tree),
       );
       localStorage.setItem(
         `Prestige.annot.${dir}`,
-        JSON.stringify(this.props.annot)
+        JSON.stringify(this.props.annot),
       );
       const time = Date.now() + 0;
       const timeString = time.toString();
@@ -438,13 +437,13 @@ class SelectFolderZone extends Component<FolderProps> {
 
         const annotationPath = mediaFile.path.substring(
           0,
-          mediaFile.path.indexOf("_Annotations")
+          mediaFile.path.indexOf("_Annotations"),
         );
         const fileURL = await electronAPI.pathToFileURL(annotationPath);
 
         this.props.addOralAnnotation(
           oralMilestone,
-          getTimelineIndex(this.props.timeline, fileURL)
+          getTimelineIndex(this.props.timeline, fileURL),
         );
       }
     }
@@ -485,7 +484,7 @@ class SelectFolderZone extends Component<FolderProps> {
       const pathSep = await electronAPI.getPathSeparator();
       const annotDir = inputFiles[0].substring(
         0,
-        inputFiles[0].lastIndexOf(pathSep) + 1
+        inputFiles[0].lastIndexOf(pathSep) + 1,
       );
 
       const outputPath = annotDir + ctString + "_Merged.mp3";
@@ -494,7 +493,7 @@ class SelectFolderZone extends Component<FolderProps> {
       this.sendSnackbar(
         "Merging " +
           (carefulOrTranslation ? "Careful Speech" : "Translation") +
-          " files."
+          " files.",
       );
 
       // Use secure API to merge audio files
@@ -505,7 +504,7 @@ class SelectFolderZone extends Component<FolderProps> {
           bitrate: "128k",
           channels: 1,
           silencePath: cwd + "/public/silence.wav",
-        }
+        },
       );
 
       console.log("Merging finished!");
@@ -558,18 +557,18 @@ class SelectFolderZone extends Component<FolderProps> {
 
         // Add Milestone to Timeline
         const timelineURL = await electronAPI.pathToFileURL(
-          annotDir.substring(0, annotDir.indexOf("_Annotations"))
+          annotDir.substring(0, annotDir.indexOf("_Annotations")),
         );
         this.props.addOralAnnotation(
           oralMilestone,
-          getTimelineIndex(this.props.timeline, timelineURL)
+          getTimelineIndex(this.props.timeline, timelineURL),
         );
         this.props.setTimelineChanged(true);
       }
 
       this.sendSnackbar(
         (carefulOrTranslation ? "Careful Speech" : "Translation") +
-          " annotations merged!"
+          " annotations merged!",
       );
       this.props.setAnnotMediaWSAllowed(mergedFileURL);
       await this.setLocal(this.currentFolder);
@@ -578,7 +577,7 @@ class SelectFolderZone extends Component<FolderProps> {
       this.sendSnackbar(
         "File Access error: " + (err as any).message,
         undefined,
-        "error"
+        "error",
       );
     }
   };
@@ -637,7 +636,7 @@ class SelectFolderZone extends Component<FolderProps> {
         const mediaURL = await electronAPI.pathToFileURL(
           parsedPath.dir +
             "/" +
-            fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL
+            fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL,
         );
         syncMedia.push(mediaURL);
       }
@@ -716,12 +715,12 @@ class SelectFolderZone extends Component<FolderProps> {
                 startId: refAnnPointer.$.TIME_SLOT_REF1,
                 startTime: findAnnotTime(
                   refAnnPointer.$.ANNOTATION_REF,
-                  "startTime"
+                  "startTime",
                 ),
                 stopId: refAnnPointer.$.TIME_SLOT_REF2,
                 stopTime: findAnnotTime(
                   refAnnPointer.$.ANNOTATION_REF,
-                  "stopTime"
+                  "stopTime",
                 ),
                 timeline: parsedPath.base,
               };
@@ -758,7 +757,7 @@ class SelectFolderZone extends Component<FolderProps> {
     this.sendSnackbar("Video Loading");
     this.props.setURL(
       "http://localhost:3000/savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01.mp4",
-      0
+      0,
     );
     /* this.props.setURL(
       "./savedSession/Pourquoi%20un%20m%C3%A8tre%20mesure%201m/Pourquoi%20un%20m%C3%A8tre%20mesure%201m_Source_01.mp4",
@@ -783,7 +782,7 @@ class SelectFolderZone extends Component<FolderProps> {
       const savedSourceMedia = JSON.stringify(
         parentThis.props.sourceMedia,
         null,
-        2
+        2,
       );
       await electronAPI.writeFile(dir + "sourceMedia.json", savedSourceMedia);
       //TODO: Filter out wavs, copy the others.
@@ -791,7 +790,7 @@ class SelectFolderZone extends Component<FolderProps> {
       const savedAnnotMedia = JSON.stringify(
         parentThis.props.annotMedia,
         null,
-        2
+        2,
       );
       await electronAPI.writeFile(dir + "annotMedia.json", savedAnnotMedia);
       //TODO: Filter out wavs, copy the others.
@@ -893,7 +892,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => ({
       setAnnotMediaWSAllowed: actions.setAnnotMediaWSAllowed,
       setSourceMediaWSAllowed: actions.setSourceMediaWSAllowed,
     },
-    dispatch
+    dispatch,
   ),
 });
 

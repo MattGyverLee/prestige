@@ -1,196 +1,196 @@
-import { describe, it, expect } from 'vitest';
-import { getAudio } from '../ExportVid';
-import { Milestone, MilestoneData } from '../../../store/annot/types';
+import { describe, it, expect } from "vitest";
+import { getAudio } from "../ExportVid";
+import { Milestone, MilestoneData } from "../../../store/annot/types";
 
-describe('ExportVid - getAudio', () => {
-  it('should find audio clip for CarefulMerged channel', () => {
+describe("ExportVid - getAudio", () => {
+  it("should find audio clip for CarefulMerged channel", () => {
     const milestone: Milestone = {
-      annotationID: 'a1',
+      annotationID: "a1",
       startTime: 0,
       stopTime: 5,
       data: [
         {
-          channel: 'CarefulMerged',
-          data: '/path/to/careful.mp3',
-          linguisticType: 'default-lt',
-          locale: 'fr',
-          mimeType: 'audio/mpeg',
+          channel: "CarefulMerged",
+          data: "/path/to/careful.mp3",
+          linguisticType: "default-lt",
+          locale: "fr",
+          mimeType: "audio/mpeg",
           clipStart: 0,
           clipStop: 2,
-          duration: 2
+          duration: 2,
         },
         {
-          channel: 'TranslationMerged',
-          data: '/path/to/translation.mp3',
-          linguisticType: 'default-lt',
-          locale: 'en',
-          mimeType: 'audio/mpeg',
+          channel: "TranslationMerged",
+          data: "/path/to/translation.mp3",
+          linguisticType: "default-lt",
+          locale: "en",
+          mimeType: "audio/mpeg",
           clipStart: 0,
           clipStop: 2.5,
-          duration: 2.5
-        }
-      ]
+          duration: 2.5,
+        },
+      ],
     };
 
-    const result = getAudio('CarefulMerged', milestone);
+    const result = getAudio("CarefulMerged", milestone);
 
     expect(result).toEqual({
-      file: '/path/to/careful.mp3',
+      file: "/path/to/careful.mp3",
       start: 0,
-      stop: 2
+      stop: 2,
     });
   });
 
-  it('should find audio clip for TranslationMerged channel', () => {
+  it("should find audio clip for TranslationMerged channel", () => {
     const milestone: Milestone = {
-      annotationID: 'a1',
+      annotationID: "a1",
       startTime: 0,
       stopTime: 5,
       data: [
         {
-          channel: 'CarefulMerged',
-          data: '/path/to/careful.mp3',
-          linguisticType: 'default-lt',
-          locale: 'fr',
-          mimeType: 'audio/mpeg',
+          channel: "CarefulMerged",
+          data: "/path/to/careful.mp3",
+          linguisticType: "default-lt",
+          locale: "fr",
+          mimeType: "audio/mpeg",
           clipStart: 0,
           clipStop: 2,
-          duration: 2
+          duration: 2,
         },
         {
-          channel: 'TranslationMerged',
-          data: '/path/to/translation.mp3',
-          linguisticType: 'default-lt',
-          locale: 'en',
-          mimeType: 'audio/mpeg',
+          channel: "TranslationMerged",
+          data: "/path/to/translation.mp3",
+          linguisticType: "default-lt",
+          locale: "en",
+          mimeType: "audio/mpeg",
           clipStart: 1.5,
           clipStop: 4,
-          duration: 2.5
-        }
-      ]
+          duration: 2.5,
+        },
+      ],
     };
 
-    const result = getAudio('TranslationMerged', milestone);
+    const result = getAudio("TranslationMerged", milestone);
 
     expect(result).toEqual({
-      file: '/path/to/translation.mp3',
+      file: "/path/to/translation.mp3",
       start: 1.5,
-      stop: 4
+      stop: 4,
     });
   });
 
-  it('should return empty values when channel not found', () => {
+  it("should return empty values when channel not found", () => {
     const milestone: Milestone = {
-      annotationID: 'a1',
+      annotationID: "a1",
       startTime: 0,
       stopTime: 5,
       data: [
         {
-          channel: 'CarefulMerged',
-          data: '/path/to/careful.mp3',
-          linguisticType: 'default-lt',
-          locale: 'fr',
-          mimeType: 'audio/mpeg',
+          channel: "CarefulMerged",
+          data: "/path/to/careful.mp3",
+          linguisticType: "default-lt",
+          locale: "fr",
+          mimeType: "audio/mpeg",
           clipStart: 0,
           clipStop: 2,
-          duration: 2
-        }
-      ]
+          duration: 2,
+        },
+      ],
     };
 
-    const result = getAudio('TranslationMerged', milestone);
+    const result = getAudio("TranslationMerged", milestone);
 
     expect(result).toEqual({
-      file: '',
+      file: "",
       start: -1,
-      stop: -1
+      stop: -1,
     });
   });
 
-  it('should handle milestone with no data', () => {
+  it("should handle milestone with no data", () => {
     const milestone: Milestone = {
-      annotationID: 'a1',
+      annotationID: "a1",
       startTime: 0,
       stopTime: 5,
-      data: []
+      data: [],
     };
 
-    const result = getAudio('CarefulMerged', milestone);
+    const result = getAudio("CarefulMerged", milestone);
 
     expect(result).toEqual({
-      file: '',
+      file: "",
       start: -1,
-      stop: -1
+      stop: -1,
     });
   });
 
-  it('should handle missing clipStart/clipStop (undefined)', () => {
+  it("should handle missing clipStart/clipStop (undefined)", () => {
     const milestone: Milestone = {
-      annotationID: 'a1',
+      annotationID: "a1",
       startTime: 0,
       stopTime: 5,
       data: [
         {
-          channel: 'CarefulMerged',
-          data: '/path/to/careful.mp3',
-          linguisticType: 'default-lt',
-          locale: 'fr',
-          mimeType: 'audio/mpeg'
+          channel: "CarefulMerged",
+          data: "/path/to/careful.mp3",
+          linguisticType: "default-lt",
+          locale: "fr",
+          mimeType: "audio/mpeg",
           // No clipStart, clipStop, or duration
-        }
-      ]
+        },
+      ],
     };
 
-    const result = getAudio('CarefulMerged', milestone);
+    const result = getAudio("CarefulMerged", milestone);
 
     expect(result).toEqual({
-      file: '/path/to/careful.mp3',
+      file: "/path/to/careful.mp3",
       start: -1,
-      stop: -1
+      stop: -1,
     });
   });
 
-  it('should take the last matching channel if duplicates exist', () => {
+  it("should take the last matching channel if duplicates exist", () => {
     const milestone: Milestone = {
-      annotationID: 'a1',
+      annotationID: "a1",
       startTime: 0,
       stopTime: 5,
       data: [
         {
-          channel: 'CarefulMerged',
-          data: '/path/to/careful1.mp3',
-          linguisticType: 'default-lt',
-          locale: 'fr',
-          mimeType: 'audio/mpeg',
+          channel: "CarefulMerged",
+          data: "/path/to/careful1.mp3",
+          linguisticType: "default-lt",
+          locale: "fr",
+          mimeType: "audio/mpeg",
           clipStart: 0,
           clipStop: 2,
-          duration: 2
+          duration: 2,
         },
         {
-          channel: 'CarefulMerged',
-          data: '/path/to/careful2.mp3',
-          linguisticType: 'default-lt',
-          locale: 'fr',
-          mimeType: 'audio/mpeg',
+          channel: "CarefulMerged",
+          data: "/path/to/careful2.mp3",
+          linguisticType: "default-lt",
+          locale: "fr",
+          mimeType: "audio/mpeg",
           clipStart: 2,
           clipStop: 4,
-          duration: 2
-        }
-      ]
+          duration: 2,
+        },
+      ],
     };
 
-    const result = getAudio('CarefulMerged', milestone);
+    const result = getAudio("CarefulMerged", milestone);
 
     expect(result).toEqual({
-      file: '/path/to/careful2.mp3',
+      file: "/path/to/careful2.mp3",
       start: 2,
-      stop: 4
+      stop: 4,
     });
   });
 });
 
-describe('ExportVid - Kings and Princes Logic', () => {
-  it('should categorize volumes correctly', () => {
+describe("ExportVid - Kings and Princes Logic", () => {
+  it("should categorize volumes correctly", () => {
     const vols = [0.8, 0.3, 0.5, 0, 0.7, 0.1];
     const kings: number[] = [];
     const princes: number[] = [];
@@ -207,7 +207,7 @@ describe('ExportVid - Kings and Princes Logic', () => {
     expect(princes).toEqual([1, 2, 5]); // 0.3, 0.5, 0.1
   });
 
-  it('should handle all kings (no princes)', () => {
+  it("should handle all kings (no princes)", () => {
     const vols = [0.9, 0.8, 0.7];
     const kings: number[] = [];
     const princes: number[] = [];
@@ -224,7 +224,7 @@ describe('ExportVid - Kings and Princes Logic', () => {
     expect(princes).toEqual([]);
   });
 
-  it('should handle all princes (no kings)', () => {
+  it("should handle all princes (no kings)", () => {
     const vols = [0.3, 0.5, 0.1];
     const kings: number[] = [];
     const princes: number[] = [];
@@ -241,7 +241,7 @@ describe('ExportVid - Kings and Princes Logic', () => {
     expect(princes).toEqual([0, 1, 2]);
   });
 
-  it('should handle all silent (no kings or princes)', () => {
+  it("should handle all silent (no kings or princes)", () => {
     const vols = [0, 0, 0];
     const kings: number[] = [];
     const princes: number[] = [];
@@ -258,7 +258,7 @@ describe('ExportVid - Kings and Princes Logic', () => {
     expect(princes).toEqual([]);
   });
 
-  it('should handle boundary case (exactly 0.7)', () => {
+  it("should handle boundary case (exactly 0.7)", () => {
     const vols = [0.7];
     const kings: number[] = [];
     const princes: number[] = [];
@@ -276,8 +276,8 @@ describe('ExportVid - Kings and Princes Logic', () => {
   });
 });
 
-describe('ExportVid - Speed Calculations', () => {
-  it('should calculate video speed when king is video audio (king=0)', () => {
+describe("ExportVid - Speed Calculations", () => {
+  it("should calculate video speed when king is video audio (king=0)", () => {
     const multiplier = 1.5;
     const startTime = 0;
     const stopTime = 10;
@@ -291,7 +291,7 @@ describe('ExportVid - Speed Calculations', () => {
     expect(expectedKingLen).toBe(15); // 10 seconds * 1.5
   });
 
-  it('should calculate video speed when king is annotation audio (king=1)', () => {
+  it("should calculate video speed when king is annotation audio (king=1)", () => {
     const multiplier = 1.5;
     const msStartTime = 0;
     const msStopTime = 10;
@@ -305,7 +305,7 @@ describe('ExportVid - Speed Calculations', () => {
     expect(V1Speed).toBe(1.2);
   });
 
-  it('should calculate voiceover speed for prince audio', () => {
+  it("should calculate voiceover speed for prince audio", () => {
     const kingLen = 12; // From previous calculation
     const A2Start = 0;
     const A2Stop = 6; // Voiceover is 6 seconds
@@ -315,7 +315,7 @@ describe('ExportVid - Speed Calculations', () => {
     expect(A2Speed).toBe(2.0);
   });
 
-  it('should handle edge case where annotation equals milestone duration', () => {
+  it("should handle edge case where annotation equals milestone duration", () => {
     const multiplier = 1.5;
     const msStartTime = 0;
     const msStopTime = 10;

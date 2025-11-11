@@ -4,11 +4,6 @@ const ipcMain = electron.ipcMain;
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 const path = require("path");
-const isDev = require("electron-is-dev");
-const {
-  default: installExtension,
-  REDUX_DEVTOOLS,
-} = require("electron-devtools-installer");
 
 // TODO: Remove this and follow instructions here:
 // https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings
@@ -19,6 +14,12 @@ let imageWindow;
 let settingsWindow;
 
 function createWindow() {
+  // Check isDev inside the function after electron is initialized
+  const isDev = require("electron-is-dev");
+  // Use VITE_DEV_SERVER_PORT env var if set, otherwise default to 5173 (Vite's default)
+  const devPort = process.env.VITE_DEV_SERVER_PORT || "5173";
+  const devUrl = `http://localhost:${devPort}`;
+
   mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
@@ -26,34 +27,51 @@ function createWindow() {
     minWidth: 720,
     title: "Prestige",
     icon: path.join(__dirname, "../src/assets/icons/png/64x64.png"),
-    webPreferences: { nodeIntegration: true, webSecurity: false },
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false, // Required for nodeIntegration to work
+      webSecurity: false,
+      sandbox: false, // Disable sandbox to fix the error
+    },
   });
   imageWindow = new BrowserWindow({
     width: 600,
     height: 600,
     parent: mainWindow,
     show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      webSecurity: false,
+      sandbox: false,
+    },
   });
   settingsWindow = new BrowserWindow({
     width: 600,
     height: 600,
     parent: mainWindow,
     show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      webSecurity: false,
+      sandbox: false,
+    },
   });
 
   mainWindow.loadURL(
     isDev
-      ? "http://localhost:3000"
+      ? devUrl
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
   imageWindow.loadURL(
     isDev
-      ? "http://localhost:3000/image"
+      ? `${devUrl}/image`
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
   settingsWindow.loadURL(
     isDev
-      ? "http://localhost:3000/settings"
+      ? `${devUrl}/settings`
       : `file://${path.join(__dirname, "../build/index.html")}`
   );
 
@@ -77,25 +95,24 @@ function createWindow() {
 }
 
 app.on("ready", async () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const path = require("path");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const os = require("os");
-  BrowserWindow.addDevToolsExtension(
-    path.join(
-      os.homedir(),
-      "/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.10.1_0"
-    )
-  );
-  BrowserWindow.addDevToolsExtension(
-    path.join(
-      os.homedir(),
-      "/AppData/Local/Google/Chrome/User Data/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/2.17.0_0"
-    )
-  );
-  installExtension(REDUX_DEVTOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log("An error occurred: ", err));
+  // Load electron-devtools-installer after app is ready
+  const {
+    default: installExtension,
+    REDUX_DEVTOOLS,
+  } = require("electron-devtools-installer");
+  const { session } = require("electron");
+
+  // Install Redux DevTools extension using the new API
+  try {
+    const name = await installExtension(REDUX_DEVTOOLS, {
+      loadExtensionOptions: { allowFileAccess: true },
+      forceDownload: false,
+    });
+    console.log(`Added Extension: ${name}`);
+  } catch (err) {
+    console.log("Could not install Redux DevTools:", err.message);
+  }
+
   createWindow();
 });
 
