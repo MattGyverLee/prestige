@@ -153,10 +153,6 @@ export class DeeJay extends Component<DeeJayProps> {
       console.log(`[DeeJay] WS${idx} 'ready' event fired`);
     });
 
-    newWS.on("waveform-ready", () => {
-      console.log(`[DeeJay] WS${idx} 'waveform-ready' event fired (via global listener)`);
-    });
-
     // Process WS Seeking
     newWS.on("seek", () => this.wsSeek(idx));
 
@@ -669,7 +665,9 @@ export class DeeJay extends Component<DeeJayProps> {
       }
     }
     */
-    const sub = (wave ? "" : "waveform-") + "ready";
+    // WaveSurfer v7: Use 'ready' event (fires when audio is decoded and rendered)
+    // v6 used 'waveform-ready' but that event no longer exists in v7
+    const sub = "ready";
 
     // Subscription Function to Act Whenever WS is Ready or WFReady
     const waveformReady = () => {
