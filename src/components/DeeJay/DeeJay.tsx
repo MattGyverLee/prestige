@@ -214,11 +214,6 @@ export class DeeJay extends Component<DeeJayProps> {
       });
     }
 
-    // Only attempt to load files if URL or media changed
-    if (!urlChanged && !mediaChanged) {
-      return;
-    }
-
     // Loop Through all WSs
     this.idxs.forEach((idx: number) => {
       // If Sync Media Does Not Contain currBlob => No Timeline Actions
@@ -230,8 +225,8 @@ export class DeeJay extends Component<DeeJayProps> {
         else if (!idx && this.props.url) {
           const audioToLoad =
             this.props.url !== "" ? findValidAudio(idx) : this.props.url;
-          // Only load if different from what's currently playing/loading
-          if (audioToLoad && this.currentPlaying[idx] !== audioToLoad) {
+          // Only load if we have a valid URL and it's different from current
+          if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
             this.loadFileWS(idx, audioToLoad);
           }
         }
@@ -240,17 +235,14 @@ export class DeeJay extends Component<DeeJayProps> {
         // -> Else => Search and Load
         if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady)
           this.checkPlayingValues(idx);
-        else {
+        else if (!this.currentPlaying[idx]) {
           const load = this.loadQueue[idx]
             ? this.loadQueue[idx]
             : findValidAudio(idx);
-          // Only load if:
-          // 1. File is allowed
-          // 2. Different from what's currently playing/loading
-          // 3. Not empty
+          // Load File if Possible, Otherwise Put Into LoadQueue
           if (!this.fileAllowed(load)) {
             this.loadQueue[idx] = load;
-          } else if (load && this.currentPlaying[idx] !== load) {
+          } else if (load) {
             this.loadFileWS(idx, load);
           }
         }
