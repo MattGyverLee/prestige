@@ -208,11 +208,12 @@ export class DeeJay extends Component<DeeJayProps> {
       const regions0 = this.regionsPlugins[0];
       console.log(`[DeeJay] Checking if WS0 needs redraw:`, {
         ws0Exists: !!ws0,
-        ws0IsReady: ws0?.isReady,
         regions0Exists: !!regions0,
-        currentPlaying0: this.currentPlaying[0]
+        currentPlaying0: this.currentPlaying[0],
+        hasAudio: this.currentPlaying[0] !== ""
       });
-      if (ws0 && ws0.isReady && regions0) {
+      // In WaveSurfer v7, there's no isReady property. Check if audio is loaded instead.
+      if (ws0 && this.currentPlaying[0] && regions0) {
         console.log(`[DeeJay] WS0 already ready, drawing regions for timeline ${this.props.currentTimeline}`);
         regions0.clearRegions();
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
@@ -729,6 +730,9 @@ export class DeeJay extends Component<DeeJayProps> {
 
         milestones.forEach(
           (m: any, mileNum: number) => {
+            if (idx === 2 && mileNum === 1) {
+              console.log(`[DeeJay] WS${idx} Full milestone object for debugging:`, m);
+            }
             const region = {
               id: m.startId,
               start: m.startTime,
