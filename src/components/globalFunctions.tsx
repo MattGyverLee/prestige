@@ -53,10 +53,12 @@ export function getTimelineIndex(
     for (let i = 0, l = temp.length; i < l; i++) {
       for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
         const syncMediaURL = temp[i].syncMedia[j];
-        // Extract filename from file:// URL or path
-        const syncMediaName = syncMediaURL.substring(
+        // Extract filename from file:// URL or path and decode URL encoding
+        const syncMediaNameEncoded = syncMediaURL.substring(
           syncMediaURL.lastIndexOf("/") + 1,
         );
+        const syncMediaName = decodeURIComponent(syncMediaNameEncoded);
+        console.log(`[getTimelineIndex] Comparing decoded "${syncMediaName}" === "${fileName}"`);
         if (syncMediaName === fileName) {
           console.log(`[getTimelineIndex] ✓ MATCH! "${syncMediaName}" === "${fileName}" -> returning timeline ${temp[i].idx}`);
           return temp[i].idx;
@@ -72,10 +74,13 @@ export function getTimelineIndex(
     for (let i = 0, l = temp.length; i < l; i++) {
       for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
         const syncMediaURL = temp[i].syncMedia[j];
-        // Convert file:// URL back to path for comparison
-        const syncMediaPath = syncMediaURL.startsWith("file://")
+        // Convert file:// URL back to path for comparison and decode URL encoding
+        let syncMediaPath = syncMediaURL.startsWith("file://")
           ? syncMediaURL.substring(7) // Remove "file://" prefix
           : syncMediaURL;
+        // Decode URL-encoded characters
+        syncMediaPath = decodeURIComponent(syncMediaPath);
+        console.log(`[getTimelineIndex] Comparing decoded path "${syncMediaPath}" === "${filePath}"`);
         if (syncMediaPath === filePath) {
           console.log(`[getTimelineIndex] ✓ MATCH! path "${syncMediaPath}" === "${filePath}" -> returning timeline ${temp[i].idx}`);
           return temp[i].idx;
