@@ -101,8 +101,8 @@ export class AnnotationTable extends Component<ComponentProps, ComponentState> {
   }
 
   componentDidUpdate(prevProps: StateProps): void {
-    const newIndex = getTimelineIndex(this.props.timelines, this.props.url);
-    const prevIndex = getTimelineIndex(prevProps.timelines, prevProps.url);
+    const newIndex = getTimelineIndex(this.props.timelines, this.props.url, this.props.sourceMedia);
+    const prevIndex = getTimelineIndex(prevProps.timelines, prevProps.url, prevProps.sourceMedia);
 
     // Only update if the timeline actually changed (comparing with prevProps, not internal state)
     if (

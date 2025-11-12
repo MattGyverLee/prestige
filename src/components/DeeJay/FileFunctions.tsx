@@ -69,6 +69,7 @@ function findValidAnnotAudio(idx: number): LooseObject[] {
     true,
     state.annot.currentTimeline,
     state.annot.timeline,
+    state.tree.sourceMedia,
   );
 
   console.log(`[findValidAnnotAudio] WS${idx} looking for "${channelName}"`);

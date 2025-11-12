@@ -273,7 +273,7 @@ class SelectFolderZone extends Component<FolderProps> {
       if (this.readyPlayURL !== "") {
         props.setURL(
           this.readyPlayURL,
-          getTimelineIndex(this.props.timeline, this.readyPlayURL),
+          getTimelineIndex(this.props.timeline, this.readyPlayURL, this.props.sourceMedia),
         );
         this.readyPlayURL = "";
       } else if (this.props.sourceMedia.length !== 0) {
@@ -281,14 +281,14 @@ class SelectFolderZone extends Component<FolderProps> {
         await this.loadAnnot(false);
         const blobURL = getSourceMedia(this.props.sourceMedia, false)[0]
           .blobURL;
-        props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
+        props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia));
         console.log(`Initial scan complete. Ready for changes`);
       } else {
         console.log("Empty Directory");
       }
     } else if (this.props.url === "" && this.props.sourceMedia.length !== 0) {
       const blobURL = getSourceMedia(this.props.sourceMedia, false)[0].blobURL;
-      props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
+      props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia));
     }
 
     this.isChokReady = true;

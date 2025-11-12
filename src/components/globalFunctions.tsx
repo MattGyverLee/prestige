@@ -6,7 +6,11 @@ interface tempTimeline {
   idx: number;
 }
 
-export function getTimelineIndex(timelines: any, blobURL: string): number {
+export function getTimelineIndex(
+  timelines: any,
+  blobURL: string,
+  sourceMedia?: LooseObject[],
+): number {
   if (
     blobURL === undefined ||
     blobURL === null ||
@@ -15,24 +19,72 @@ export function getTimelineIndex(timelines: any, blobURL: string): number {
   ) {
     return -1;
   }
+
+  // Find the file object matching this blobURL to get its original filename/path
+  let fileName: string | null = null;
+  let filePath: string | null = null;
+
+  if (sourceMedia) {
+    const fileObj = sourceMedia.find((f) => f.blobURL === blobURL);
+    if (fileObj) {
+      fileName = fileObj.name; // e.g., "audio.wav"
+      filePath = fileObj.path; // e.g., "/home/user/project/audio.wav"
+    }
+  }
+
   const temp = timelines.map((t: LooseObject, idx: number) => {
     const x: tempTimeline = { syncMedia: t.syncMedia, idx };
     return x;
   });
+
+  // Try matching by filename if we have it
+  if (fileName) {
+    for (let i = 0, l = temp.length; i < l; i++) {
+      for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
+        const syncMediaURL = temp[i].syncMedia[j];
+        // Extract filename from file:// URL or path
+        const syncMediaName = syncMediaURL.substring(
+          syncMediaURL.lastIndexOf("/") + 1,
+        );
+        if (syncMediaName === fileName) return temp[i].idx;
+      }
+    }
+  }
+
+  // Try matching by full path if we have it
+  if (filePath) {
+    for (let i = 0, l = temp.length; i < l; i++) {
+      for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
+        const syncMediaURL = temp[i].syncMedia[j];
+        // Convert file:// URL back to path for comparison
+        const syncMediaPath = syncMediaURL.startsWith("file://")
+          ? syncMediaURL.substring(7) // Remove "file://" prefix
+          : syncMediaURL;
+        if (syncMediaPath === filePath) return temp[i].idx;
+      }
+    }
+  }
+
+  // Fallback: Try direct URL matching (for backward compatibility)
   for (let i = 0, l = temp.length; i < l; i++) {
     for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
       if (temp[i].syncMedia[j] === blobURL) return temp[i].idx;
     }
   }
-  for (let i = 0, l = timelines.length; i < l; i++) {
-    if (
-      timelines[i].eafFile.includes(
-        blobURL.substring(0, blobURL.lastIndexOf(".")),
-      )
-    ) {
-      return i;
+
+  // Try matching by eafFile
+  if (fileName) {
+    const fileNameWithoutExt = fileName.substring(
+      0,
+      fileName.lastIndexOf("."),
+    );
+    for (let i = 0, l = timelines.length; i < l; i++) {
+      if (timelines[i].eafFile.includes(fileNameWithoutExt)) {
+        return i;
+      }
     }
   }
+
   return -1;
 }
 
@@ -143,6 +195,7 @@ export function annotAudio(
   splitOrMerged: boolean,
   timelineIdx: number,
   timelines: any[],
+  sourceMedia?: LooseObject[],
   // true: merged only, false: split only
 ): LooseObject[] {
   const annotAud = annotMedia
@@ -154,6 +207,7 @@ export function annotAudio(
         getTimelineIndex(
           timelines,
           file.blobURL.substring(0, file.blobURL.indexOf("_Annotations")),
+          sourceMedia,
         ) === timelineIdx,
     )
     .sort((a: LooseObject, b: LooseObject) =>

@@ -26,6 +26,7 @@ interface StateProps {
   ready: boolean;
   subtitle: string;
   dimensions: LooseObject;
+  sourceMedia: LooseObject[];
 }
 
 interface DispatchProps {
@@ -77,7 +78,7 @@ class PlayerZone extends Component<PlayerProps> {
 
   loadNewFile(blobURL: string) {
     this.props.togglePlay(true);
-    this.props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL));
+    this.props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia));
   }
 
   onDuration = (duration: number) => {
@@ -170,6 +171,7 @@ const mapStateToProps = (state: actions.StateProps): StateProps => ({
   url: state.player.url,
   volume: state.player.volume,
   ready: state.player.ready,
+  sourceMedia: state.tree.sourceMedia,
 });
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => ({
