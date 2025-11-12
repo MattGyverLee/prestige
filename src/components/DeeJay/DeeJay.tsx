@@ -696,6 +696,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // Subscription Function to Act Whenever WS is Ready or WFReady
     const waveformReady = () => {
+      console.log(`[DeeJay] WS${idx} ===== WAVEFORM READY CALLBACK EXECUTING =====`);
       console.log(`[DeeJay] WS${idx} waveform ready. currentTimeline:`, this.props.currentTimeline);
 
       // Add WF and Set WS Duration
@@ -779,13 +780,16 @@ export class DeeJay extends Component<DeeJayProps> {
     };
 
     // Subscribe to Appropriate Ready Function
+    console.log(`[DeeJay] WS${idx} About to subscribe waveformReady callback to '${sub}' event`);
     ws.on(sub, waveformReady);
+    console.log(`[DeeJay] WS${idx} Subscribed. Now loading:`, load.substring(0, 60));
 
     // Load WS (with/without Wave) and Update LoadQueue and CurrentPlaying
     this.currentPlaying[idx] = load;
     if (wave) ws.load(load, JSON.parse(wave));
     else ws.load(load);
     this.loadQueue[idx] = "";
+    console.log(`[DeeJay] WS${idx} ws.load() called, waiting for 'ready' event to fire...`);
   };
 
   componentWillUnmount(): void {
