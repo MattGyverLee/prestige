@@ -745,22 +745,19 @@ export class DeeJay extends Component<DeeJayProps> {
               console.log(`[DeeJay] WS${idx} adding region:`, region);
               this.regionsPlugins[idx].addRegion(region);
             } else {
-              const targetChannel = idx === 1 ? "Careful" : "Translation";
-              console.log(`[DeeJay] WS${idx} looking for channel "${targetChannel}", milestone has ${m.data.length} data items`);
-              m.data.forEach((d: LooseObject) => {
-                console.log(`[DeeJay] WS${idx} data channel: "${d.channel}"`, d);
-                if (d.channel === targetChannel) {
-                  console.log(`[DeeJay] WS${idx} adding region for ${d.channel}:`, {
-                    start: d.clipStart,
-                    end: d.clipStop,
-                  });
-                  this.regionsPlugins[idx].addRegion({
-                    ...region,
-                    start: d.clipStart,
-                    end: d.clipStop,
-                  });
-                }
-              });
+              // WS1 plays Careful_Merged.mp3 (shows regions for "Transcription" channel)
+              // WS2 plays Translation_Merged.mp3 (shows regions for "Translation" channel)
+              // These are merged/concatenated audio, so use milestone start/stop times
+              const targetChannel = idx === 1 ? "Transcription" : "Translation";
+              const hasChannel = m.data.some((d: LooseObject) => d.channel === targetChannel);
+
+              if (hasChannel) {
+                console.log(`[DeeJay] WS${idx} adding region for ${targetChannel}:`, {
+                  start: m.startTime,
+                  end: m.stopTime,
+                });
+                this.regionsPlugins[idx].addRegion(region);
+              }
             }
           },
         );
