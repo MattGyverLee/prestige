@@ -593,9 +593,13 @@ class SelectFolderZone extends Component<FolderProps> {
 
       console.log("Merging finished!");
       const timecodes = mergeResult.timecodes;
+      console.log(`[loadAnnot] mergeResult:`, mergeResult);
+      console.log(`[loadAnnot] timecodes:`, timecodes);
+      console.log(`[loadAnnot] timecodes.length:`, timecodes ? timecodes.length : 'undefined');
 
       // Get metadata for each input file to create milestones
       const inputTimes: any[] = [];
+      console.log(`[loadAnnot] Getting metadata for ${inputFiles.length} files`);
       for (const filePath of inputFiles) {
         const metadata = await electronAPI.getMediaMetadata(filePath);
         const parsedPath = safeParseSync(filePath);
@@ -612,10 +616,13 @@ class SelectFolderZone extends Component<FolderProps> {
 
       // Sort InputTimes Based on Start Time
       inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
+      console.log(`[loadAnnot] inputTimes sorted:`, inputTimes);
 
       // Create and Add Oral Milestones to Timeline
       const TOGGLE_TIMES = true;
       const mergedFileURL = await electronAPI.pathToFileURL(outputPath);
+      console.log(`[loadAnnot] Creating oral annotations. mergedFileURL:`, mergedFileURL);
+      console.log(`[loadAnnot] Will create ${inputTimes.length} oral milestones`);
 
       for (let i = 0, l = inputTimes.length; i < l; i++) {
         const oralMilestone: aTypes.Milestone = {
@@ -643,9 +650,18 @@ class SelectFolderZone extends Component<FolderProps> {
         const timelineURL = await electronAPI.pathToFileURL(
           annotDir.substring(0, annotDir.indexOf("_Annotations")),
         );
+        const timelineIndex = getTimelineIndex(this.props.timeline, timelineURL);
+        console.log(`[loadAnnot] Adding oral milestone ${i}/${inputTimes.length}:`, {
+          channel: oralMilestone.data[0].channel,
+          startTime: oralMilestone.startTime,
+          stopTime: oralMilestone.stopTime,
+          clipStart: oralMilestone.data[0].clipStart,
+          clipStop: oralMilestone.data[0].clipStop,
+          timelineIndex
+        });
         this.props.addOralAnnotation(
           oralMilestone,
-          getTimelineIndex(this.props.timeline, timelineURL),
+          timelineIndex,
         );
         this.props.setTimelineChanged(true);
       }
