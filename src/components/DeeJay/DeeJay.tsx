@@ -733,9 +733,6 @@ export class DeeJay extends Component<DeeJayProps> {
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
         console.log(`[DeeJay] WS${idx} drawing regions. Milestones count:`, milestones.length);
 
-        // For WS1/WS2, track cumulative timing in merged audio file
-        let cumulativeTime = 0;
-
         milestones.forEach(
           (m: any, mileNum: number) => {
             if (idx === 2 && mileNum === 1) {
@@ -757,36 +754,26 @@ export class DeeJay extends Component<DeeJayProps> {
               console.log(`[DeeJay] WS${idx} adding region:`, region);
               this.regionsPlugins[idx].addRegion(region);
             } else {
-              // WS1 plays Careful_Merged.mp3 (shows regions for "Careful" audio)
-              // WS2 plays Translation_Merged.mp3 (shows regions for "Translation" audio)
-              // These are merged/concatenated audio files, so we need cumulative timing
-              // Check if audio file exists for this milestone by looking for the clip filename
-              const audioType = idx === 1 ? "Careful" : "Translation";
-              const expectedFilename = `${m.startTime}_to_${m.stopTime}_${audioType}.wav`;
-              const hasAudio = this.props.annotMedia.some((file: any) =>
-                file.name && file.name.includes(expectedFilename)
-              );
-
-              if (hasAudio) {
-                // Use milestone duration (audio files are spliced from source at these times)
-                const clipDuration = m.stopTime - m.startTime;
-                console.log(`[DeeJay] WS${idx} adding region for ${audioType}:`, {
-                  cumulativeStart: cumulativeTime,
-                  cumulativeEnd: cumulativeTime + clipDuration,
-                  milestoneStart: m.startTime,
-                  milestoneStop: m.stopTime,
-                  clipDuration: clipDuration,
-                  expectedFilename: expectedFilename
-                });
-                this.regionsPlugins[idx].addRegion({
-                  ...region,
-                  start: cumulativeTime,
-                  end: cumulativeTime + clipDuration,
-                });
-                cumulativeTime += clipDuration;
-              } else {
-                console.log(`[DeeJay] WS${idx} skipping milestone ${mileNum} - no file matching ${expectedFilename}`);
-              }
+              // WS1 plays Careful_Merged.mp3, WS2 plays Translation_Merged.mp3
+              // Look for data items with channel "CarefulMerged" or "TranslationMerged"
+              // which have clipStart/clipStop positions in the merged audio
+              m.data.forEach((d: LooseObject) => {
+                if (
+                  d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
+                ) {
+                  console.log(`[DeeJay] WS${idx} adding region from ${d.channel}:`, {
+                    start: d.clipStart,
+                    end: d.clipStop,
+                    milestoneStart: m.startTime,
+                    milestoneStop: m.stopTime
+                  });
+                  this.regionsPlugins[idx].addRegion({
+                    ...region,
+                    start: d.clipStart,
+                    end: d.clipStop,
+                  });
+                }
+              });
             }
           },
         );
