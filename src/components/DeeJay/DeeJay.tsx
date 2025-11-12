@@ -206,6 +206,12 @@ export class DeeJay extends Component<DeeJayProps> {
       // Redraw regions for WS0 if it's already ready
       const ws0 = this.waveSurfers[0];
       const regions0 = this.regionsPlugins[0];
+      console.log(`[DeeJay] Checking if WS0 needs redraw:`, {
+        ws0Exists: !!ws0,
+        ws0IsReady: ws0?.isReady,
+        regions0Exists: !!regions0,
+        currentPlaying0: this.currentPlaying[0]
+      });
       if (ws0 && ws0.isReady && regions0) {
         console.log(`[DeeJay] WS0 already ready, drawing regions for timeline ${this.props.currentTimeline}`);
         regions0.clearRegions();
@@ -738,7 +744,7 @@ export class DeeJay extends Component<DeeJayProps> {
               const targetChannel = idx === 1 ? "Careful" : "Translation";
               console.log(`[DeeJay] WS${idx} looking for channel "${targetChannel}", milestone has ${m.data.length} data items`);
               m.data.forEach((d: LooseObject) => {
-                console.log(`[DeeJay] WS${idx} data channel: "${d.channel}"`);
+                console.log(`[DeeJay] WS${idx} data channel: "${d.channel}"`, d);
                 if (d.channel === targetChannel) {
                   console.log(`[DeeJay] WS${idx} adding region for ${d.channel}:`, {
                     start: d.clipStart,
