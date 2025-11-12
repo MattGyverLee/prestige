@@ -276,57 +276,40 @@ export class DeeJay extends Component<DeeJayProps> {
       // If Sync Media Does Not Contain currBlob => No Timeline Actions
       // -> Else => Timeline Actions
       const inSync = syncContainsCurrent(this.currBlob);
-      console.log(`[DeeJay] WS${idx} componentDidUpdate loop - syncContainsCurrent:`, inSync, `currentPlaying:`, this.currentPlaying[idx], `props.url:`, this.props.url?.substring(0, 60));
 
       if (inSync) {
         // If WS is Playing => Check for Playing Actions
         // -> Else If WS0, and Not Empty URL => Load and Play URL
         if (this.currentPlaying[idx]) {
-          console.log(`[DeeJay] WS${idx} sync - already playing, checking values`);
           this.checkPlayingValues(idx);
         } else if (!idx && this.props.url) {
           const audioToLoad =
             this.props.url !== "" ? findValidAudio(idx) : this.props.url;
-          console.log(`[DeeJay] WS${idx} sync - audioToLoad:`, audioToLoad, `currentPlaying:`, this.currentPlaying[idx], `props.url:`, this.props.url);
           // Only load if we have a valid URL and it's different from current
           if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
-            console.log(`[DeeJay] WS${idx} - Calling loadFileWS with:`, audioToLoad);
             this.loadFileWS(idx, audioToLoad);
-          } else if (!audioToLoad) {
-            console.log(`[DeeJay] WS${idx} - No valid audio. SourceMedia count:`, this.props.sourceMedia?.length);
           }
         } else if (idx > 0) {
           // WS1 and WS2 (annotation tracks)
           const audioToLoad = findValidAudio(idx);
-          console.log(`[DeeJay] WS${idx} sync (annot) - audioToLoad:`, audioToLoad, `currentPlaying:`, this.currentPlaying[idx], `annotMedia count:`, this.props.annotMedia?.length);
           if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
-            console.log(`[DeeJay] WS${idx} - Calling loadFileWS with:`, audioToLoad);
             this.loadFileWS(idx, audioToLoad);
           }
-        } else if (!idx) {
-          console.log(`[DeeJay] WS${idx} sync - skipped because props.url is empty or falsy`);
         }
       } else {
-        console.log(`[DeeJay] WS${idx} non-sync path - currentPlaying:`, this.currentPlaying[idx], `isReady:`, this.waveSurfers[idx].isReady);
         // If WS is Ready and Playing => Check for Playing Actions
         // -> Else => Search and Load
         if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady) {
-          console.log(`[DeeJay] WS${idx} non-sync - already playing and ready, checking values`);
           this.checkPlayingValues(idx);
         } else if (!this.currentPlaying[idx]) {
           const load = this.loadQueue[idx]
             ? this.loadQueue[idx]
             : findValidAudio(idx);
-          console.log(`[DeeJay] WS${idx} non-sync - load:`, load, `queue:`, this.loadQueue[idx], `currentPlaying:`, this.currentPlaying[idx]);
           // Load File if Possible, Otherwise Put Into LoadQueue
           if (!this.fileAllowed(load)) {
             this.loadQueue[idx] = load;
-            console.log(`[DeeJay] WS${idx} - File not allowed, queued`);
           } else if (load) {
-            console.log(`[DeeJay] WS${idx} - Calling loadFileWS with:`, load);
             this.loadFileWS(idx, load);
-          } else {
-            console.log(`[DeeJay] WS${idx} - No file to load. AnnotMedia count:`, this.props.annotMedia?.length);
           }
         }
       }
@@ -334,8 +317,7 @@ export class DeeJay extends Component<DeeJayProps> {
   }
 
   wsSeek = (idx: number): void => {
-    if (!this.clicked[idx]) console.log(`${idx} No Click Seeking`);
-    else {
+    if (this.clicked[idx]) {
       // Added Mar 2021 because Pause was breaking things.
       // todo: this breaks Single clip playing.
       this.playPausing = false;
@@ -681,7 +663,6 @@ export class DeeJay extends Component<DeeJayProps> {
   loadFileWS = (idx: number, load: string): void => {
     // Don't load if already loading this file
     if (this.currentPlaying[idx] === load) {
-      console.log(`Skipping load - ${load} is already loading/playing on WS${idx}`);
       return;
     }
 
@@ -798,16 +779,13 @@ export class DeeJay extends Component<DeeJayProps> {
     };
 
     // Subscribe to Appropriate Ready Function
-    console.log(`[DeeJay] WS${idx} subscribing to '${sub}' event`);
     ws.on(sub, waveformReady);
 
     // Load WS (with/without Wave) and Update LoadQueue and CurrentPlaying
     this.currentPlaying[idx] = load;
-    console.log(`[DeeJay] WS${idx} calling ws.load() with:`, load.substring(0, 60));
     if (wave) ws.load(load, JSON.parse(wave));
     else ws.load(load);
     this.loadQueue[idx] = "";
-    console.log(`[DeeJay] WS${idx} load initiated, waiting for ${sub} event`);
   };
 
   componentWillUnmount(): void {
@@ -847,17 +825,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
     const srcAllowed = tempSrc.length && tempSrc[0].wsAllowed;
     const annotAllowed = tempAnnot.length && tempAnnot[0].wsAllowed;
-    const isAllowed = srcAllowed || annotAllowed;
-
-    console.log(`[DeeJay] fileAllowed check for ${blobURL.substring(0, 50)}...`, {
-      foundInSource: tempSrc.length > 0,
-      wsAllowedSrc: tempSrc[0]?.wsAllowed,
-      foundInAnnot: tempAnnot.length > 0,
-      wsAllowedAnnot: tempAnnot[0]?.wsAllowed,
-      isAllowed
-    });
-
-    return isAllowed;
+    return srcAllowed || annotAllowed;
   };
 
   // Resets Volumes of and Stops all but Specified WS

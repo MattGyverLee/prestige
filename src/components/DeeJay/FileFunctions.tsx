@@ -20,9 +20,6 @@ export function findValidSourceAudio(): LooseObject[] {
   const allSourceAudio = sourceAudio(state.tree.sourceMedia, true);
   const syncMedia = getSyncMedia();
 
-  console.log("[findValidSourceAudio] All source audio:", allSourceAudio.map(sa => `${sa.name} -> ${sa.blobURL}`));
-  console.log("[findValidSourceAudio] Sync media:", syncMedia);
-
   const filtered = allSourceAudio.filter(
     (sa: LooseObject) => {
       // Check the filename, not the blob URL (blob URLs are random UUIDs)
@@ -30,12 +27,6 @@ export function findValidSourceAudio(): LooseObject[] {
 
       // If no timeline is selected (syncMedia is empty), just return normalized MP3 files
       if (syncMedia.length === 0) {
-        console.log("[findValidSourceAudio] No timeline - checking for normalized MP3:", {
-          name: sa.name,
-          blobURL: sa.blobURL,
-          hasNormalized,
-          passes: hasNormalized
-        });
         return hasNormalized;
       }
 
@@ -48,20 +39,10 @@ export function findValidSourceAudio(): LooseObject[] {
         return urlFileName === wavName;
       });
 
-      console.log("[findValidSourceAudio] Timeline exists - checking:", {
-        name: sa.name,
-        blobURL: sa.blobURL,
-        hasNormalized,
-        wavName,
-        inSync,
-        passes: hasNormalized && inSync
-      });
-
       return hasNormalized && inSync;
     }
   );
 
-  console.log("[findValidSourceAudio] Filtered result:", filtered.length, filtered.map(f => `${f.name} -> ${f.blobURL}`));
   return filtered;
 }
 
@@ -76,16 +57,11 @@ function findValidAnnotAudio(idx: number): LooseObject[] {
     state.tree.sourceMedia,
   );
 
-  console.log(`[findValidAnnotAudio] WS${idx} looking for "${channelName}"`);
-  console.log(`[findValidAnnotAudio] WS${idx} all annot audio:`, allAnnot.map(aa => `${aa.name} -> ${aa.blobURL}`));
-  console.log(`[findValidAnnotAudio] WS${idx} currentTimeline:`, state.annot.currentTimeline);
-
   const filtered = allAnnot.filter((aa: LooseObject) =>
     // Use filename instead of blob URL for matching
     aa.name && aa.name.includes(channelName),
   );
 
-  console.log(`[findValidAnnotAudio] WS${idx} filtered result:`, filtered.length, filtered.map(f => `${f.name} -> ${f.blobURL}`));
   return filtered;
 }
 
