@@ -757,22 +757,22 @@ export class DeeJay extends Component<DeeJayProps> {
               console.log(`[DeeJay] WS${idx} adding region:`, region);
               this.regionsPlugins[idx].addRegion(region);
             } else {
-              // WS1 plays Careful_Merged.mp3 (shows regions for "Transcription" text channel)
-              // WS2 plays Translation_Merged.mp3 (shows regions for "Translation" text channel)
+              // WS1 plays Careful_Merged.mp3 (check audCarefulMain flag)
+              // WS2 plays Translation_Merged.mp3 (check audTranslMain flag)
               // These are merged/concatenated audio files, so we need cumulative timing
-              // Presence of text annotation indicates corresponding audio clip exists
-              const targetTextChannel = idx === 1 ? "Transcription" : "Translation";
-              const hasTextAnnotation = m.data.some((d: LooseObject) => d.channel === targetTextChannel);
+              const audioFlagName = idx === 1 ? "audCarefulMain" : "audTranslMain";
+              const hasAudio = m[audioFlagName];
 
-              if (hasTextAnnotation) {
+              if (hasAudio) {
                 // Use milestone duration (audio files are spliced from source at these times)
                 const clipDuration = m.stopTime - m.startTime;
-                console.log(`[DeeJay] WS${idx} adding region for ${targetTextChannel}:`, {
+                console.log(`[DeeJay] WS${idx} adding region for ${audioFlagName}:`, {
                   cumulativeStart: cumulativeTime,
                   cumulativeEnd: cumulativeTime + clipDuration,
                   milestoneStart: m.startTime,
                   milestoneStop: m.stopTime,
-                  clipDuration: clipDuration
+                  clipDuration: clipDuration,
+                  audioFlag: hasAudio
                 });
                 this.regionsPlugins[idx].addRegion({
                   ...region,
@@ -781,7 +781,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 });
                 cumulativeTime += clipDuration;
               } else {
-                console.log(`[DeeJay] WS${idx} skipping milestone ${mileNum} - no ${targetTextChannel} text annotation`);
+                console.log(`[DeeJay] WS${idx} skipping milestone ${mileNum} - ${audioFlagName} is false`);
               }
             }
           },
