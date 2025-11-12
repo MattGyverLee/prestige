@@ -209,8 +209,10 @@ export class DeeJay extends Component<DeeJayProps> {
       this.lastDimensions !== this.getDimensions()
     ) {
       this.lastDimensions = this.getDimensions();
+      const newHeight = rowHeight();
       this.idxs.forEach((idx: number) => {
-        this.waveSurfers[idx].setHeight(rowHeight());
+        // WaveSurfer v7 uses setOptions instead of setHeight
+        this.waveSurfers[idx].setOptions({ height: newHeight });
       });
     }
 
