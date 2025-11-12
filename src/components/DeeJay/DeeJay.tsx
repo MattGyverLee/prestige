@@ -612,17 +612,25 @@ export class DeeJay extends Component<DeeJayProps> {
           }
         });
 
-        // If Current Timeline is not Empty => Play According to Milestones
+        // If Current Timeline is not Empty => Dispatch Clip to trigger sequential playback with voiceovers
         // -> Else => Play as Normal
-        if (this.props.currentTimeline !== -1)
-          this.checkVOAndPlay(idx, lows, currM);
-        else
+        if (this.props.currentTimeline !== -1) {
+          // Instead of calling checkVOAndPlay/seekSyncAndPlay, dispatch a Clip action
+          // This will use the full Clip handler logic for sequential highs + simultaneous lows
+          this.props.setDispatch({
+            dispatchType: "Clip",
+            wsNum: idx,
+            clipStart: currM.startTime,
+            clipStop: currM.stopTime,
+          });
+        } else {
           this.seekSyncAndPlay(0, {
             annotationID: "",
             startTime: 0,
             stopTime: ws.getDuration(),
             data: [],
           });
+        }
         // this.actingDispatch = { dispatchType: "WSSeek", wsNum: idx };
         // todo: can I delete this?
       }
@@ -1184,7 +1192,18 @@ export class DeeJay extends Component<DeeJayProps> {
       }
       case "Clip": {
         this.clearDispatchLeftovers();
-        this.solo(wsNum, true, wsNum2);
+
+        // Only reset volumes if no wavesurfers are currently active (coming from annotation table)
+        // If wavesurfers are already active (coming from waveform drag), preserve their volumes
+        const hasActiveWavesurfers = this.idxs.some((idx: number) =>
+          this.waveSurfers[idx].getVolume() > 0
+        );
+
+        if (!hasActiveWavesurfers) {
+          // Coming from annotation table - reset all volumes and enable only wsNum (and wsNum2)
+          this.solo(wsNum, true, wsNum2);
+        }
+
         if (wsNum < 0) wsNum = 0;
         // Grab Current Milestone and "Solo" the Given WS
         currM = getCurrentMilestone(
@@ -1192,6 +1211,8 @@ export class DeeJay extends Component<DeeJayProps> {
           this.waveSurfers[wsNum].getCurrentTime(),
           dispatch,
         );
+
+        // Ensure the clicked wavesurfer is fully enabled
         this.waveSurfers[wsNum].setVolume(1);
         this.props.setWSVolume(wsNum, 1);
 
