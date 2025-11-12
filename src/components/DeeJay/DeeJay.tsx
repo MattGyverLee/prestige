@@ -244,15 +244,21 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // If timeline was just set, redraw regions for WS0 and trigger load for WS1/WS2
     if (timelineJustSet) {
+      console.log(`[DeeJay] Timeline just set! Checking WS0 readiness...`);
       // Generate region colors for the new timeline
       this.regionColors = generateRegionColors();
 
       // Redraw regions for WS0 if it's already ready
       const ws0 = this.waveSurfers[0];
       const regions0 = this.regionsPlugins[0];
-      // Check if WaveSurfer has loaded audio by checking for meaningful duration (> 1 second)
-      // Durations like 0.001 mean the audio is still loading
-      if (ws0 && ws0.getDuration() > 1 && regions0) {
+      const ws0Duration = ws0 ? ws0.getDuration() : 0;
+      const ws0Ready = this.isWSReady[0];
+
+      console.log(`[DeeJay] WS0 check: exists=${!!ws0}, duration=${ws0Duration}, isReady=${ws0Ready}, regions=${!!regions0}, currentPlaying[0]=${this.currentPlaying[0]}`);
+
+      // Check if WaveSurfer is ready by checking isWSReady flag and has loaded audio
+      if (ws0 && ws0Ready && this.currentPlaying[0] && regions0) {
+        console.log(`[DeeJay] WS0 is ready, redrawing regions and starting playback`);
         regions0.clearRegions();
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
         milestones.forEach((m: any, mileNum: number) => {
@@ -269,7 +275,7 @@ export class DeeJay extends Component<DeeJayProps> {
 
         // Start playback now that timeline is set and WS0 is ready
         // WS1/WS2 will load asynchronously
-        console.log(`[DeeJay] Timeline just set and WS0 is ready, dispatching PlayerSeek to start playback`);
+        console.log(`[DeeJay] Dispatching PlayerSeek to start auto-playback`);
         // Use setTimeout to ensure dispatch happens after componentDidUpdate completes
         setTimeout(() => {
           this.props.setDispatch({
@@ -278,6 +284,8 @@ export class DeeJay extends Component<DeeJayProps> {
             refStart: 0,
           });
         }, 100);
+      } else {
+        console.log(`[DeeJay] WS0 not ready yet when timeline set, will auto-play when WS0 becomes ready`);
       }
 
       // Force WS1 and WS2 to load by clearing their currentPlaying state
