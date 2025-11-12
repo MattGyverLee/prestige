@@ -105,7 +105,7 @@ export class DeeJay extends Component<DeeJayProps> {
     const newWS = createWaveSurfer(idx);
 
     newWS.on("region-created", (region: any) => {
-      if (newWS.regions.list[region.id])
+      if (newWS.regions && newWS.regions.list && newWS.regions.list[region.id])
         newWS.regions.list[region.id].onDrag(0);
     });
 
@@ -151,7 +151,12 @@ export class DeeJay extends Component<DeeJayProps> {
   regionHover = (region: any, element: string, regionsOn: number): void => {
     if (regionsOn !== 0) {
       this.idxs.forEach((idx: number) => {
-        if (this.waveSurfers[idx].regions.list[region.id]) {
+        if (
+          this.waveSurfers[idx] &&
+          this.waveSurfers[idx].regions &&
+          this.waveSurfers[idx].regions.list &&
+          this.waveSurfers[idx].regions.list[region.id]
+        ) {
           const thisRegion = this.waveSurfers[idx].regions.list[region.id];
           thisRegion.element.id = element;
           updateRegionAlpha(
@@ -800,7 +805,9 @@ export class DeeJay extends Component<DeeJayProps> {
 
   getWSRegions = (): Array<number> => {
     return this.idxs.map((idx: number) =>
-      this.waveSurfers[idx] ? this.waveSurfers[idx].regions.list : [],
+      this.waveSurfers[idx] && this.waveSurfers[idx].regions
+        ? this.waveSurfers[idx].regions.list
+        : [],
     );
   };
 
@@ -1021,12 +1028,18 @@ export class DeeJay extends Component<DeeJayProps> {
                 // Create and Push Next Voiceover
                 voiceOvers.push(() => {
                   // Craft its Region
-                  updateRegionAlpha(
-                    this.waveSurfers[lows[y]].regions.list,
-                    0.7,
-                    m2Start,
-                    m2Stop,
-                  );
+                  if (
+                    this.waveSurfers[lows[y]] &&
+                    this.waveSurfers[lows[y]].regions &&
+                    this.waveSurfers[lows[y]].regions.list
+                  ) {
+                    updateRegionAlpha(
+                      this.waveSurfers[lows[y]].regions.list,
+                      0.7,
+                      m2Start,
+                      m2Stop,
+                    );
+                  }
 
                   // Determine its Playback Rate
                   this.currentSpeeds[lows[y]] = calcPlaybackRate(
@@ -1055,12 +1068,18 @@ export class DeeJay extends Component<DeeJayProps> {
               if (!this.playPausing && (x === 0 || !this.clipStart)) {
                 // Reset Highlights
                 toggleAllRegions(this.regionsOn, true, this.getWSRegions());
-                updateRegionAlpha(
-                  this.waveSurfers[highs[x]].regions.list,
-                  0.7,
-                  m1Start,
-                  m1Stop,
-                );
+                if (
+                  this.waveSurfers[highs[x]] &&
+                  this.waveSurfers[highs[x]].regions &&
+                  this.waveSurfers[highs[x]].regions.list
+                ) {
+                  updateRegionAlpha(
+                    this.waveSurfers[highs[x]].regions.list,
+                    0.7,
+                    m1Start,
+                    m1Stop,
+                  );
+                }
                 if (this.voNum + x < voiceOvers.length)
                   voiceOvers[voiceOvers.length - (this.voNum + x + 1)]("");
                 this.props.setPlaybackRate(
