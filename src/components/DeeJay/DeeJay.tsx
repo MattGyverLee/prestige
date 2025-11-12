@@ -618,11 +618,21 @@ export class DeeJay extends Component<DeeJayProps> {
         if (this.props.currentTimeline !== -1) {
           // Instead of calling checkVOAndPlay/seekSyncAndPlay, dispatch a Clip action
           // This will use the full Clip handler logic for sequential highs + simultaneous lows
+
+          // For WS0, use source timeline (startTime/stopTime)
+          // For WS1/WS2, use annotation timeline (data[0].clipStart/clipStop)
+          const clipStart = idx === 0
+            ? currM.startTime
+            : (currM.data[0]?.clipStart ?? currM.startTime);
+          const clipStop = idx === 0
+            ? currM.stopTime
+            : (currM.data[0]?.clipStop ?? currM.stopTime);
+
           this.props.setDispatch({
             dispatchType: "Clip",
             wsNum: idx,
-            clipStart: currM.startTime,
-            clipStop: currM.stopTime,
+            clipStart,
+            clipStop,
           });
         } else {
           this.seekSyncAndPlay(0, {
@@ -1212,6 +1222,13 @@ export class DeeJay extends Component<DeeJayProps> {
           this.waveSurfers[wsNum].getCurrentTime(),
           dispatch,
         );
+
+        // Guard against undefined milestone
+        if (!currM || currM.startTime === undefined) {
+          console.error(`[DeeJay] Clip dispatch failed: no milestone found for WS${wsNum} at position ${this.waveSurfers[wsNum].getCurrentTime()}`);
+          this.sendSnackbar("No audio clip found at this position");
+          break;
+        }
 
         // Ensure the clicked wavesurfer is fully enabled
         this.waveSurfers[wsNum].setVolume(1);
