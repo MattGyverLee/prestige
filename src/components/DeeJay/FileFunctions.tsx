@@ -20,16 +20,18 @@ export function findValidSourceAudio(): LooseObject[] {
   const allSourceAudio = sourceAudio(state.tree.sourceMedia, true);
   const syncMedia = getSyncMedia();
 
-  console.log("[findValidSourceAudio] All source audio:", allSourceAudio.map(sa => sa.blobURL));
+  console.log("[findValidSourceAudio] All source audio:", allSourceAudio.map(sa => `${sa.name} -> ${sa.blobURL}`));
   console.log("[findValidSourceAudio] Sync media:", syncMedia);
 
   const filtered = allSourceAudio.filter(
     (sa: LooseObject) => {
-      const hasNormalized = sa.blobURL.includes("_StandardAudio_Normalized.mp3");
+      // Check the filename, not the blob URL (blob URLs are random UUIDs)
+      const hasNormalized = sa.name && sa.name.includes("_StandardAudio_Normalized.mp3");
 
       // If no timeline is selected (syncMedia is empty), just return normalized MP3 files
       if (syncMedia.length === 0) {
         console.log("[findValidSourceAudio] No timeline - checking for normalized MP3:", {
+          name: sa.name,
           blobURL: sa.blobURL,
           hasNormalized,
           passes: hasNormalized
@@ -38,10 +40,12 @@ export function findValidSourceAudio(): LooseObject[] {
       }
 
       // If timeline exists, check if the .wav file is in syncMedia
-      const wavName = sa.blobURL.substring(0, sa.blobURL.indexOf("_Normalized.mp3")) + ".wav";
+      // Extract base name from the filename
+      const wavName = sa.name.substring(0, sa.name.indexOf("_Normalized.mp3")) + ".wav";
       const inSync = syncMedia.indexOf(wavName) !== -1;
 
       console.log("[findValidSourceAudio] Timeline exists - checking:", {
+        name: sa.name,
         blobURL: sa.blobURL,
         hasNormalized,
         wavName,
@@ -53,7 +57,7 @@ export function findValidSourceAudio(): LooseObject[] {
     }
   );
 
-  console.log("[findValidSourceAudio] Filtered result:", filtered.length, filtered.map(f => f.blobURL));
+  console.log("[findValidSourceAudio] Filtered result:", filtered.length, filtered.map(f => `${f.name} -> ${f.blobURL}`));
   return filtered;
 }
 
@@ -65,7 +69,8 @@ function findValidAnnotAudio(idx: number): LooseObject[] {
     state.annot.currentTimeline,
     state.annot.timeline,
   ).filter((aa: LooseObject) =>
-    aa.blobURL.includes((idx - 1 ? "Translation" : "Careful") + "_Merged.mp3"),
+    // Use filename instead of blob URL for matching
+    aa.name && aa.name.includes((idx - 1 ? "Translation" : "Careful") + "_Merged.mp3"),
   );
 }
 
