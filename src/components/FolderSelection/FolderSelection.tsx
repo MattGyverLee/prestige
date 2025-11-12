@@ -166,7 +166,7 @@ class SelectFolderZone extends Component<FolderProps> {
       mimeType: tempMime,
       name: parsedPath.base,
       path: path,
-      wsAllowed: false,
+      wsAllowed: true,
       waveform: false,
     };
   };
