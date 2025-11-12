@@ -235,6 +235,14 @@ export class DeeJay extends Component<DeeJayProps> {
           } else if (!audioToLoad) {
             console.log(`[DeeJay] WS${idx} - No valid audio. SourceMedia count:`, this.props.sourceMedia?.length);
           }
+        } else if (idx > 0) {
+          // WS1 and WS2 (annotation tracks)
+          const audioToLoad = findValidAudio(idx);
+          console.log(`[DeeJay] WS${idx} sync (annot) - audioToLoad:`, audioToLoad, `currentPlaying:`, this.currentPlaying[idx], `annotMedia count:`, this.props.annotMedia?.length);
+          if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
+            console.log(`[DeeJay] WS${idx} - Calling loadFileWS with:`, audioToLoad);
+            this.loadFileWS(idx, audioToLoad);
+          }
         }
       } else {
         // If WS is Ready and Playing => Check for Playing Actions
@@ -641,6 +649,8 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // Subscription Function to Act Whenever WS is Ready or WFReady
     const waveformReady = () => {
+      console.log(`[DeeJay] WS${idx} waveform ready. currentTimeline:`, this.props.currentTimeline);
+
       // Add WF and Set WS Duration
       this.props.waveformAdded({
         ref: this.currentPlaying[idx],
@@ -649,8 +659,11 @@ export class DeeJay extends Component<DeeJayProps> {
       });
 
       // Draw All Regions currentTimeline Has
-      if (this.props.currentTimeline !== -1)
-        this.props.timeline[this.props.currentTimeline].milestones.forEach(
+      if (this.props.currentTimeline !== -1) {
+        const milestones = this.props.timeline[this.props.currentTimeline].milestones;
+        console.log(`[DeeJay] WS${idx} drawing regions. Milestones count:`, milestones.length);
+
+        milestones.forEach(
           (m: any, mileNum: number) => {
             const region = {
               id: m.startId,
@@ -660,12 +673,18 @@ export class DeeJay extends Component<DeeJayProps> {
               drag: false,
               resize: false,
             };
-            if (idx === 0) this.waveSurfers[idx].addRegion(region);
-            else
+            if (idx === 0) {
+              console.log(`[DeeJay] WS${idx} adding region:`, region);
+              this.waveSurfers[idx].addRegion(region);
+            } else {
               m.data.forEach((d: LooseObject) => {
                 if (
                   d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
                 ) {
+                  console.log(`[DeeJay] WS${idx} adding region for ${d.channel}:`, {
+                    start: d.clipStart,
+                    end: d.clipStop,
+                  });
                   this.waveSurfers[idx].addRegion({
                     ...region,
                     start: d.clipStart,
@@ -673,19 +692,25 @@ export class DeeJay extends Component<DeeJayProps> {
                   });
                 }
               });
+            }
           },
         );
+      } else {
+        console.log(`[DeeJay] WS${idx} no timeline selected (currentTimeline = -1), skipping regions`);
+      }
 
       // Start Up if WS0, Reload All Regions, and unsubscribe
       if (idx === 0) {
         //todo: Add subtitle here.
         if (this.props.currentTimeline >= 0) {
+          console.log(`[DeeJay] WS0 dispatching PlayerSeek`);
           this.props.setDispatch({
             dispatchType: "PlayerSeek",
             wsNum: -1,
             refStart: 0,
           });
         } else {
+          console.log(`[DeeJay] WS0 no timeline, auto-playing`);
           this.waveSurfers[idx].play(0);
           this.props.setSeek(0, "fraction");
           this.props.togglePlay(true);

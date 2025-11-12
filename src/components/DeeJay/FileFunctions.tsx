@@ -63,15 +63,25 @@ export function findValidSourceAudio(): LooseObject[] {
 
 function findValidAnnotAudio(idx: number): LooseObject[] {
   const state = store.getState();
-  return annotAudio(
+  const channelName = (idx - 1 ? "Translation" : "Careful") + "_Merged.mp3";
+  const allAnnot = annotAudio(
     state.tree.annotMedia,
     true,
     state.annot.currentTimeline,
     state.annot.timeline,
-  ).filter((aa: LooseObject) =>
-    // Use filename instead of blob URL for matching
-    aa.name && aa.name.includes((idx - 1 ? "Translation" : "Careful") + "_Merged.mp3"),
   );
+
+  console.log(`[findValidAnnotAudio] WS${idx} looking for "${channelName}"`);
+  console.log(`[findValidAnnotAudio] WS${idx} all annot audio:`, allAnnot.map(aa => `${aa.name} -> ${aa.blobURL}`));
+  console.log(`[findValidAnnotAudio] WS${idx} currentTimeline:`, state.annot.currentTimeline);
+
+  const filtered = allAnnot.filter((aa: LooseObject) =>
+    // Use filename instead of blob URL for matching
+    aa.name && aa.name.includes(channelName),
+  );
+
+  console.log(`[findValidAnnotAudio] WS${idx} filtered result:`, filtered.length, filtered.map(f => `${f.name} -> ${f.blobURL}`));
+  return filtered;
 }
 
 export function syncContainsCurrent(currBlob: string): boolean {
