@@ -1025,6 +1025,19 @@ export class DeeJay extends Component<DeeJayProps> {
               this.waveSurfers[actives[0]].getDuration(),
           );
         }
+
+        // Set actingDispatch so PlayPause knows which wavesurfer to play
+        this.actingDispatch = { dispatchType: "PlayerSeek", wsNum: actives[0] };
+
+        // Auto-play after seeking (matches region-clicked behavior)
+        if (this.props.currentTimeline !== -1 && currM) {
+          this.props.setDispatch({
+            dispatchType: "Clip",
+            wsNum: actives[0],
+            clipStart: currM.startTime,
+            clipStop: currM.stopTime,
+          });
+        }
         break;
       }
       case "PlayPause": {
