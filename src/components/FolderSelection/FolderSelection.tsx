@@ -76,6 +76,26 @@ class SelectFolderZone extends Component<FolderProps> {
       if (l.startsWith("Prestige")) localStorage.removeItem(l);
   }
 
+  componentDidUpdate(prevProps: FolderProps): void {
+    // If timeline was just created and we have a URL set, update currentTimeline
+    if (
+      prevProps.timeline.length === 0 &&
+      this.props.timeline.length > 0 &&
+      this.props.url !== "" &&
+      this.props.url !== "none"
+    ) {
+      const timelineIndex = getTimelineIndex(
+        this.props.timeline,
+        this.props.url,
+        this.props.sourceMedia
+      );
+      console.log(`[FolderSelection] Timeline created! Updating currentTimeline from -1 to ${timelineIndex}`);
+      if (timelineIndex !== -1) {
+        this.props.setURL(this.props.url, timelineIndex);
+      }
+    }
+  }
+
   async componentWillUnmount() {
     if (this.watcherId !== null) {
       await electronAPI.stopWatcher(this.watcherId);
