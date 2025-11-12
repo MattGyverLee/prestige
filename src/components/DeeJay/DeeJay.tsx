@@ -223,11 +223,11 @@ export class DeeJay extends Component<DeeJayProps> {
         // -> Else If WS0, and Not Empty URL => Load and Play URL
         if (this.currentPlaying[idx]) this.checkPlayingValues(idx);
         else if (!idx && this.props.url) {
-          if (this.props.url !== "") {
-            this.loadFileWS(idx, findValidAudio(idx));
-          } else {
-            // findValidAudio(idx) / this.props.url
-            this.loadFileWS(idx, this.props.url);
+          const audioToLoad =
+            this.props.url !== "" ? findValidAudio(idx) : this.props.url;
+          // Only load if different from what's currently playing/loading
+          if (audioToLoad && this.currentPlaying[idx] !== audioToLoad) {
+            this.loadFileWS(idx, audioToLoad);
           }
         }
       } else {
@@ -235,13 +235,19 @@ export class DeeJay extends Component<DeeJayProps> {
         // -> Else => Search and Load
         if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady)
           this.checkPlayingValues(idx);
-        else if (!this.currentPlaying[idx]) {
+        else {
           const load = this.loadQueue[idx]
             ? this.loadQueue[idx]
             : findValidAudio(idx);
-          // Load File if Possible, Otherwise Put Into LoadQueue
-          if (!this.fileAllowed(load)) this.loadQueue[idx] = load;
-          else this.loadFileWS(idx, load);
+          // Only load if:
+          // 1. File is allowed
+          // 2. Different from what's currently playing/loading
+          // 3. Not empty
+          if (!this.fileAllowed(load)) {
+            this.loadQueue[idx] = load;
+          } else if (load && this.currentPlaying[idx] !== load) {
+            this.loadFileWS(idx, load);
+          }
         }
       }
     });
@@ -593,6 +599,12 @@ export class DeeJay extends Component<DeeJayProps> {
 
   // Loads a WS and Subscribes it to an "onReady" Function
   loadFileWS = (idx: number, load: string): void => {
+    // Don't load if already loading this file
+    if (this.currentPlaying[idx] === load) {
+      console.log(`Skipping load - ${load} is already loading/playing on WS${idx}`);
+      return;
+    }
+
     // Grab WS, Its WF (if it exists), and Subscription Function (based on if WF exists or not)
     const ws = this.waveSurfers[idx];
     //todo:, Waveforms not saved, so all are currently false.
