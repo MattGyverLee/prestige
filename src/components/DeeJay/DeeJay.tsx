@@ -190,6 +190,34 @@ export class DeeJay extends Component<DeeJayProps> {
     const mediaChanged =
       prevProps.annotMedia !== this.props.annotMedia ||
       prevProps.sourceMedia !== this.props.sourceMedia;
+    const timelineJustSet = prevProps.currentTimeline === -1 && this.props.currentTimeline !== -1;
+
+    // If timeline was just set, redraw regions for WS0 and trigger load for WS1/WS2
+    if (timelineJustSet) {
+      console.log(`[DeeJay] Timeline just set (${prevProps.currentTimeline} -> ${this.props.currentTimeline})`);
+
+      // Redraw regions for WS0 if it's already ready
+      const ws0 = this.waveSurfers[0];
+      if (ws0 && ws0.isReady) {
+        console.log(`[DeeJay] WS0 already ready, drawing regions for timeline ${this.props.currentTimeline}`);
+        ws0.clearRegions();
+        const milestones = this.props.timeline[this.props.currentTimeline].milestones;
+        milestones.forEach((m: any, mileNum: number) => {
+          ws0.addRegion({
+            id: m.startId,
+            start: m.startTime,
+            end: m.stopTime,
+            color: this.regionColors[mileNum],
+            drag: false,
+            resize: false,
+          });
+        });
+      }
+
+      // Force WS1 and WS2 to load by clearing their currentPlaying state
+      this.currentPlaying[1] = "";
+      this.currentPlaying[2] = "";
+    }
 
     // If currentURL and StateURL Don't Match (use prevProps for comparison)
     if (urlChanged) {
