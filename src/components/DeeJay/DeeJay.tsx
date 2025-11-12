@@ -78,6 +78,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private waveSurfers: WaveSurfer[] = [];
   private regionsPlugins: RegionsPlugin[] = [];
   private debugPlayback = false;
+  private verboseMilestones = false; // Set to true to see milestone redrawing logs
   private lastDimensions = 477;
 
   getDimensions = (): number => {
@@ -272,13 +273,17 @@ export class DeeJay extends Component<DeeJayProps> {
           // This prevents infinite reload loops when milestones change repeatedly
           const audioToLoad = findValidAudio(idx);
           if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
-            console.log(`[DeeJay] WS${idx} milestones changed, clearing currentPlaying to reload with new regions`);
+            if (this.verboseMilestones) {
+              console.log(`[DeeJay] WS${idx} milestones changed, clearing currentPlaying to reload with new regions`);
+            }
             this.currentPlaying[idx] = "";
           } else if (!audioToLoad) {
             // If no valid audio, clear it
             this.currentPlaying[idx] = "";
           } else {
-            console.log(`[DeeJay] WS${idx} milestones changed but same file is loaded, just redrawing regions`);
+            if (this.verboseMilestones) {
+              console.log(`[DeeJay] WS${idx} milestones changed but same file is loaded, just redrawing regions`);
+            }
             // Same file is already loaded, just clear and redraw regions
             this.regionsPlugins[idx].clearRegions();
             const milestones = this.props.timeline[this.props.currentTimeline].milestones;
