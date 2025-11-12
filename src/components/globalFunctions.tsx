@@ -215,7 +215,7 @@ export function annotAudio(
         (splitOrMerged ? file.isMerged : !file.isMerged) &&
         getTimelineIndex(
           timelines,
-          file.blobURL.substring(0, file.blobURL.indexOf("_Annotations")),
+          file.path.substring(0, file.path.indexOf("_Annotations")),
           sourceMedia,
         ) === timelineIdx,
     )
