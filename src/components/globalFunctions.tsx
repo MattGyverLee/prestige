@@ -11,12 +11,17 @@ export function getTimelineIndex(
   blobURL: string,
   sourceMedia?: LooseObject[],
 ): number {
+  console.log(`[getTimelineIndex] Called with blobURL:`, blobURL?.substring(0, 60));
+  console.log(`[getTimelineIndex] timelines.length:`, timelines.length);
+  console.log(`[getTimelineIndex] sourceMedia:`, sourceMedia ? `array of ${sourceMedia.length}` : 'NOT PROVIDED');
+
   if (
     blobURL === undefined ||
     blobURL === null ||
     blobURL === "" ||
     timelines.length === 0
   ) {
+    console.log(`[getTimelineIndex] Early return -1: blobURL=${blobURL}, timelines.length=${timelines.length}`);
     return -1;
   }
 
@@ -26,10 +31,13 @@ export function getTimelineIndex(
 
   if (sourceMedia) {
     const fileObj = sourceMedia.find((f) => f.blobURL === blobURL);
+    console.log(`[getTimelineIndex] fileObj found:`, fileObj ? `name="${fileObj.name}", path="${fileObj.path}"` : 'NOT FOUND');
     if (fileObj) {
       fileName = fileObj.name; // e.g., "audio.wav"
       filePath = fileObj.path; // e.g., "/home/user/project/audio.wav"
     }
+  } else {
+    console.log(`[getTimelineIndex] sourceMedia not provided, cannot extract filename`);
   }
 
   const temp = timelines.map((t: LooseObject, idx: number) => {
@@ -37,8 +45,11 @@ export function getTimelineIndex(
     return x;
   });
 
+  console.log(`[getTimelineIndex] Timeline syncMedia:`, temp.map((t, i) => `TL${i}: [${t.syncMedia.map(sm => sm.substring(sm.lastIndexOf('/')+1)).join(', ')}]`).join('; '));
+
   // Try matching by filename if we have it
   if (fileName) {
+    console.log(`[getTimelineIndex] Trying filename match with: "${fileName}"`);
     for (let i = 0, l = temp.length; i < l; i++) {
       for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
         const syncMediaURL = temp[i].syncMedia[j];
@@ -46,13 +57,18 @@ export function getTimelineIndex(
         const syncMediaName = syncMediaURL.substring(
           syncMediaURL.lastIndexOf("/") + 1,
         );
-        if (syncMediaName === fileName) return temp[i].idx;
+        if (syncMediaName === fileName) {
+          console.log(`[getTimelineIndex] ✓ MATCH! "${syncMediaName}" === "${fileName}" -> returning timeline ${temp[i].idx}`);
+          return temp[i].idx;
+        }
       }
     }
+    console.log(`[getTimelineIndex] No filename matches found`);
   }
 
   // Try matching by full path if we have it
   if (filePath) {
+    console.log(`[getTimelineIndex] Trying path match with: "${filePath}"`);
     for (let i = 0, l = temp.length; i < l; i++) {
       for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
         const syncMediaURL = temp[i].syncMedia[j];
@@ -60,15 +76,23 @@ export function getTimelineIndex(
         const syncMediaPath = syncMediaURL.startsWith("file://")
           ? syncMediaURL.substring(7) // Remove "file://" prefix
           : syncMediaURL;
-        if (syncMediaPath === filePath) return temp[i].idx;
+        if (syncMediaPath === filePath) {
+          console.log(`[getTimelineIndex] ✓ MATCH! path "${syncMediaPath}" === "${filePath}" -> returning timeline ${temp[i].idx}`);
+          return temp[i].idx;
+        }
       }
     }
+    console.log(`[getTimelineIndex] No path matches found`);
   }
 
   // Fallback: Try direct URL matching (for backward compatibility)
+  console.log(`[getTimelineIndex] Trying direct blobURL match`);
   for (let i = 0, l = temp.length; i < l; i++) {
     for (let j = 0, l2 = temp[i].syncMedia.length; j < l2; j++) {
-      if (temp[i].syncMedia[j] === blobURL) return temp[i].idx;
+      if (temp[i].syncMedia[j] === blobURL) {
+        console.log(`[getTimelineIndex] ✓ MATCH! direct URL -> returning timeline ${temp[i].idx}`);
+        return temp[i].idx;
+      }
     }
   }
 
@@ -78,13 +102,16 @@ export function getTimelineIndex(
       0,
       fileName.lastIndexOf("."),
     );
+    console.log(`[getTimelineIndex] Trying eafFile match with: "${fileNameWithoutExt}"`);
     for (let i = 0, l = timelines.length; i < l; i++) {
       if (timelines[i].eafFile.includes(fileNameWithoutExt)) {
+        console.log(`[getTimelineIndex] ✓ MATCH! eafFile includes "${fileNameWithoutExt}" -> returning timeline ${i}`);
         return i;
       }
     }
   }
 
+  console.log(`[getTimelineIndex] ✗ NO MATCHES - returning -1`);
   return -1;
 }
 
