@@ -68,6 +68,7 @@ class SelectFolderZone extends Component<FolderProps> {
   private readyPlayURL = "";
   private usingStoredData = false;
   private watcherId: string | null = null;
+  private annotMergeTimeout: NodeJS.Timeout | null = null;
 
   componentDidMount(): void {
     // Cleaning Storage
@@ -233,6 +234,34 @@ class SelectFolderZone extends Component<FolderProps> {
       if (isAudVid) {
         if (fileDef.isAnnotation) {
           this.props.annotMediaAdded({ file: fileDef });
+
+          // If this is a Merged.mp3 file being added, trigger loadAnnot to create oral annotations
+          if (fileDef.isMerged && fileDef.name.includes("_Merged.mp3") && this.isChokReady) {
+            console.log(`[handleFileAdd] Merged file detected: ${fileDef.name}, triggering loadAnnot`);
+            const isCareful = fileDef.name.includes("Careful");
+            // Note: Merged files already exist, so we don't need to create them
+            // We just need to add the oral annotations to the timeline
+            // This is handled by detecting when all Careful/Translation clips have been added
+          }
+
+          // If this is an individual Careful/Translation clip, check if we should trigger merging
+          if (!fileDef.isMerged && this.isChokReady && this.props.currentTimeline !== -1) {
+            const isCareful = fileDef.name.includes("_Careful.");
+            const isTranslation = fileDef.name.includes("_Translation.");
+
+            if (isCareful || isTranslation) {
+              console.log(`[handleFileAdd] Annotation audio clip added: ${fileDef.name}`);
+              // Debounce: wait a bit for all clips to be discovered, then trigger merge
+              if (this.annotMergeTimeout) {
+                clearTimeout(this.annotMergeTimeout);
+              }
+              this.annotMergeTimeout = setTimeout(async () => {
+                console.log(`[handleFileAdd] Triggering delayed loadAnnot after clip discovery`);
+                await this.loadAnnot(true);  // Careful
+                await this.loadAnnot(false); // Translation
+              }, 500); // Wait 500ms for all clips to be discovered
+            }
+          }
         } else {
           this.props.sourceMediaAdded({ file: fileDef });
           if (fileDef.name.endsWith("_StandardAudio.wav")) {
