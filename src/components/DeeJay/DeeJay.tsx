@@ -200,6 +200,9 @@ export class DeeJay extends Component<DeeJayProps> {
     if (timelineJustSet) {
       console.log(`[DeeJay] Timeline just set (${prevProps.currentTimeline} -> ${this.props.currentTimeline})`);
 
+      // Generate region colors for the new timeline
+      this.regionColors = generateRegionColors();
+
       // Redraw regions for WS0 if it's already ready
       const ws0 = this.waveSurfers[0];
       const regions0 = this.regionsPlugins[0];
@@ -901,11 +904,20 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   clearHandler = (idx: number, handler: string): void => {
-    while (this.waveSurfers[idx].handlers[handler].length > 1)
-      this.waveSurfers[idx].un(
-        handler,
-        this.waveSurfers[idx].handlers[handler][1],
-      );
+    // In WaveSurfer v7, handlers are managed differently
+    // Check if wavesurfer exists and has the handlers property (v6 compatibility)
+    if (
+      this.waveSurfers[idx] &&
+      this.waveSurfers[idx].handlers &&
+      this.waveSurfers[idx].handlers[handler] &&
+      this.waveSurfers[idx].handlers[handler].length > 1
+    ) {
+      while (this.waveSurfers[idx].handlers[handler].length > 1)
+        this.waveSurfers[idx].un(
+          handler,
+          this.waveSurfers[idx].handlers[handler][1],
+        );
+    }
   };
 
   // Returns an Array with the Indexes of Active WSs

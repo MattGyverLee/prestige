@@ -209,15 +209,28 @@ export function annotAudio(
 ): LooseObject[] {
   const annotAud = annotMedia
     .filter(
-      (file) =>
-        file.isAnnotation &&
-        file.mimeType.startsWith("audio") &&
-        (splitOrMerged ? file.isMerged : !file.isMerged) &&
-        getTimelineIndex(
-          timelines,
-          file.path.substring(0, file.path.indexOf("_Annotations")),
-          sourceMedia,
-        ) === timelineIdx,
+      (file) => {
+        if (
+          !file.isAnnotation ||
+          !file.mimeType.startsWith("audio") ||
+          (splitOrMerged ? !file.isMerged : file.isMerged)
+        ) {
+          return false;
+        }
+
+        // Get the base path (before _Annotations directory)
+        const basePath = file.path.substring(0, file.path.indexOf("_Annotations"));
+
+        // Find the source media file that has this base path
+        const sourceFile = sourceMedia?.find((s: LooseObject) => s.path === basePath);
+
+        if (!sourceFile) {
+          return false;
+        }
+
+        // Use the source file's blobURL to match against timeline
+        return getTimelineIndex(timelines, sourceFile.blobURL, sourceMedia) === timelineIdx;
+      }
     )
     .sort((a: LooseObject, b: LooseObject) =>
       sortName(a.name.toLowerCase(), b.name.toLowerCase()),
