@@ -85,6 +85,20 @@ function registerIPCHandlers(mainWindow) {
   });
 
   /**
+   * Read file as ArrayBuffer for binary files (audio/video)
+   */
+  ipcMain.handle('fs:readFileAsBuffer', async (event, filePath) => {
+    try {
+      const buffer = await fs.readFile(filePath);
+      // Convert Node.js Buffer to ArrayBuffer
+      return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+    } catch (error) {
+      console.error('Error reading file as buffer:', error);
+      throw error;
+    }
+  });
+
+  /**
    * Write file contents
    */
   ipcMain.handle('fs:writeFile', async (event, filePath, content) => {

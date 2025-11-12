@@ -37,6 +37,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
 
   /**
+   * Read file as ArrayBuffer (for binary files like audio/video)
+   * @param {string} filePath - Path to file
+   * @returns {Promise<ArrayBuffer>} File contents as ArrayBuffer
+   */
+  readFileAsBuffer: (filePath) => ipcRenderer.invoke('fs:readFileAsBuffer', filePath),
+
+  /**
    * Write file contents
    * @param {string} filePath - Path to file
    * @param {string} content - Content to write

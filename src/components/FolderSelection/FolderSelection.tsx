@@ -92,16 +92,38 @@ class SelectFolderZone extends Component<FolderProps> {
   ): Promise<aTypes.LooseObject> => {
     // Define Fields for Returned FileDef using secure APIs
     const parsedPath = safeParseSync(path);
-    const blobURL = await electronAPI.pathToFileURL(path);
+
+    // Get MIME Type of File
+    const tempMime = await electronAPI.getMimeType(path);
+
+    // For audio/video files, convert to blob URL for webSecurity compatibility
+    // For other files, use file:// URL
+    let blobURL: string;
+    const isAudioVideo = tempMime.startsWith("audio") || tempMime.startsWith("video");
+
+    if (isAudioVideo) {
+      try {
+        // Read file as ArrayBuffer
+        const arrayBuffer = await electronAPI.readFileAsBuffer(path);
+        // Create Blob from ArrayBuffer with proper MIME type
+        const blob = new Blob([arrayBuffer], { type: tempMime });
+        // Create blob URL
+        blobURL = URL.createObjectURL(blob);
+        console.log(`[chokFileDescribe] Created blob URL for ${parsedPath.base}`);
+      } catch (error) {
+        console.error(`[chokFileDescribe] Error creating blob URL for ${path}:`, error);
+        // Fallback to file:// URL if blob creation fails
+        blobURL = await electronAPI.pathToFileURL(path);
+      }
+    } else {
+      blobURL = await electronAPI.pathToFileURL(path);
+    }
 
     const isMerged = parsedPath.base.includes("_Merged");
     const isAnnotation =
       parsedPath.dir.endsWith("_Annotations") ||
       parsedPath.base.includes("oralAnnotations") ||
       isMerged;
-
-    // Get MIME Type of File
-    const tempMime = await electronAPI.getMimeType(path);
 
     // If ".mts" File => Convert (TODO: Implement video conversion via IPC)
     // -> Else If ".eaf" File => Process
