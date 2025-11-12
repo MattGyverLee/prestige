@@ -225,9 +225,13 @@ export class DeeJay extends Component<DeeJayProps> {
         else if (!idx && this.props.url) {
           const audioToLoad =
             this.props.url !== "" ? findValidAudio(idx) : this.props.url;
+          console.log(`[DeeJay] WS${idx} sync - audioToLoad:`, audioToLoad, `currentPlaying:`, this.currentPlaying[idx], `props.url:`, this.props.url);
           // Only load if we have a valid URL and it's different from current
           if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
+            console.log(`[DeeJay] WS${idx} - Calling loadFileWS with:`, audioToLoad);
             this.loadFileWS(idx, audioToLoad);
+          } else if (!audioToLoad) {
+            console.log(`[DeeJay] WS${idx} - No valid audio. SourceMedia count:`, this.props.sourceMedia?.length);
           }
         }
       } else {
@@ -239,11 +243,16 @@ export class DeeJay extends Component<DeeJayProps> {
           const load = this.loadQueue[idx]
             ? this.loadQueue[idx]
             : findValidAudio(idx);
+          console.log(`[DeeJay] WS${idx} non-sync - load:`, load, `queue:`, this.loadQueue[idx], `currentPlaying:`, this.currentPlaying[idx]);
           // Load File if Possible, Otherwise Put Into LoadQueue
           if (!this.fileAllowed(load)) {
             this.loadQueue[idx] = load;
+            console.log(`[DeeJay] WS${idx} - File not allowed, queued`);
           } else if (load) {
+            console.log(`[DeeJay] WS${idx} - Calling loadFileWS with:`, load);
             this.loadFileWS(idx, load);
+          } else {
+            console.log(`[DeeJay] WS${idx} - No file to load. AnnotMedia count:`, this.props.annotMedia?.length);
           }
         }
       }
