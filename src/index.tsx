@@ -11,6 +11,30 @@ import { createRoot } from "react-dom/client";
 import { Toaster } from "react-hot-toast";
 import store from "./store/store";
 
+// Suppress defaultProps deprecation warnings from third-party libraries
+// This is specifically for @devexpress/dx-react-grid-material-ui which is in maintenance mode
+const originalError = console.error;
+console.error = (...args) => {
+  if (
+    typeof args[0] === "string" &&
+    args[0].includes("Support for defaultProps will be removed")
+  ) {
+    return;
+  }
+  originalError.call(console, ...args);
+};
+
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  if (
+    typeof args[0] === "string" &&
+    args[0].includes("Support for defaultProps will be removed")
+  ) {
+    return;
+  }
+  originalWarn.call(console, ...args);
+};
+
 console.log(`process.env: `, process.env);
 if (process.env.REACT_APP_MODE === "electron") {
   console.log(`Running in Electron: Filesystem access is enabled.`);
