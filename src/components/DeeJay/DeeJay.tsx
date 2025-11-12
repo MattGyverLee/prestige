@@ -246,9 +246,29 @@ export class DeeJay extends Component<DeeJayProps> {
       this.currentPlaying[2] = "";
     }
 
-    // If milestones changed (e.g., oral annotations were added), force WS1/WS2 to reload
+    // If milestones changed (e.g., oral annotations were added), redraw all waveforms
     if (milestonesChanged && !timelineJustSet) {
-      console.log(`[DeeJay] Milestones changed, forcing WS1/WS2 to reload with updated milestone data`);
+      console.log(`[DeeJay] Milestones changed, redrawing all waveforms with updated milestone data`);
+
+      // Redraw WS0 regions with new milestone data
+      const ws0 = this.waveSurfers[0];
+      const regions0 = this.regionsPlugins[0];
+      if (ws0 && regions0 && ws0.getDuration() > 0) {
+        console.log(`[DeeJay] WS0 redrawing regions after milestone change`);
+        regions0.clearRegions();
+        const milestones = this.props.timeline[this.props.currentTimeline].milestones;
+        milestones.forEach((m: any, mileNum: number) => {
+          const region = {
+            id: m.startId,
+            start: m.startTime,
+            end: m.stopTime,
+            color: this.regionColors[mileNum],
+            drag: false,
+            resize: false,
+          };
+          regions0.addRegion(region);
+        });
+      }
 
       // Clear and reload WS1 and WS2 to redraw regions with new oral annotations
       [1, 2].forEach((idx) => {
