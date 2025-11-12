@@ -69,6 +69,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private currentPlaying: string[] = [];
   private currentSpeeds: number[] = [];
   private idxs = [0, 1, 2];
+  private isWSReady: boolean[] = [];  // Track ready state for each WaveSurfer
   private loadQueue: string[] = [];
   private playPausing = false;
   private regionColors: string[] = [];
@@ -98,6 +99,7 @@ export class DeeJay extends Component<DeeJayProps> {
       this.clicked.push(false);
       this.currentPlaying.push("");
       this.currentSpeeds.push(1);
+      this.isWSReady.push(false);  // Initialize ready state to false
       this.loadQueue.push("");
       this.createWaveSurfer(idx);
     });
@@ -352,7 +354,7 @@ export class DeeJay extends Component<DeeJayProps> {
       } else {
         // If WS is Ready and Playing => Check for Playing Actions
         // -> Else => Search and Load
-        if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady) {
+        if (this.currentPlaying[idx] && this.isWSReady[idx]) {
           this.checkPlayingValues(idx);
         } else if (!this.currentPlaying[idx]) {
           const load = this.loadQueue[idx]
@@ -719,6 +721,9 @@ export class DeeJay extends Component<DeeJayProps> {
       return;
     }
 
+    // Mark as not ready while loading (disables volume controls)
+    this.isWSReady[idx] = false;
+
     // Grab WS, Its WF (if it exists), and Subscription Function (based on if WF exists or not)
     const ws = this.waveSurfers[idx];
     //todo:, Waveforms not saved, so all are currently false.
@@ -751,6 +756,9 @@ export class DeeJay extends Component<DeeJayProps> {
     const waveformReady = () => {
       console.log(`[DeeJay] WS${idx} ===== WAVEFORM READY CALLBACK EXECUTING =====`);
       console.log(`[DeeJay] WS${idx} waveform ready. currentTimeline:`, this.props.currentTimeline);
+
+      // Mark this WaveSurfer as ready (for volume controls)
+      this.isWSReady[idx] = true;
 
       // Add WF and Set WS Duration
       // WaveSurfer v7: exportPCM is replaced with getDecodedData
@@ -1316,11 +1324,11 @@ export class DeeJay extends Component<DeeJayProps> {
             this.waveSurfers[idx] && this.waveSurfers[idx].getPlaybackRate()
           }
           getReady={() =>
-            this.waveSurfers[idx] && this.waveSurfers[idx].isReady
+            this.isWSReady[idx]
           }
           index={idx}
           onClick={() => {
-            if (this.waveSurfers[idx] && this.waveSurfers[idx].isReady) {
+            if (this.waveSurfers[idx] && this.isWSReady[idx]) {
               this.clearDispatchLeftovers();
               this.clicked[idx] = true;
               this.solo(idx, false);
