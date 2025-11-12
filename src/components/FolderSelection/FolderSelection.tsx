@@ -650,7 +650,13 @@ class SelectFolderZone extends Component<FolderProps> {
         const timelineURL = await electronAPI.pathToFileURL(
           annotDir.substring(0, annotDir.indexOf("_Annotations")),
         );
+        console.log(`[loadAnnot] annotDir:`, annotDir);
+        console.log(`[loadAnnot] annotDir.substring:`, annotDir.substring(0, annotDir.indexOf("_Annotations")));
+        console.log(`[loadAnnot] timelineURL for getTimelineIndex:`, timelineURL);
+        console.log(`[loadAnnot] this.props.timeline.length:`, this.props.timeline.length);
+        console.log(`[loadAnnot] timeline[0].syncMedia:`, this.props.timeline[0]?.syncMedia);
         const timelineIndex = getTimelineIndex(this.props.timeline, timelineURL);
+        console.log(`[loadAnnot] ⚠️ timelineIndex = ${timelineIndex} (${timelineIndex === -1 ? 'INVALID - will not add!' : 'valid'})`);
         console.log(`[loadAnnot] Adding oral milestone ${i}/${inputTimes.length}:`, {
           channel: oralMilestone.data[0].channel,
           startTime: oralMilestone.startTime,
@@ -659,10 +665,12 @@ class SelectFolderZone extends Component<FolderProps> {
           clipStop: oralMilestone.data[0].clipStop,
           timelineIndex
         });
+        console.log(`[loadAnnot] Calling addOralAnnotation...`);
         this.props.addOralAnnotation(
           oralMilestone,
           timelineIndex,
         );
+        console.log(`[loadAnnot] addOralAnnotation dispatched for milestone ${i}/${inputTimes.length}`);
         this.props.setTimelineChanged(true);
       }
 
