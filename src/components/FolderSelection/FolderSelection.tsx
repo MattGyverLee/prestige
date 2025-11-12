@@ -510,11 +510,15 @@ class SelectFolderZone extends Component<FolderProps> {
   loadAnnot = async (carefulOrTranslation: boolean) => {
     try {
       const ctString = carefulOrTranslation ? "Careful" : "Translation";
-      console.log(`[loadAnnot] Starting for ${ctString}, annotMedia.length: ${this.props.annotMedia.length}`);
+      console.log(`[loadAnnot] Starting for ${ctString}`);
+      console.log(`[loadAnnot] annotMedia.length: ${this.props.annotMedia.length}`);
+      console.log(`[loadAnnot] annotMedia files:`, this.props.annotMedia.map((am: any) => am.name));
 
       // Sort FilteredAnnot Based on Start Time into InputFiles
-      const inputFiles: any[] = this.props.annotMedia
-        .filter((am: any) => am.name.includes("_" + ctString))
+      const filtered = this.props.annotMedia.filter((am: any) => am.name.includes("_" + ctString));
+      console.log(`[loadAnnot] Filtered ${ctString} files:`, filtered.map((f: any) => f.name));
+
+      const inputFiles: any[] = filtered
         .sort((a1: any, a2: any) => {
           return (
             parseFloat(a1.name.substring(0, a1.name.indexOf("_"))) -
@@ -524,6 +528,8 @@ class SelectFolderZone extends Component<FolderProps> {
         .map((a: any) => a.path);
 
       console.log(`[loadAnnot] Found ${inputFiles.length} ${ctString} files to merge`);
+      console.log(`[loadAnnot] Input file paths:`, inputFiles);
+
       if (inputFiles.length === 0) {
         console.log(`[loadAnnot] No ${ctString} files found, skipping merge`);
         return;
