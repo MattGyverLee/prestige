@@ -190,36 +190,6 @@ export class DeeJay extends Component<DeeJayProps> {
     const mediaChanged =
       prevProps.annotMedia !== this.props.annotMedia ||
       prevProps.sourceMedia !== this.props.sourceMedia;
-    const timelineCreated = prevProps.currentTimeline === -1 && this.props.currentTimeline !== -1;
-
-    // If timeline was just created, redraw regions on already-ready waveforms
-    if (timelineCreated && this.props.currentTimeline !== -1) {
-      console.log(`[DeeJay] Timeline created (${prevProps.currentTimeline} -> ${this.props.currentTimeline}), redrawing regions`);
-      this.idxs.forEach((idx: number) => {
-        const ws = this.waveSurfers[idx];
-        if (ws && ws.isReady) {
-          console.log(`[DeeJay] WS${idx} is ready, drawing regions for currentTimeline=${this.props.currentTimeline}`);
-          // Clear existing regions
-          ws.clearRegions();
-
-          // Draw regions for the timeline
-          const milestones = this.props.timeline[this.props.currentTimeline].milestones;
-          milestones.forEach((m: any, mileNum: number) => {
-            const region = {
-              id: m.startId,
-              start: m.startTime,
-              end: m.stopTime,
-              color: this.regionColors[mileNum],
-              drag: false,
-              resize: false,
-            };
-            if (idx === 0) {
-              ws.addRegion(region);
-            }
-          });
-        }
-      });
-    }
 
     // If currentURL and StateURL Don't Match (use prevProps for comparison)
     if (urlChanged) {
@@ -259,6 +229,14 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // Loop Through all WSs
     this.idxs.forEach((idx: number) => {
+      // Don't load waveforms until we have a timeline (if one exists)
+      // If timeline array is populated but currentTimeline is -1, wait
+      const waitingForTimeline = this.props.timeline.length > 0 && this.props.currentTimeline === -1;
+      if (waitingForTimeline) {
+        console.log(`[DeeJay] WS${idx} waiting for timeline to be set (timeline.length=${this.props.timeline.length}, currentTimeline=${this.props.currentTimeline})`);
+        return;
+      }
+
       // If Sync Media Does Not Contain currBlob => No Timeline Actions
       // -> Else => Timeline Actions
       const inSync = syncContainsCurrent(this.currBlob);
