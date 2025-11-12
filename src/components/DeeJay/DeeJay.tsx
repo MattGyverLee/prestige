@@ -125,12 +125,14 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // Process Region Click - enables playback when clicking on regions
     newWS.on("region-clicked", (region: any) => {
-      if (this.waveSurfers[idx] && this.isWSReady[idx]) {
-        this.clearDispatchLeftovers();
-        this.clicked[idx] = true;
-        this.solo(idx, false);
-        this.waveSurfers[idx].pause();
-        // The click will trigger a seek event, which calls wsSeek(idx)
+      if (this.waveSurfers[idx] && this.isWSReady[idx] && this.props.currentTimeline !== -1) {
+        // Dispatch a "Clip" action to play this region, matching annotation table behavior
+        this.props.setDispatch({
+          dispatchType: "Clip",
+          wsNum: idx,
+          clipStart: region.start,
+          clipStop: region.end,
+        });
       }
     });
 
