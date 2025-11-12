@@ -289,6 +289,7 @@ class SelectFolderZone extends Component<FolderProps> {
 
   // Handler for watcher ready event
   private handleWatcherReady = async (props: any) => {
+    console.log(`[handleWatcherReady] usingStoredData: ${this.usingStoredData}, sourceMedia.length: ${this.props.sourceMedia.length}, readyPlayURL: ${this.readyPlayURL}`);
     if (!this.usingStoredData) {
       if (this.readyPlayURL !== "") {
         props.setURL(
@@ -297,6 +298,7 @@ class SelectFolderZone extends Component<FolderProps> {
         );
         this.readyPlayURL = "";
       } else if (this.props.sourceMedia.length !== 0) {
+        console.log(`[handleWatcherReady] Calling loadAnnot for Careful and Translation`);
         await this.loadAnnot(true);
         await this.loadAnnot(false);
         const blobURL = getSourceMedia(this.props.sourceMedia, false)[0]
@@ -508,6 +510,7 @@ class SelectFolderZone extends Component<FolderProps> {
   loadAnnot = async (carefulOrTranslation: boolean) => {
     try {
       const ctString = carefulOrTranslation ? "Careful" : "Translation";
+      console.log(`[loadAnnot] Starting for ${ctString}, annotMedia.length: ${this.props.annotMedia.length}`);
 
       // Sort FilteredAnnot Based on Start Time into InputFiles
       const inputFiles: any[] = this.props.annotMedia
@@ -520,7 +523,9 @@ class SelectFolderZone extends Component<FolderProps> {
         })
         .map((a: any) => a.path);
 
+      console.log(`[loadAnnot] Found ${inputFiles.length} ${ctString} files to merge`);
       if (inputFiles.length === 0) {
+        console.log(`[loadAnnot] No ${ctString} files found, skipping merge`);
         return;
       }
 
