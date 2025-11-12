@@ -7,6 +7,7 @@ import { DeeJayDispatch } from "../../store/deeJay/types";
 
 import { LooseObject, Milestone } from "../../store/annot/types";
 import WaveSurfer from "wavesurfer.js";
+import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import toast from "react-hot-toast";
@@ -74,6 +75,7 @@ export class DeeJay extends Component<DeeJayProps> {
   private regionsOn = 1;
   private voNum = 0;
   private waveSurfers: WaveSurfer[] = [];
+  private regionsPlugins: RegionsPlugin[] = [];
   private debugPlayback = false;
   private lastDimensions = 477;
 
@@ -102,11 +104,11 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   createWaveSurfer = (idx: number): void => {
-    const newWS = createWaveSurfer(idx);
+    const { wavesurfer: newWS, regionsPlugin } = createWaveSurfer(idx);
 
     newWS.on("region-created", (region: any) => {
-      if (newWS.regions && newWS.regions.list && newWS.regions.list[region.id])
-        newWS.regions.list[region.id].onDrag(0);
+      // In WaveSurfer v7, region.onDrag is not needed
+      // The region is already created and configured
     });
 
     // Process Region Hover In
@@ -157,6 +159,7 @@ export class DeeJay extends Component<DeeJayProps> {
     newWS.on("seek", () => this.wsSeek(idx));
 
     this.waveSurfers[idx] = newWS;
+    this.regionsPlugins[idx] = regionsPlugin;
   };
 
   regionHover = (region: any, element: string, regionsOn: number): void => {
@@ -164,20 +167,21 @@ export class DeeJay extends Component<DeeJayProps> {
       this.idxs.forEach((idx: number) => {
         if (
           this.waveSurfers[idx] &&
-          this.waveSurfers[idx].regions &&
-          this.waveSurfers[idx].regions.list &&
-          this.waveSurfers[idx].regions.list[region.id]
+          this.regionsPlugins[idx]
         ) {
-          const thisRegion = this.waveSurfers[idx].regions.list[region.id];
-          thisRegion.element.id = element;
-          updateRegionAlpha(
-            this.waveSurfers[idx].regions.list,
-            regionsOn === 1 ? (element ? 0.7 : 0.1) : element ? 0.1 : 0.0,
-            thisRegion.start,
-            thisRegion.end,
-          );
-          if (element) thisRegion.element.style.outlineOffset = "-3px";
-          thisRegion.onDrag(0);
+          const regions = this.regionsPlugins[idx].getRegions();
+          const thisRegion = regions.find((r: any) => r.id === region.id);
+          if (thisRegion) {
+            thisRegion.element.id = element;
+            updateRegionAlpha(
+              regions,
+              regionsOn === 1 ? (element ? 0.7 : 0.1) : element ? 0.1 : 0.0,
+              thisRegion.start,
+              thisRegion.end,
+            );
+            if (element) thisRegion.element.style.outlineOffset = "-3px";
+            // onDrag is not needed in v7
+          }
         }
       });
     }
@@ -198,12 +202,13 @@ export class DeeJay extends Component<DeeJayProps> {
 
       // Redraw regions for WS0 if it's already ready
       const ws0 = this.waveSurfers[0];
-      if (ws0 && ws0.isReady) {
+      const regions0 = this.regionsPlugins[0];
+      if (ws0 && ws0.isReady && regions0) {
         console.log(`[DeeJay] WS0 already ready, drawing regions for timeline ${this.props.currentTimeline}`);
-        ws0.clearRegions();
+        regions0.clearRegions();
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
         milestones.forEach((m: any, mileNum: number) => {
-          ws0.addRegion({
+          regions0.addRegion({
             id: m.startId,
             start: m.startTime,
             end: m.stopTime,
@@ -743,7 +748,7 @@ export class DeeJay extends Component<DeeJayProps> {
             };
             if (idx === 0) {
               console.log(`[DeeJay] WS${idx} adding region:`, region);
-              this.waveSurfers[idx].addRegion(region);
+              this.regionsPlugins[idx].addRegion(region);
             } else {
               m.data.forEach((d: LooseObject) => {
                 if (
@@ -753,7 +758,7 @@ export class DeeJay extends Component<DeeJayProps> {
                     start: d.clipStart,
                     end: d.clipStop,
                   });
-                  this.waveSurfers[idx].addRegion({
+                  this.regionsPlugins[idx].addRegion({
                     ...region,
                     start: d.clipStart,
                     end: d.clipStop,
@@ -912,10 +917,10 @@ export class DeeJay extends Component<DeeJayProps> {
     );
   };
 
-  getWSRegions = (): Array<number> => {
+  getWSRegions = (): Array<any> => {
     return this.idxs.map((idx: number) =>
-      this.waveSurfers[idx] && this.waveSurfers[idx].regions
-        ? this.waveSurfers[idx].regions.list
+      this.regionsPlugins[idx]
+        ? this.regionsPlugins[idx].getRegions()
         : [],
     );
   };
@@ -1139,11 +1144,10 @@ export class DeeJay extends Component<DeeJayProps> {
                   // Craft its Region
                   if (
                     this.waveSurfers[lows[y]] &&
-                    this.waveSurfers[lows[y]].regions &&
-                    this.waveSurfers[lows[y]].regions.list
+                    this.regionsPlugins[lows[y]]
                   ) {
                     updateRegionAlpha(
-                      this.waveSurfers[lows[y]].regions.list,
+                      this.regionsPlugins[lows[y]].getRegions(),
                       0.7,
                       m2Start,
                       m2Stop,

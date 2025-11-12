@@ -39,27 +39,24 @@ export function generateRegionColors(): string[] {
 }
 
 export function updateRegionAlpha(
-  regions: any,
+  regions: any[],
   alpha: number,
   start: number,
   end: number,
 ): void {
-  const id = findRegion(regions, start, end);
-  if (id) {
-    regions[id].color = regions[id].color
-      .split(",")
-      .map((v: string) => (v.endsWith(")") ? `${alpha})` : v))
-      .join(",");
-    regions[id].onDrag(0);
+  const region = findRegion(regions, start, end);
+  if (region) {
+    region.setOptions({
+      color: region.color
+        .split(",")
+        .map((v: string) => (v.endsWith(")") ? `${alpha})` : v))
+        .join(",")
+    });
   }
 }
 
-function findRegion(regions: any, start: number, end: number): string {
-  const id = Object.keys(regions).filter((id: any) => {
-    const r = regions[id];
-    return r.start === start && r.end === end;
-  });
-  return id.length === 1 ? id[0] : "";
+function findRegion(regions: any[], start: number, end: number): any {
+  return regions.find((r: any) => r.start === start && r.end === end);
 }
 
 // Toggle Between Various Representations of the Current Timeline's Regions

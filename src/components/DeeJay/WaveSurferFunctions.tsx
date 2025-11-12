@@ -2,7 +2,13 @@ import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import store from "../../store/store";
 
-export function createWaveSurfer(idx: number): WaveSurfer {
+export interface WaveSurferWithRegions {
+  wavesurfer: WaveSurfer;
+  regionsPlugin: RegionsPlugin;
+}
+
+export function createWaveSurfer(idx: number): WaveSurferWithRegions {
+  const regionsPlugin = RegionsPlugin.create();
   const newWS = WaveSurfer.create({
     container: "#waveform" + idx.toString(),
     barWidth: 1,
@@ -12,12 +18,12 @@ export function createWaveSurfer(idx: number): WaveSurfer {
     waveColor: "#00ccff",
     hideScrollbar: true,
     height: 128,
-    plugins: [RegionsPlugin.create()],
+    plugins: [regionsPlugin],
   });
   newWS.empty();
   newWS.setVolume(+(idx === 0));
 
-  return newWS;
+  return { wavesurfer: newWS, regionsPlugin };
 }
 
 export function rowHeight() {
