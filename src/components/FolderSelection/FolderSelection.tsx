@@ -69,6 +69,7 @@ class SelectFolderZone extends Component<FolderProps> {
   private usingStoredData = false;
   private watcherId: string | null = null;
   private annotMergeTimeout: NodeJS.Timeout | null = null;
+  private verboseFileHandling = false; // Set to true to see detailed file handling logs
 
   componentDidMount(): void {
     // Cleaning Storage
@@ -130,7 +131,9 @@ class SelectFolderZone extends Component<FolderProps> {
         const blob = new Blob([arrayBuffer], { type: tempMime });
         // Create blob URL
         blobURL = URL.createObjectURL(blob);
-        console.log(`[chokFileDescribe] Created blob URL for ${parsedPath.base}`);
+        if (this.verboseFileHandling) {
+          console.log(`[chokFileDescribe] Created blob URL for ${parsedPath.base}`);
+        }
       } catch (error) {
         console.error(`[chokFileDescribe] Error creating blob URL for ${path}:`, error);
         // Fallback to file:// URL if blob creation fails
@@ -250,7 +253,9 @@ class SelectFolderZone extends Component<FolderProps> {
             const isTranslation = fileDef.name.includes("_Translation.");
 
             if (isCareful || isTranslation) {
-              console.log(`[handleFileAdd] Annotation audio clip added: ${fileDef.name}`);
+              if (this.verboseFileHandling) {
+                console.log(`[handleFileAdd] Annotation audio clip added: ${fileDef.name}`);
+              }
               // Debounce: wait a bit for all clips to be discovered, then trigger merge
               if (this.annotMergeTimeout) {
                 clearTimeout(this.annotMergeTimeout);
