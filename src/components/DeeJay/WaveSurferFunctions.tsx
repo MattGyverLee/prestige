@@ -7,7 +7,6 @@ export function createWaveSurfer(idx: number): WaveSurfer {
     container: "#waveform" + idx.toString(),
     barWidth: 1,
     cursorWidth: 4,
-    backend: "MediaElement",
     progressColor: "#fff",
     cursorColor: "#4a74a5",
     waveColor: "#00ccff",
