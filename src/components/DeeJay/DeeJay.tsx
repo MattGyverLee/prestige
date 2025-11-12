@@ -731,7 +731,11 @@ export class DeeJay extends Component<DeeJayProps> {
         milestones.forEach(
           (m: any, mileNum: number) => {
             if (idx === 2 && mileNum === 1) {
-              console.log(`[DeeJay] WS${idx} Full milestone object for debugging:`, m);
+              console.log(`[DeeJay] WS${idx} Full milestone object for debugging:`, JSON.parse(JSON.stringify(m)));
+              console.log(`[DeeJay] WS${idx} Milestone data array length:`, m.data.length);
+              m.data.forEach((d: any, i: number) => {
+                console.log(`[DeeJay] WS${idx} data[${i}]:`, JSON.parse(JSON.stringify(d)));
+              });
             }
             const region = {
               id: m.startId,
