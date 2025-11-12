@@ -10,7 +10,7 @@ export function getNiceHSLColor(colorPos = 0): string {
   hue += goldenRatioConj * (colorPos / (5 * Math.random()));
   hue = hue % 1;
   hue = roundIt(359 * hue, 0);
-  return "hsl(" + hue + ", " + 60 + "%, " + 50 + "%, 0.1)";  // Changed from 0.4 to 0.1 for better transparency
+  return "hsl(" + hue + ", " + 60 + "%, " + 50 + "%, 0.05)";  // Very transparent - 5% opaque, 95% transparent
 }
 export function getRandomRGBAColor(): string {
   const rgb =
@@ -76,7 +76,7 @@ export function toggleAllRegions(
 
   // FIXME: Last Region in all WSs Not Drawn
   if (state.annot.currentTimeline !== -1 && regionsOn !== 2) {
-    const alpha = regionsOn ? 0.1 : 0.0;
+    const alpha = regionsOn ? 0.05 : 0.0;  // Match getNiceHSLColor default alpha
     console.log(`[toggleAllRegions] Setting alpha to:`, alpha);
     state.annot.timeline[state.annot.currentTimeline].milestones.forEach(
       (m: any) => {
