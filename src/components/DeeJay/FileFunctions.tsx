@@ -17,13 +17,32 @@ export function findValidAudio(idx: number): string {
 
 export function findValidSourceAudio(): LooseObject[] {
   const state = store.getState();
-  return sourceAudio(state.tree.sourceMedia, true).filter(
-    (sa: LooseObject) =>
-      sa.blobURL.includes("_StandardAudio_Normalized.mp3") &&
-      getSyncMedia().indexOf(
-        sa.blobURL.substring(0, sa.blobURL.indexOf("_Normalized.mp3")) + ".wav",
-      ) !== -1,
+  const allSourceAudio = sourceAudio(state.tree.sourceMedia, true);
+  const syncMedia = getSyncMedia();
+
+  console.log("[findValidSourceAudio] All source audio:", allSourceAudio.map(sa => sa.blobURL));
+  console.log("[findValidSourceAudio] Sync media:", syncMedia);
+
+  const filtered = allSourceAudio.filter(
+    (sa: LooseObject) => {
+      const hasNormalized = sa.blobURL.includes("_StandardAudio_Normalized.mp3");
+      const wavName = sa.blobURL.substring(0, sa.blobURL.indexOf("_Normalized.mp3")) + ".wav";
+      const inSync = syncMedia.indexOf(wavName) !== -1;
+
+      console.log("[findValidSourceAudio] Checking:", {
+        blobURL: sa.blobURL,
+        hasNormalized,
+        wavName,
+        inSync,
+        passes: hasNormalized && inSync
+      });
+
+      return hasNormalized && inSync;
+    }
   );
+
+  console.log("[findValidSourceAudio] Filtered result:", filtered.length, filtered.map(f => f.blobURL));
+  return filtered;
 }
 
 function findValidAnnotAudio(idx: number): LooseObject[] {
