@@ -1254,6 +1254,12 @@ export class DeeJay extends Component<DeeJayProps> {
             const m1Start = clipTime(highs[x], m1, true);
             const m1Stop = clipTime(highs[x], m1, false);
 
+            // Determine actual play start position
+            // If wavesurfer is already positioned within this clip, start from current position
+            // Otherwise start from clip beginning
+            const currentPos = this.waveSurfers[highs[x]].getCurrentTime();
+            const actualM1Start = (currentPos >= m1Start && currentPos < m1Stop) ? currentPos : m1Start;
+
             // For Each WS in Low
             for (let y = lows.length - 1; y >= 0; y--) {
               // Grab the Sub's Milestone
@@ -1273,6 +1279,11 @@ export class DeeJay extends Component<DeeJayProps> {
               if (!lows[y] || m2.data.length) {
                 const m2Start = clipTime(lows[y], m2, true);
                 const m2Stop = clipTime(lows[y], m2, false);
+
+                // Calculate relative start position for voiceover
+                // If main clip starts mid-way, voiceover should start at corresponding position
+                const voiceoverCurrentPos = this.waveSurfers[lows[y]].getCurrentTime();
+                const actualM2Start = (voiceoverCurrentPos >= m2Start && voiceoverCurrentPos < m2Stop) ? voiceoverCurrentPos : m2Start;
 
                 // Create and Push Next Voiceover
                 voiceOvers.push(() => {
@@ -1294,19 +1305,19 @@ export class DeeJay extends Component<DeeJayProps> {
                     m2,
                     {
                       dispatchType: "Clip",
-                      clipStart: m1Start,
+                      clipStart: actualM1Start,
                       clipStop: m1Stop,
                     },
                     {
                       dispatchType: "Clip",
-                      clipStart: m2Start,
+                      clipStart: actualM2Start,
                       clipStop: m2Stop,
                     },
                   );
                   this.waveSurfers[lows[y]].setPlaybackRate(
                     roundIt(this.currentSpeeds[lows[y]], 2),
                   );
-                  this.waveSurfers[lows[y]].play(m2Start, m2Stop);
+                  this.waveSurfers[lows[y]].play(actualM2Start, m2Stop);
                 });
               }
             }
@@ -1333,10 +1344,18 @@ export class DeeJay extends Component<DeeJayProps> {
                 this.props.setPlaybackRate(
                   roundIt(calcPlaybackRate(m1, dispatch), 2),
                 );
-                this.props.setSeek(m1.startTime || 0, "seconds");
+
+                // Calculate video seek position based on where we're actually starting
+                // If starting from middle of clip, adjust video position accordingly
+                const playbackRate = highs[x] === 0 ? 1 : calcPlaybackRate(m1);
+                const videoSeekTime = highs[x] === 0
+                  ? actualM1Start  // WS0 is source, use direct position
+                  : m1.startTime + (actualM1Start - m1Start) * playbackRate;  // WS1/WS2, calculate relative source position
+
+                this.props.setSeek(videoSeekTime || 0, "seconds");
                 this.props.togglePlay(true);
                 this.dispatchSubtitle(highs[x], m1);
-                this.waveSurfers[highs[x]].play(m1Start, m1Stop);
+                this.waveSurfers[highs[x]].play(actualM1Start, m1Stop);
                 if (x > 0)
                   this.waveSurfers[highs[x - 1]].un("pause", recentStart);
               }
