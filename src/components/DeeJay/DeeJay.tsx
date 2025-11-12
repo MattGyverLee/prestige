@@ -166,7 +166,27 @@ export class DeeJay extends Component<DeeJayProps> {
       this.sendSnackbar(String(err));
     });
 
-    // Process WS Seeking
+    // Process WS Interaction (click/drag on waveform) - enables drag-to-seek
+    newWS.on("interaction", () => {
+      if (this.waveSurfers[idx] && this.isWSReady[idx]) {
+        if (this.debugPlayback) {
+          console.log(`[DeeJay] WS${idx} interaction detected, enabling drag-to-seek`);
+        }
+        this.clearDispatchLeftovers();
+        this.clicked[idx] = true;
+        this.solo(idx, false);
+        this.waveSurfers[idx].pause();
+      }
+    });
+
+    // Process WS Seeking (fires continuously while dragging)
+    newWS.on("seeking", () => {
+      if (this.clicked[idx]) {
+        this.wsSeek(idx);
+      }
+    });
+
+    // Process WS Seek (fires when seek is complete)
     newWS.on("seek", () => this.wsSeek(idx));
 
     this.waveSurfers[idx] = newWS;
