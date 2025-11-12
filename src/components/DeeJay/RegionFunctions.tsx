@@ -46,17 +46,13 @@ export function updateRegionAlpha(
 ): void {
   const region = findRegion(regions, start, end);
   if (region) {
-    console.log(`[updateRegionAlpha] Found region:`, { start, end, currentColor: region.color, alpha });
     const newColor = region.color
       .split(",")
       .map((v: string) => (v.endsWith(")") ? `${alpha})` : v))
       .join(",");
-    console.log(`[updateRegionAlpha] Setting new color:`, newColor);
     region.setOptions({
       color: newColor
     });
-  } else {
-    console.warn(`[updateRegionAlpha] Region not found:`, { start, end, regionsCount: regions.length });
   }
 }
 
@@ -72,12 +68,9 @@ export function toggleAllRegions(
 ): void {
   const state = store.getState();
 
-  console.log(`[toggleAllRegions] Called with:`, { regionsOn, noIncrement, wsRegionsLengths: wsRegions.map(r => r.length) });
-
   // FIXME: Last Region in all WSs Not Drawn
   if (state.annot.currentTimeline !== -1 && regionsOn !== 2) {
     const alpha = regionsOn ? 0.1 : 0.0;  // Match getNiceHSLColor default alpha
-    console.log(`[toggleAllRegions] Setting alpha to:`, alpha);
     state.annot.timeline[state.annot.currentTimeline].milestones.forEach(
       (m: any) => {
         updateRegionAlpha(wsRegions[0], alpha, m.startTime, m.stopTime);

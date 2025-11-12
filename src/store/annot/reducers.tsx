@@ -47,14 +47,6 @@ export function annotationReducer(
       };
     }
     case types.ADD_ORAL_ANNOTATION: {
-      console.log(`[ADD_ORAL_ANNOTATION] Reducer called with:`, {
-        idx: action.payload.idx,
-        newMilestoneStart: action.payload.newMilestone.startTime,
-        newMilestoneStop: action.payload.newMilestone.stopTime,
-        channel: action.payload.newMilestone.data[0].channel,
-        existingMilestonesCount: action.payload.idx !== -1 ? state.timeline[action.payload.idx]?.milestones.length : 0
-      });
-
       if (action.payload.idx === -1) {
         let eafFile = action.payload.newMilestone.data[0].data;
         eafFile = eafFile.substring(0, eafFile.indexOf("_Annotations"));
@@ -69,15 +61,6 @@ export function annotationReducer(
         return { ...state, timeline: [...state.timeline, timeline] };
       }
 
-      // Log existing milestone times for comparison
-      console.log(`[ADD_ORAL_ANNOTATION] Existing milestone times:`,
-        state.timeline[action.payload.idx].milestones.map((m: types.LooseObject) => ({
-          start: m.startTime,
-          stop: m.stopTime,
-          dataCount: m.data.length
-        }))
-      );
-
       let added = false;
       let milestones = state.timeline[action.payload.idx].milestones.map(
         (m: types.LooseObject) => {
@@ -85,7 +68,6 @@ export function annotationReducer(
             m.startTime === action.payload.newMilestone.startTime &&
             m.stopTime === action.payload.newMilestone.stopTime
           ) {
-            console.log(`[ADD_ORAL_ANNOTATION] ✅ MATCH FOUND! Appending to milestone ${m.startTime}-${m.stopTime}. Old data count: ${m.data.length}, new: ${m.data.length + 1}`);
             added = true;
             return {
               ...m,
@@ -98,7 +80,6 @@ export function annotationReducer(
       );
       const newM = action.payload.newMilestone;
       if (!added) {
-        console.log(`[ADD_ORAL_ANNOTATION] ⚠️ NO MATCH! Creating new milestone for ${newM.startTime}-${newM.stopTime}`);
         milestones = [...milestones, newM];
       }
       return {

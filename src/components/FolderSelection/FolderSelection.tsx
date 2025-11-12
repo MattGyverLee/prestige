@@ -539,13 +539,9 @@ class SelectFolderZone extends Component<FolderProps> {
   loadAnnot = async (carefulOrTranslation: boolean) => {
     try {
       const ctString = carefulOrTranslation ? "Careful" : "Translation";
-      console.log(`[loadAnnot] Starting for ${ctString}`);
-      console.log(`[loadAnnot] annotMedia.length: ${this.props.annotMedia.length}`);
-      console.log(`[loadAnnot] annotMedia files:`, this.props.annotMedia.map((am: any) => am.name));
 
       // Sort FilteredAnnot Based on Start Time into InputFiles
       const filtered = this.props.annotMedia.filter((am: any) => am.name.includes("_" + ctString));
-      console.log(`[loadAnnot] Filtered ${ctString} files:`, filtered.map((f: any) => f.name));
 
       const inputFiles: any[] = filtered
         .sort((a1: any, a2: any) => {
@@ -556,11 +552,7 @@ class SelectFolderZone extends Component<FolderProps> {
         })
         .map((a: any) => a.path);
 
-      console.log(`[loadAnnot] Found ${inputFiles.length} ${ctString} files to merge`);
-      console.log(`[loadAnnot] Input file paths:`, inputFiles);
-
       if (inputFiles.length === 0) {
-        console.log(`[loadAnnot] No ${ctString} files found, skipping merge`);
         return;
       }
 
@@ -591,15 +583,10 @@ class SelectFolderZone extends Component<FolderProps> {
         },
       );
 
-      console.log("Merging finished!");
       const timecodes = mergeResult.timecodes;
-      console.log(`[loadAnnot] mergeResult:`, mergeResult);
-      console.log(`[loadAnnot] timecodes:`, timecodes);
-      console.log(`[loadAnnot] timecodes.length:`, timecodes ? timecodes.length : 'undefined');
 
       // Get metadata for each input file to create milestones
       const inputTimes: any[] = [];
-      console.log(`[loadAnnot] Getting metadata for ${inputFiles.length} files`);
       for (const filePath of inputFiles) {
         const metadata = await electronAPI.getMediaMetadata(filePath);
         const parsedPath = safeParseSync(filePath);
@@ -616,13 +603,10 @@ class SelectFolderZone extends Component<FolderProps> {
 
       // Sort InputTimes Based on Start Time
       inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
-      console.log(`[loadAnnot] inputTimes sorted:`, inputTimes);
 
       // Create and Add Oral Milestones to Timeline
       const TOGGLE_TIMES = true;
       const mergedFileURL = await electronAPI.pathToFileURL(outputPath);
-      console.log(`[loadAnnot] Creating oral annotations. mergedFileURL:`, mergedFileURL);
-      console.log(`[loadAnnot] Will create ${inputTimes.length} oral milestones`);
 
       for (let i = 0, l = inputTimes.length; i < l; i++) {
         const oralMilestone: aTypes.Milestone = {
@@ -650,27 +634,11 @@ class SelectFolderZone extends Component<FolderProps> {
         const timelineURL = await electronAPI.pathToFileURL(
           annotDir.substring(0, annotDir.indexOf("_Annotations")),
         );
-        console.log(`[loadAnnot] annotDir:`, annotDir);
-        console.log(`[loadAnnot] annotDir.substring:`, annotDir.substring(0, annotDir.indexOf("_Annotations")));
-        console.log(`[loadAnnot] timelineURL for getTimelineIndex:`, timelineURL);
-        console.log(`[loadAnnot] this.props.timeline.length:`, this.props.timeline.length);
-        console.log(`[loadAnnot] timeline[0].syncMedia:`, this.props.timeline[0]?.syncMedia);
         const timelineIndex = getTimelineIndex(this.props.timeline, timelineURL);
-        console.log(`[loadAnnot] ⚠️ timelineIndex = ${timelineIndex} (${timelineIndex === -1 ? 'INVALID - will not add!' : 'valid'})`);
-        console.log(`[loadAnnot] Adding oral milestone ${i}/${inputTimes.length}:`, {
-          channel: oralMilestone.data[0].channel,
-          startTime: oralMilestone.startTime,
-          stopTime: oralMilestone.stopTime,
-          clipStart: oralMilestone.data[0].clipStart,
-          clipStop: oralMilestone.data[0].clipStop,
-          timelineIndex
-        });
-        console.log(`[loadAnnot] Calling addOralAnnotation...`);
         this.props.addOralAnnotation(
           oralMilestone,
           timelineIndex,
         );
-        console.log(`[loadAnnot] addOralAnnotation dispatched for milestone ${i}/${inputTimes.length}`);
         this.props.setTimelineChanged(true);
       }
 

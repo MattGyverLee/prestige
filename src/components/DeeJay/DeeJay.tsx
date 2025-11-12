@@ -152,11 +152,6 @@ export class DeeJay extends Component<DeeJayProps> {
       this.sendSnackbar(String(err));
     });
 
-    // Add logging for ready events
-    newWS.on("ready", () => {
-      console.log(`[DeeJay] WS${idx} 'ready' event fired`);
-    });
-
     // Process WS Seeking
     newWS.on("seek", () => this.wsSeek(idx));
 
@@ -207,28 +202,17 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // If timeline was just set, redraw regions for WS0 and trigger load for WS1/WS2
     if (timelineJustSet) {
-      console.log(`[DeeJay] Timeline just set (${prevProps.currentTimeline} -> ${this.props.currentTimeline})`);
-
       // Generate region colors for the new timeline
       this.regionColors = generateRegionColors();
 
       // Redraw regions for WS0 if it's already ready
       const ws0 = this.waveSurfers[0];
       const regions0 = this.regionsPlugins[0];
-      console.log(`[DeeJay] Checking if WS0 needs redraw:`, {
-        ws0Exists: !!ws0,
-        regions0Exists: !!regions0,
-        currentPlaying0: this.currentPlaying[0],
-        hasAudio: this.currentPlaying[0] !== "",
-        duration: ws0 ? ws0.getDuration() : 0
-      });
       // Check if WaveSurfer has loaded audio by checking for meaningful duration (> 1 second)
       // Durations like 0.001 mean the audio is still loading
       if (ws0 && ws0.getDuration() > 1 && regions0) {
-        console.log(`[DeeJay] WS0 already ready, drawing regions for timeline ${this.props.currentTimeline}`);
         regions0.clearRegions();
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
-        console.log(`[DeeJay] WS0 redraw - milestones count:`, milestones.length, `regionColors:`, this.regionColors);
         milestones.forEach((m: any, mileNum: number) => {
           const region = {
             id: m.startId,
@@ -238,7 +222,6 @@ export class DeeJay extends Component<DeeJayProps> {
             drag: false,
             resize: false,
           };
-          console.log(`[DeeJay] WS0 redraw - adding region ${mileNum}:`, region);
           regions0.addRegion(region);
         });
       }
@@ -250,13 +233,10 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // If milestones changed (e.g., oral annotations were added), redraw all waveforms
     if (milestonesChanged && !timelineJustSet) {
-      console.log(`[DeeJay] Milestones changed, redrawing all waveforms with updated milestone data`);
-
       // Redraw WS0 regions with new milestone data
       const ws0 = this.waveSurfers[0];
       const regions0 = this.regionsPlugins[0];
       if (ws0 && regions0 && ws0.getDuration() > 0) {
-        console.log(`[DeeJay] WS0 redrawing regions after milestone change`);
         regions0.clearRegions();
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
         milestones.forEach((m: any, mileNum: number) => {
@@ -275,7 +255,6 @@ export class DeeJay extends Component<DeeJayProps> {
       // Clear and reload WS1 and WS2 to redraw regions with new oral annotations
       [1, 2].forEach((idx) => {
         if (this.waveSurfers[idx] && this.regionsPlugins[idx]) {
-          console.log(`[DeeJay] WS${idx} reloading to redraw regions with updated milestones`);
           // Clear current playing state to force reload in componentDidUpdate loop below
           this.currentPlaying[idx] = "";
         }
@@ -780,17 +759,9 @@ export class DeeJay extends Component<DeeJayProps> {
       // Draw All Regions currentTimeline Has
       if (this.props.currentTimeline !== -1) {
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
-        console.log(`[DeeJay] WS${idx} drawing regions. Milestones count:`, milestones.length);
 
         milestones.forEach(
           (m: any, mileNum: number) => {
-            if (idx === 2 && mileNum === 1) {
-              console.log(`[DeeJay] WS${idx} Full milestone object for debugging:`, JSON.parse(JSON.stringify(m)));
-              console.log(`[DeeJay] WS${idx} Milestone data array length:`, m.data.length);
-              m.data.forEach((d: any, i: number) => {
-                console.log(`[DeeJay] WS${idx} data[${i}]:`, JSON.parse(JSON.stringify(d)));
-              });
-            }
             const region = {
               id: m.startId,
               start: m.startTime,
@@ -800,7 +771,6 @@ export class DeeJay extends Component<DeeJayProps> {
               resize: false,
             };
             if (idx === 0) {
-              console.log(`[DeeJay] WS${idx} adding region:`, region);
               this.regionsPlugins[idx].addRegion(region);
             } else {
               // WS1 plays Careful_Merged.mp3, WS2 plays Translation_Merged.mp3
@@ -810,12 +780,6 @@ export class DeeJay extends Component<DeeJayProps> {
                 if (
                   d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
                 ) {
-                  console.log(`[DeeJay] WS${idx} adding region from ${d.channel}:`, {
-                    start: d.clipStart,
-                    end: d.clipStop,
-                    milestoneStart: m.startTime,
-                    milestoneStop: m.stopTime
-                  });
                   this.regionsPlugins[idx].addRegion({
                     ...region,
                     start: d.clipStart,
