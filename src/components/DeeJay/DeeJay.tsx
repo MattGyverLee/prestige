@@ -721,13 +721,16 @@ export class DeeJay extends Component<DeeJayProps> {
     };
 
     // Subscribe to Appropriate Ready Function
+    console.log(`[DeeJay] WS${idx} subscribing to '${sub}' event`);
     ws.on(sub, waveformReady);
 
     // Load WS (with/without Wave) and Update LoadQueue and CurrentPlaying
     this.currentPlaying[idx] = load;
+    console.log(`[DeeJay] WS${idx} calling ws.load() with:`, load.substring(0, 60));
     if (wave) ws.load(load, JSON.parse(wave));
     else ws.load(load);
     this.loadQueue[idx] = "";
+    console.log(`[DeeJay] WS${idx} load initiated, waiting for ${sub} event`);
   };
 
   componentWillUnmount(): void {
@@ -764,10 +767,20 @@ export class DeeJay extends Component<DeeJayProps> {
     const tempAnnot = this.props.annotMedia.filter(
       (m: LooseObject) => m.blobURL === blobURL,
     );
-    return (
-      (tempSrc.length && tempSrc[0].wsAllowed) ||
-      (tempAnnot.length && tempAnnot[0].wsAllowed)
-    );
+
+    const srcAllowed = tempSrc.length && tempSrc[0].wsAllowed;
+    const annotAllowed = tempAnnot.length && tempAnnot[0].wsAllowed;
+    const isAllowed = srcAllowed || annotAllowed;
+
+    console.log(`[DeeJay] fileAllowed check for ${blobURL.substring(0, 50)}...`, {
+      foundInSource: tempSrc.length > 0,
+      wsAllowedSrc: tempSrc[0]?.wsAllowed,
+      foundInAnnot: tempAnnot.length > 0,
+      wsAllowedAnnot: tempAnnot[0]?.wsAllowed,
+      isAllowed
+    });
+
+    return isAllowed;
   };
 
   // Resets Volumes of and Stops all but Specified WS
