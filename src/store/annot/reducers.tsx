@@ -41,6 +41,7 @@ export function annotationReducer(
       return { ...state, timelineChanged: true };
     }
     case types.SET_URL: {
+      console.log(`[SET_URL reducer] Setting currentTimeline to:`, action.payload.timelineIndex);
       return {
         ...state,
         currentTimeline: action.payload.timelineIndex,

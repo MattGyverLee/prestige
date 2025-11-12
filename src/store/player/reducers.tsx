@@ -48,6 +48,7 @@ export function playerReducer(
       };
     }
     case types.SET_URL: {
+      console.log(`[SET_URL player reducer] Setting url to:`, action.payload.blobURL?.substring(0, 60));
       return {
         ...playerCleanStore,
         url: action.payload.blobURL,

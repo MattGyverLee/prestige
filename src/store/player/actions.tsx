@@ -13,6 +13,7 @@ export function setURL(
   blobURL: string,
   timelineIndex: number,
 ): types.PlayerActionTypes {
+  console.log(`[setURL action] Dispatching SET_URL with blobURL=${blobURL?.substring(0, 60)}, timelineIndex=${timelineIndex}`);
   return {
     type: types.SET_URL,
     payload: { blobURL, timelineIndex },
