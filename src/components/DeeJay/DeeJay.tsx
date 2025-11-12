@@ -266,6 +266,15 @@ export class DeeJay extends Component<DeeJayProps> {
           };
           regions0.addRegion(region);
         });
+
+        // Start playback now that timeline is set and WS0 is ready
+        // WS1/WS2 will load asynchronously
+        console.log(`[DeeJay] Timeline just set and WS0 is ready, dispatching PlayerSeek to start playback`);
+        this.props.setDispatch({
+          dispatchType: "PlayerSeek",
+          wsNum: -1,
+          refStart: 0,
+        });
       }
 
       // Force WS1 and WS2 to load by clearing their currentPlaying state
@@ -898,10 +907,9 @@ export class DeeJay extends Component<DeeJayProps> {
             refStart: 0,
           });
         } else {
-          console.log(`[DeeJay] WS0 no timeline, auto-playing`);
-          this.waveSurfers[idx].play(0);
-          this.props.setSeek(0, "fraction");
-          this.props.togglePlay(true);
+          // Don't auto-play immediately - wait for timeline and other wavesurfers to load
+          // Auto-play will happen when timeline is set up
+          console.log(`[DeeJay] WS0 ready but no timeline yet, waiting for timeline setup before auto-playing`);
         }
       }
       toggleAllRegions(this.regionsOn, true, this.getWSRegions());
