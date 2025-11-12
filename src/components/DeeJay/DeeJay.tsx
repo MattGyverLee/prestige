@@ -220,11 +220,16 @@ export class DeeJay extends Component<DeeJayProps> {
     this.idxs.forEach((idx: number) => {
       // If Sync Media Does Not Contain currBlob => No Timeline Actions
       // -> Else => Timeline Actions
-      if (syncContainsCurrent(this.currBlob)) {
+      const inSync = syncContainsCurrent(this.currBlob);
+      console.log(`[DeeJay] WS${idx} componentDidUpdate loop - syncContainsCurrent:`, inSync, `currentPlaying:`, this.currentPlaying[idx], `props.url:`, this.props.url?.substring(0, 60));
+
+      if (inSync) {
         // If WS is Playing => Check for Playing Actions
         // -> Else If WS0, and Not Empty URL => Load and Play URL
-        if (this.currentPlaying[idx]) this.checkPlayingValues(idx);
-        else if (!idx && this.props.url) {
+        if (this.currentPlaying[idx]) {
+          console.log(`[DeeJay] WS${idx} sync - already playing, checking values`);
+          this.checkPlayingValues(idx);
+        } else if (!idx && this.props.url) {
           const audioToLoad =
             this.props.url !== "" ? findValidAudio(idx) : this.props.url;
           console.log(`[DeeJay] WS${idx} sync - audioToLoad:`, audioToLoad, `currentPlaying:`, this.currentPlaying[idx], `props.url:`, this.props.url);
@@ -243,13 +248,17 @@ export class DeeJay extends Component<DeeJayProps> {
             console.log(`[DeeJay] WS${idx} - Calling loadFileWS with:`, audioToLoad);
             this.loadFileWS(idx, audioToLoad);
           }
+        } else if (!idx) {
+          console.log(`[DeeJay] WS${idx} sync - skipped because props.url is empty or falsy`);
         }
       } else {
+        console.log(`[DeeJay] WS${idx} non-sync path - currentPlaying:`, this.currentPlaying[idx], `isReady:`, this.waveSurfers[idx].isReady);
         // If WS is Ready and Playing => Check for Playing Actions
         // -> Else => Search and Load
-        if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady)
+        if (this.currentPlaying[idx] && this.waveSurfers[idx].isReady) {
+          console.log(`[DeeJay] WS${idx} non-sync - already playing and ready, checking values`);
           this.checkPlayingValues(idx);
-        else if (!this.currentPlaying[idx]) {
+        } else if (!this.currentPlaying[idx]) {
           const load = this.loadQueue[idx]
             ? this.loadQueue[idx]
             : findValidAudio(idx);
