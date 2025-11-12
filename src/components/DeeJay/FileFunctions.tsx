@@ -42,7 +42,11 @@ export function findValidSourceAudio(): LooseObject[] {
       // If timeline exists, check if the .wav file is in syncMedia
       // Extract base name from the filename
       const wavName = sa.name.substring(0, sa.name.indexOf("_Normalized.mp3")) + ".wav";
-      const inSync = syncMedia.indexOf(wavName) !== -1;
+      // syncMedia contains file:// URLs, so we need to check if any URL ends with this filename
+      const inSync = syncMedia.some((url: string) => {
+        const urlFileName = decodeURIComponent(url.substring(url.lastIndexOf("/") + 1));
+        return urlFileName === wavName;
+      });
 
       console.log("[findValidSourceAudio] Timeline exists - checking:", {
         name: sa.name,
@@ -86,5 +90,25 @@ function findValidAnnotAudio(idx: number): LooseObject[] {
 }
 
 export function syncContainsCurrent(currBlob: string): boolean {
-  return getSyncMedia().filter((s: any) => s === currBlob).length !== 1;
+  const state = store.getState();
+  const syncMedia = getSyncMedia();
+
+  // If no timeline/sync media, return false
+  if (syncMedia.length === 0) {
+    return false;
+  }
+
+  // Find the file object by blobURL to get its name/path
+  const sourceMedia = state.tree.sourceMedia;
+  const fileObj = sourceMedia.find((f: LooseObject) => f.blobURL === currBlob);
+
+  if (!fileObj || !fileObj.name) {
+    return false;
+  }
+
+  // Check if any syncMedia URL matches this file's name
+  return syncMedia.some((url: string) => {
+    const urlFileName = decodeURIComponent(url.substring(url.lastIndexOf("/") + 1));
+    return urlFileName === fileObj.name;
+  });
 }
