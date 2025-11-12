@@ -10,7 +10,7 @@ export function getNiceHSLColor(colorPos = 0): string {
   hue += goldenRatioConj * (colorPos / (5 * Math.random()));
   hue = hue % 1;
   hue = roundIt(359 * hue, 0);
-  return "hsl(" + hue + ", " + 60 + "%, " + 50 + "%, 0.0)";
+  return "hsl(" + hue + ", " + 60 + "%, " + 50 + "%, 0.1)";
 }
 export function getRandomRGBAColor(): string {
   const rgb =

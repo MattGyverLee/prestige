@@ -753,10 +753,11 @@ export class DeeJay extends Component<DeeJayProps> {
               console.log(`[DeeJay] WS${idx} adding region:`, region);
               this.regionsPlugins[idx].addRegion(region);
             } else {
+              const targetChannel = `${idx === 1 ? "Careful" : "Translation"}Merged`;
+              console.log(`[DeeJay] WS${idx} looking for channel "${targetChannel}", milestone has ${m.data.length} data items`);
               m.data.forEach((d: LooseObject) => {
-                if (
-                  d.channel === `${idx === 1 ? "Careful" : "Translation"}Merged`
-                ) {
+                console.log(`[DeeJay] WS${idx} data channel: "${d.channel}"`);
+                if (d.channel === targetChannel) {
                   console.log(`[DeeJay] WS${idx} adding region for ${d.channel}:`, {
                     start: d.clipStart,
                     end: d.clipStop,
