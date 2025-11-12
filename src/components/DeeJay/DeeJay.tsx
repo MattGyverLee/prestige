@@ -123,6 +123,17 @@ export class DeeJay extends Component<DeeJayProps> {
       this.regionHover(region, "", this.regionsOn),
     );
 
+    // Process Region Click - enables playback when clicking on regions
+    newWS.on("region-clicked", (region: any) => {
+      if (this.waveSurfers[idx] && this.isWSReady[idx]) {
+        this.clearDispatchLeftovers();
+        this.clicked[idx] = true;
+        this.solo(idx, false);
+        this.waveSurfers[idx].pause();
+        // The click will trigger a seek event, which calls wsSeek(idx)
+      }
+    });
+
     // Log Pause and Stop Player if All are Paused
     newWS.on("pause", () => {
       console.log(`${idx} Paused`);
