@@ -169,8 +169,14 @@ export class DeeJay extends Component<DeeJayProps> {
 
   // Processes Reaction to State Updates
   componentDidUpdate(prevProps: StateProps): void {
+    // Track if URL or media files changed
+    const urlChanged = prevProps.url !== this.props.url;
+    const mediaChanged =
+      prevProps.annotMedia !== this.props.annotMedia ||
+      prevProps.sourceMedia !== this.props.sourceMedia;
+
     // If currentURL and StateURL Don't Match (use prevProps for comparison)
-    if (prevProps.url !== this.props.url) {
+    if (urlChanged) {
       // Add Colors for Possible Regions if Necessary
       this.regionColors = generateRegionColors();
 
@@ -201,6 +207,11 @@ export class DeeJay extends Component<DeeJayProps> {
       this.idxs.forEach((idx: number) => {
         this.waveSurfers[idx].setHeight(rowHeight());
       });
+    }
+
+    // Only attempt to load files if URL or media changed
+    if (!urlChanged && !mediaChanged) {
+      return;
     }
 
     // Loop Through all WSs
