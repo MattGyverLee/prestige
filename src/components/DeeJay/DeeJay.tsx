@@ -138,8 +138,23 @@ export class DeeJay extends Component<DeeJayProps> {
 
     // Process WS Error by Displaying Through Snackbar
     newWS.on("error", (err: any) => {
-      console.log(err);
+      console.error(`[DeeJay] WS${idx} ERROR:`, err);
+      console.error(`[DeeJay] WS${idx} ERROR details:`, {
+        message: err?.message,
+        stack: err?.stack,
+        type: typeof err,
+        full: err
+      });
       this.sendSnackbar(String(err));
+    });
+
+    // Add logging for ready events
+    newWS.on("ready", () => {
+      console.log(`[DeeJay] WS${idx} 'ready' event fired`);
+    });
+
+    newWS.on("waveform-ready", () => {
+      console.log(`[DeeJay] WS${idx} 'waveform-ready' event fired (via global listener)`);
     });
 
     // Process WS Seeking
