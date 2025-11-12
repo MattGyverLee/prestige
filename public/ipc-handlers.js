@@ -595,7 +595,6 @@ function registerIPCHandlers(mainWindow) {
           resolve({
             output: outputPath,
             timecodes,
-            command: mergedAudio,
           });
         })
         .save(outputPath);

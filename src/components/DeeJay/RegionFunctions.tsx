@@ -76,7 +76,7 @@ export function toggleAllRegions(
 
   // FIXME: Last Region in all WSs Not Drawn
   if (state.annot.currentTimeline !== -1 && regionsOn !== 2) {
-    const alpha = (regionsOn - +(noIncrement || 0)) ? 0.1 : 0.0;
+    const alpha = regionsOn ? 0.1 : 0.0;
     console.log(`[toggleAllRegions] Setting alpha to:`, alpha);
     state.annot.timeline[state.annot.currentTimeline].milestones.forEach(
       (m: any) => {
