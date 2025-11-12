@@ -213,8 +213,9 @@ export class DeeJay extends Component<DeeJayProps> {
         hasAudio: this.currentPlaying[0] !== "",
         duration: ws0 ? ws0.getDuration() : 0
       });
-      // Check if WaveSurfer has loaded audio by checking duration > 0
-      if (ws0 && ws0.getDuration() > 0 && regions0) {
+      // Check if WaveSurfer has loaded audio by checking for meaningful duration (> 1 second)
+      // Durations like 0.001 mean the audio is still loading
+      if (ws0 && ws0.getDuration() > 1 && regions0) {
         console.log(`[DeeJay] WS0 already ready, drawing regions for timeline ${this.props.currentTimeline}`);
         regions0.clearRegions();
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
@@ -756,30 +757,22 @@ export class DeeJay extends Component<DeeJayProps> {
               console.log(`[DeeJay] WS${idx} adding region:`, region);
               this.regionsPlugins[idx].addRegion(region);
             } else {
-              // WS1 plays Careful_Merged.mp3 (audio channel: "Careful")
-              // WS2 plays Translation_Merged.mp3 (audio channel: "Translation")
-              // These are merged/concatenated audio files, so we need cumulative timing based on AUDIO clip durations
-              const targetAudioChannel = idx === 1 ? "Careful" : "Translation";
+              // WS1 plays Careful_Merged.mp3 (shows regions for "Transcription" text channel)
+              // WS2 plays Translation_Merged.mp3 (shows regions for "Translation" text channel)
+              // These are merged/concatenated audio files, so we need cumulative timing
+              // Presence of text annotation indicates corresponding audio clip exists
+              const targetTextChannel = idx === 1 ? "Transcription" : "Translation";
+              const hasTextAnnotation = m.data.some((d: LooseObject) => d.channel === targetTextChannel);
 
-              // Find audio data (not text data) by checking for clipStart/clipStop
-              const audioData = m.data.find((d: LooseObject) =>
-                d.channel === targetAudioChannel &&
-                d.clipStart !== undefined &&
-                d.clipStop !== undefined
-              );
-
-              if (audioData) {
-                // Use actual audio clip duration from audio timestamps
-                const clipDuration = audioData.clipStop - audioData.clipStart;
-                console.log(`[DeeJay] WS${idx} adding region for ${targetAudioChannel} AUDIO:`, {
+              if (hasTextAnnotation) {
+                // Use milestone duration (audio files are spliced from source at these times)
+                const clipDuration = m.stopTime - m.startTime;
+                console.log(`[DeeJay] WS${idx} adding region for ${targetTextChannel}:`, {
                   cumulativeStart: cumulativeTime,
                   cumulativeEnd: cumulativeTime + clipDuration,
-                  audioClipStart: audioData.clipStart,
-                  audioClipStop: audioData.clipStop,
-                  audioDuration: clipDuration,
                   milestoneStart: m.startTime,
                   milestoneStop: m.stopTime,
-                  milestoneDuration: m.stopTime - m.startTime
+                  clipDuration: clipDuration
                 });
                 this.regionsPlugins[idx].addRegion({
                   ...region,
@@ -788,7 +781,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 });
                 cumulativeTime += clipDuration;
               } else {
-                console.log(`[DeeJay] WS${idx} skipping milestone ${mileNum} - no ${targetAudioChannel} audio data found`);
+                console.log(`[DeeJay] WS${idx} skipping milestone ${mileNum} - no ${targetTextChannel} text annotation`);
               }
             }
           },
