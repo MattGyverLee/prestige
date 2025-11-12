@@ -177,7 +177,7 @@ export class DeeJay extends Component<DeeJayProps> {
             thisRegion.element.id = element;
             updateRegionAlpha(
               regions,
-              regionsOn === 1 ? (element ? 0.7 : 0.05) : element ? 0.05 : 0.0,  // Non-hover: 0.05 to match default
+              regionsOn === 1 ? (element ? 0.7 : 0.1) : element ? 0.1 : 0.0,  // Non-hover: 0.1 to match default
               thisRegion.start,
               thisRegion.end,
             );
