@@ -43,6 +43,7 @@ export default function configureStore() {
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: false, // Disable if you have non-serializable data
+        immutableCheck: false, // Disable to avoid performance warnings with large state
       }),
     devTools: process.env.NODE_ENV !== "production",
   });
