@@ -81,6 +81,13 @@ export class DeeJay extends Component<DeeJayProps> {
   private verboseMilestones = false; // Set to true to see milestone redrawing logs
   private lastDimensions = 477;
 
+  // Track pause/play handlers so we can remove them in WaveSurfer v7
+  private eventHandlers: { [idx: number]: { pause: Function[], play: Function[] } } = {
+    0: { pause: [], play: [] },
+    1: { pause: [], play: [] },
+    2: { pause: [], play: [] }
+  };
+
   getDimensions = (): number => {
     if (
       this.props.dimensions.AppBody.height > 1 &&
@@ -599,7 +606,10 @@ export class DeeJay extends Component<DeeJayProps> {
             this.setRelativeTime(idx, high, currM, highM);
 
           // Subscribe High for Pausing (Allows for Loading Next Milestone)
-          if (this.props.currentTimeline !== -1) highWS.on("pause", loadNext);
+          if (this.props.currentTimeline !== -1) {
+            highWS.on("pause", loadNext);
+            this.eventHandlers[high].pause.push(loadNext);
+          }
         });
 
         // If Current Timeline is not Empty => Play According to Milestones
@@ -977,19 +987,16 @@ export class DeeJay extends Component<DeeJayProps> {
   };
 
   clearHandler = (idx: number, handler: string): void => {
-    // In WaveSurfer v7, handlers are managed differently
-    // Check if wavesurfer exists and has the handlers property (v6 compatibility)
-    if (
-      this.waveSurfers[idx] &&
-      this.waveSurfers[idx].handlers &&
-      this.waveSurfers[idx].handlers[handler] &&
-      this.waveSurfers[idx].handlers[handler].length > 1
-    ) {
-      while (this.waveSurfers[idx].handlers[handler].length > 1)
-        this.waveSurfers[idx].un(
-          handler,
-          this.waveSurfers[idx].handlers[handler][1],
-        );
+    if (!this.waveSurfers[idx]) return;
+
+    // WaveSurfer v7: Use our tracked handlers
+    if (handler === "pause" || handler === "play") {
+      const handlers = this.eventHandlers[idx][handler as "pause" | "play"];
+      handlers.forEach(handlerFn => {
+        this.waveSurfers[idx].un(handler, handlerFn);
+      });
+      // Clear the tracked handlers array
+      this.eventHandlers[idx][handler as "pause" | "play"] = [];
     }
   };
 
@@ -1314,7 +1321,10 @@ export class DeeJay extends Component<DeeJayProps> {
             };
 
             // Sub Next Lowest WS to RecentStart Only if Not Lowest WS
-            if (x > 0) this.waveSurfers[highs[x - 1]].on("pause", recentStart);
+            if (x > 0) {
+              this.waveSurfers[highs[x - 1]].on("pause", recentStart);
+              this.eventHandlers[highs[x - 1]].pause.push(recentStart);
+            }
             if (x === highs.length - 1) {
               const resetDispatch = () => {
                 if (
@@ -1327,6 +1337,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 }
               };
               this.waveSurfers[highs[x]].on("pause", resetDispatch);
+              this.eventHandlers[highs[x]].pause.push(resetDispatch);
             }
           }
         }
@@ -1348,6 +1359,7 @@ export class DeeJay extends Component<DeeJayProps> {
             }
           };
           this.waveSurfers[highs[0]].on("pause", secondVO);
+          this.eventHandlers[highs[0]].pause.push(secondVO);
         }
         break;
       }
