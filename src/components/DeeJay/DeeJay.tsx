@@ -270,11 +270,14 @@ export class DeeJay extends Component<DeeJayProps> {
         // Start playback now that timeline is set and WS0 is ready
         // WS1/WS2 will load asynchronously
         console.log(`[DeeJay] Timeline just set and WS0 is ready, dispatching PlayerSeek to start playback`);
-        this.props.setDispatch({
-          dispatchType: "PlayerSeek",
-          wsNum: -1,
-          refStart: 0,
-        });
+        // Use setTimeout to ensure dispatch happens after componentDidUpdate completes
+        setTimeout(() => {
+          this.props.setDispatch({
+            dispatchType: "PlayerSeek",
+            wsNum: -1,
+            refStart: 0,
+          });
+        }, 100);
       }
 
       // Force WS1 and WS2 to load by clearing their currentPlaying state
@@ -900,16 +903,19 @@ export class DeeJay extends Component<DeeJayProps> {
       if (idx === 0) {
         //todo: Add subtitle here.
         if (this.props.currentTimeline >= 0) {
-          console.log(`[DeeJay] WS0 dispatching PlayerSeek`);
-          this.props.setDispatch({
-            dispatchType: "PlayerSeek",
-            wsNum: -1,
-            refStart: 0,
-          });
+          console.log(`[DeeJay] WS0 ready and timeline exists, dispatching PlayerSeek to start playback`);
+          // Use setTimeout to ensure dispatch happens after waveformReady completes
+          setTimeout(() => {
+            this.props.setDispatch({
+              dispatchType: "PlayerSeek",
+              wsNum: -1,
+              refStart: 0,
+            });
+          }, 100);
         } else {
-          // Don't auto-play immediately - wait for timeline and other wavesurfers to load
-          // Auto-play will happen when timeline is set up
-          console.log(`[DeeJay] WS0 ready but no timeline yet, waiting for timeline setup before auto-playing`);
+          // Timeline doesn't exist yet - wait for it to be created
+          // Auto-play will happen in componentDidUpdate when timeline is set
+          console.log(`[DeeJay] WS0 ready but no timeline yet, waiting for timeline setup`);
         }
       }
       toggleAllRegions(this.regionsOn, true, this.getWSRegions());
