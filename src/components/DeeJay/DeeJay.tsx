@@ -268,8 +268,34 @@ export class DeeJay extends Component<DeeJayProps> {
       // Clear and reload WS1 and WS2 to redraw regions with new oral annotations
       [1, 2].forEach((idx) => {
         if (this.waveSurfers[idx] && this.regionsPlugins[idx]) {
-          // Clear current playing state to force reload in componentDidUpdate loop below
-          this.currentPlaying[idx] = "";
+          // Only clear if the file to load is different from what's currently loaded
+          // This prevents infinite reload loops when milestones change repeatedly
+          const audioToLoad = findValidAudio(idx);
+          if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
+            console.log(`[DeeJay] WS${idx} milestones changed, clearing currentPlaying to reload with new regions`);
+            this.currentPlaying[idx] = "";
+          } else if (!audioToLoad) {
+            // If no valid audio, clear it
+            this.currentPlaying[idx] = "";
+          } else {
+            console.log(`[DeeJay] WS${idx} milestones changed but same file is loaded, just redrawing regions`);
+            // Same file is already loaded, just clear and redraw regions
+            this.regionsPlugins[idx].clearRegions();
+            const milestones = this.props.timeline[this.props.currentTimeline].milestones;
+            milestones.forEach((m: any, mileNum: number) => {
+              if (m.data[idx]) {
+                const region = {
+                  id: m.startId + "_ws" + idx,
+                  start: m.data[idx].clipStart !== undefined ? m.data[idx].clipStart : m.startTime,
+                  end: m.data[idx].clipStop !== undefined ? m.data[idx].clipStop : m.stopTime,
+                  color: this.regionColors[mileNum],
+                  drag: false,
+                  resize: false,
+                };
+                this.regionsPlugins[idx].addRegion(region);
+              }
+            });
+          }
         }
       });
     }
@@ -1029,14 +1055,22 @@ export class DeeJay extends Component<DeeJayProps> {
         // Set actingDispatch so PlayPause knows which wavesurfer to play
         this.actingDispatch = { dispatchType: "PlayerSeek", wsNum: actives[0] };
 
-        // Auto-play after seeking (matches region-clicked behavior)
-        if (this.props.currentTimeline !== -1 && currM) {
-          this.props.setDispatch({
-            dispatchType: "Clip",
-            wsNum: actives[0],
-            clipStart: currM.startTime,
-            clipStop: currM.stopTime,
-          });
+        // Auto-play after seeking
+        if (this.props.currentTimeline !== -1 && currM && currM.startTime !== undefined) {
+          console.log(`[DeeJay] PlayerSeek auto-play: dispatching Clip for WS${actives[0]} from ${currM.startTime} to ${currM.stopTime}`);
+          console.log(`[DeeJay] PlayerSeek currM.data:`, currM.data);
+
+          // Use setTimeout to ensure the Clip dispatch happens after the current dispatch cycle completes
+          setTimeout(() => {
+            this.props.setDispatch({
+              dispatchType: "Clip",
+              wsNum: actives[0],
+              clipStart: currM.startTime,
+              clipStop: currM.stopTime,
+            });
+          }, 50);
+        } else {
+          console.log(`[DeeJay] PlayerSeek auto-play skipped: currentTimeline=${this.props.currentTimeline}, currM=`, currM);
         }
         break;
       }
