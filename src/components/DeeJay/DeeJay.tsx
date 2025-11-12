@@ -196,6 +196,13 @@ export class DeeJay extends Component<DeeJayProps> {
       prevProps.sourceMedia !== this.props.sourceMedia;
     const timelineJustSet = prevProps.currentTimeline === -1 && this.props.currentTimeline !== -1;
 
+    // Check if milestones changed (e.g., oral annotations added)
+    const milestonesChanged =
+      this.props.currentTimeline !== -1 &&
+      prevProps.timeline[this.props.currentTimeline] &&
+      this.props.timeline[this.props.currentTimeline] &&
+      prevProps.timeline[this.props.currentTimeline].milestones !== this.props.timeline[this.props.currentTimeline].milestones;
+
     // If timeline was just set, redraw regions for WS0 and trigger load for WS1/WS2
     if (timelineJustSet) {
       console.log(`[DeeJay] Timeline just set (${prevProps.currentTimeline} -> ${this.props.currentTimeline})`);
@@ -237,6 +244,20 @@ export class DeeJay extends Component<DeeJayProps> {
       // Force WS1 and WS2 to load by clearing their currentPlaying state
       this.currentPlaying[1] = "";
       this.currentPlaying[2] = "";
+    }
+
+    // If milestones changed (e.g., oral annotations were added), force WS1/WS2 to reload
+    if (milestonesChanged && !timelineJustSet) {
+      console.log(`[DeeJay] Milestones changed, forcing WS1/WS2 to reload with updated milestone data`);
+
+      // Clear and reload WS1 and WS2 to redraw regions with new oral annotations
+      [1, 2].forEach((idx) => {
+        if (this.waveSurfers[idx] && this.regionsPlugins[idx]) {
+          console.log(`[DeeJay] WS${idx} reloading to redraw regions with updated milestones`);
+          // Clear current playing state to force reload in componentDidUpdate loop below
+          this.currentPlaying[idx] = "";
+        }
+      });
     }
 
     // If currentURL and StateURL Don't Match (use prevProps for comparison)
