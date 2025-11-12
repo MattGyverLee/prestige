@@ -674,10 +674,20 @@ export class DeeJay extends Component<DeeJayProps> {
       console.log(`[DeeJay] WS${idx} waveform ready. currentTimeline:`, this.props.currentTimeline);
 
       // Add WF and Set WS Duration
+      // WaveSurfer v7: exportPCM is replaced with getDecodedData
+      // getDecodedData returns an AudioBuffer
+      const decodedData = this.waveSurfers[idx].getDecodedData();
+      const peaks: number[][] = [];
+      if (decodedData) {
+        for (let i = 0; i < decodedData.numberOfChannels; i++) {
+          peaks.push(Array.from(decodedData.getChannelData(i)));
+        }
+      }
+
       this.props.waveformAdded({
         ref: this.currentPlaying[idx],
         sourceAnnot: idx === 0,
-        wavedata: this.waveSurfers[idx].exportPCM(1024, 10000, true),
+        wavedata: peaks,
       });
 
       // Draw All Regions currentTimeline Has
