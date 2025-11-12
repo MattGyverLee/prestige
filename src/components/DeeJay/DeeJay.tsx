@@ -181,7 +181,8 @@ export class DeeJay extends Component<DeeJayProps> {
         }
         this.clearDispatchLeftovers();
         this.clicked[idx] = true;
-        this.solo(idx, false);
+        // Don't call solo() - preserve existing volume states for voiceover workflow
+        // Just pause this wavesurfer to prepare for seeking
         this.waveSurfers[idx].pause();
       }
     });
