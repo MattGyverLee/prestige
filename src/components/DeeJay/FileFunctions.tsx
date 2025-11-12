@@ -26,10 +26,22 @@ export function findValidSourceAudio(): LooseObject[] {
   const filtered = allSourceAudio.filter(
     (sa: LooseObject) => {
       const hasNormalized = sa.blobURL.includes("_StandardAudio_Normalized.mp3");
+
+      // If no timeline is selected (syncMedia is empty), just return normalized MP3 files
+      if (syncMedia.length === 0) {
+        console.log("[findValidSourceAudio] No timeline - checking for normalized MP3:", {
+          blobURL: sa.blobURL,
+          hasNormalized,
+          passes: hasNormalized
+        });
+        return hasNormalized;
+      }
+
+      // If timeline exists, check if the .wav file is in syncMedia
       const wavName = sa.blobURL.substring(0, sa.blobURL.indexOf("_Normalized.mp3")) + ".wav";
       const inSync = syncMedia.indexOf(wavName) !== -1;
 
-      console.log("[findValidSourceAudio] Checking:", {
+      console.log("[findValidSourceAudio] Timeline exists - checking:", {
         blobURL: sa.blobURL,
         hasNormalized,
         wavName,
