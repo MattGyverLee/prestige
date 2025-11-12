@@ -757,22 +757,26 @@ export class DeeJay extends Component<DeeJayProps> {
               console.log(`[DeeJay] WS${idx} adding region:`, region);
               this.regionsPlugins[idx].addRegion(region);
             } else {
-              // WS1 plays Careful_Merged.mp3 (check audCarefulMain flag)
-              // WS2 plays Translation_Merged.mp3 (check audTranslMain flag)
+              // WS1 plays Careful_Merged.mp3 (shows regions for "Careful" audio)
+              // WS2 plays Translation_Merged.mp3 (shows regions for "Translation" audio)
               // These are merged/concatenated audio files, so we need cumulative timing
-              const audioFlagName = idx === 1 ? "audCarefulMain" : "audTranslMain";
-              const hasAudio = m[audioFlagName];
+              // Check if audio file exists for this milestone by looking for the clip filename
+              const audioType = idx === 1 ? "Careful" : "Translation";
+              const expectedFilename = `${m.startTime}_to_${m.stopTime}_${audioType}.wav`;
+              const hasAudio = this.props.annotMedia.some((file: any) =>
+                file.name && file.name.includes(expectedFilename)
+              );
 
               if (hasAudio) {
                 // Use milestone duration (audio files are spliced from source at these times)
                 const clipDuration = m.stopTime - m.startTime;
-                console.log(`[DeeJay] WS${idx} adding region for ${audioFlagName}:`, {
+                console.log(`[DeeJay] WS${idx} adding region for ${audioType}:`, {
                   cumulativeStart: cumulativeTime,
                   cumulativeEnd: cumulativeTime + clipDuration,
                   milestoneStart: m.startTime,
                   milestoneStop: m.stopTime,
                   clipDuration: clipDuration,
-                  audioFlag: hasAudio
+                  expectedFilename: expectedFilename
                 });
                 this.regionsPlugins[idx].addRegion({
                   ...region,
@@ -781,7 +785,7 @@ export class DeeJay extends Component<DeeJayProps> {
                 });
                 cumulativeTime += clipDuration;
               } else {
-                console.log(`[DeeJay] WS${idx} skipping milestone ${mileNum} - ${audioFlagName} is false`);
+                console.log(`[DeeJay] WS${idx} skipping milestone ${mileNum} - no file matching ${expectedFilename}`);
               }
             }
           },
