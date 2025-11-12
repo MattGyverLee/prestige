@@ -210,10 +210,11 @@ export class DeeJay extends Component<DeeJayProps> {
         ws0Exists: !!ws0,
         regions0Exists: !!regions0,
         currentPlaying0: this.currentPlaying[0],
-        hasAudio: this.currentPlaying[0] !== ""
+        hasAudio: this.currentPlaying[0] !== "",
+        duration: ws0 ? ws0.getDuration() : 0
       });
-      // In WaveSurfer v7, there's no isReady property. Check if audio is loaded instead.
-      if (ws0 && this.currentPlaying[0] && regions0) {
+      // Check if WaveSurfer has loaded audio by checking duration > 0
+      if (ws0 && ws0.getDuration() > 0 && regions0) {
         console.log(`[DeeJay] WS0 already ready, drawing regions for timeline ${this.props.currentTimeline}`);
         regions0.clearRegions();
         const milestones = this.props.timeline[this.props.currentTimeline].milestones;
