@@ -261,6 +261,11 @@ function buildMilestoneClips(params: BuildMilestoneClipsParams): VideoClip[] {
     const { A1, A1Start, A1Stop, A1Speed, V1Speed, kingLen } = kingConfig;
 
     // -------------------------------------------------------------------------
+    // Extract subtitle text for this king
+    // -------------------------------------------------------------------------
+    const subtitle = getSubtitleForKing(ms, king);
+
+    // -------------------------------------------------------------------------
     // Add clips with prince (background) voiceovers
     // -------------------------------------------------------------------------
     if (princes.length > 0) {
@@ -280,6 +285,7 @@ function buildMilestoneClips(params: BuildMilestoneClipsParams): VideoClip[] {
         king,
         audSource,
         vols,
+        subtitle,
       });
 
       clips.push(...princeClips);
@@ -298,6 +304,7 @@ function buildMilestoneClips(params: BuildMilestoneClipsParams): VideoClip[] {
         A1Speed,
         A1Vol: vols[king],
         isA2: false,
+        subtitle,
         Comment: `Milestone ${msIndex}: King ${king}`,
       });
     }
@@ -416,6 +423,7 @@ interface BuildPrinceClipsParams {
   king: number;
   audSource: string;
   vols: number[];
+  subtitle: string;
 }
 
 /**
@@ -444,6 +452,7 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
     king,
     audSource,
     vols,
+    subtitle,
   } = params;
 
   const clips: VideoClip[] = [];
@@ -473,6 +482,7 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
         A2Stop: V1Stop,
         A2Speed: V1Speed,
         A2Vol: vols[prince],
+        subtitle,
         Comment: `Milestone ${msIndex}: King ${king} with voiceover ${prince}`,
       });
       clipCreated = true;
@@ -505,6 +515,7 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
           A2Stop,
           A2Speed,
           A2Vol: vols[prince],
+          subtitle,
           Comment: `Milestone ${msIndex}: King ${king} with voiceover ${prince}`,
         });
         clipCreated = true;
@@ -521,6 +532,7 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
           A1Speed,
           A1Vol: vols[king],
           isA2: false,
+          subtitle,
           Comment: `Milestone ${msIndex}: King ${king} (no voiceover ${prince})`,
         });
         clipCreated = true;
@@ -554,6 +566,7 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
           A2Stop,
           A2Speed,
           A2Vol: vols[prince],
+          subtitle,
           Comment: `Milestone ${msIndex}: King ${king} with voiceover ${prince}`,
         });
         clipCreated = true;
@@ -570,6 +583,7 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
           A1Speed,
           A1Vol: vols[king],
           isA2: false,
+          subtitle,
           Comment: `Milestone ${msIndex}: King ${king} (no voiceover ${prince})`,
         });
         clipCreated = true;
@@ -620,4 +634,49 @@ export function getAudio(chan: string, ms: Milestone) {
   });
 
   return { file: audioFile, start: audioStart, stop: audioStop };
+}
+
+/**
+ * Extract subtitle text from milestone based on king index
+ *
+ * Returns transcription text for kings 0-1 (video/careful),
+ * or translation text for king 2 (translation).
+ *
+ * @param ms - Milestone object containing subtitle data
+ * @param kingIndex - Index of the king track (0=video, 1=careful, 2=translation)
+ * @returns Subtitle text, or empty string if not found
+ *
+ * @example
+ * // Get transcription for video king
+ * const subtitle = getSubtitleForKing(milestone, 0);
+ * // Returns: "Bonjour, comment allez-vous?"
+ *
+ * @example
+ * // Get translation for translation king
+ * const subtitle = getSubtitleForKing(milestone, 2);
+ * // Returns: "Hello, how are you?"
+ */
+function getSubtitleForKing(ms: Milestone, kingIndex: number): string {
+  let subtitle = "";
+
+  if (kingIndex <= 1) {
+    // Kings 0-1: Show transcription
+    const transcData = ms.data.find((d) => d.channel === "Transcription");
+    if (transcData && transcData.data) {
+      subtitle = transcData.data;
+    }
+  } else if (kingIndex === 2) {
+    // King 2: Show translation
+    const translData = ms.data.find((d) => d.channel === "Translation");
+    if (translData && translData.data) {
+      subtitle = translData.data;
+    }
+  }
+
+  // Filter out null, undefined, or "%ignore%" markers
+  if (subtitle === undefined || subtitle === null || subtitle === "%ignore%") {
+    subtitle = "";
+  }
+
+  return subtitle;
 }

@@ -201,6 +201,10 @@ export interface VideoClip {
   /** Secondary audio volume (0.0 to 1.0) */
   A2Vol?: number;
 
+  // Subtitle
+  /** Optional subtitle text to burn into video */
+  subtitle?: string;
+
   // Metadata
   /** Optional comment or description */
   Comment?: string;

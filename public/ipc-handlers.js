@@ -669,11 +669,31 @@ function registerIPCHandlers(mainWindow) {
           const filters = [];
 
           // Video speed filter (setpts)
+          let videoFilter = '[0:v]';
           if (clip.V1Speed && clip.V1Speed !== 1) {
-            filters.push(`[0:v]setpts=${1/clip.V1Speed}*PTS[v]`);
+            videoFilter += `setpts=${1/clip.V1Speed}*PTS`;
           } else {
-            filters.push(`[0:v]copy[v]`);
+            videoFilter += 'copy';
           }
+
+          // Add subtitle burning if subtitle text is provided
+          if (clip.subtitle && clip.subtitle.trim() !== '') {
+            // Escape special characters for FFmpeg drawtext filter
+            // FFmpeg requires: ' -> \' , : -> \: , \ -> \\
+            const escapedText = clip.subtitle
+              .replace(/\\/g, '\\\\')    // Escape backslashes first
+              .replace(/'/g, "\\'")       // Escape single quotes
+              .replace(/:/g, '\\:')       // Escape colons
+              .replace(/\[/g, '\\[')      // Escape brackets
+              .replace(/\]/g, '\\]')
+              .replace(/%/g, '\\%');      // Escape percent signs
+
+            // Add drawtext filter for yellow subtitles at bottom
+            videoFilter += `,drawtext=text='${escapedText}':fontcolor=yellow:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-20`;
+          }
+
+          videoFilter += '[v]';
+          filters.push(videoFilter);
 
           // A1 audio tempo filter (handle speeds > 2 by stacking atempo filters)
           let a1Filter = '[1:a]';
