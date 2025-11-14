@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { expect, vi } from "vitest";
+import { vi } from "vitest";
 
 // Mock Electron APIs globally
 const mockElectronAPI = {
@@ -9,6 +9,8 @@ const mockElectronAPI = {
   writeFile: vi.fn(() => Promise.resolve()),
   watchFolder: vi.fn(() => Promise.resolve()),
   unwatchFolder: vi.fn(() => Promise.resolve()),
+  stopWatcher: vi.fn(() => Promise.resolve()),
+  removeFileSystemEventListener: vi.fn(() => Promise.resolve()),
   exportVideo: vi.fn(() =>
     Promise.resolve({ output: "/test/output.mp4", clips: 1 }),
   ),
@@ -16,6 +18,15 @@ const mockElectronAPI = {
     Promise.resolve({ size: 1000, modified: Date.now() }),
   ),
   selectFolder: vi.fn(() => Promise.resolve("/test/selected/folder")),
+  getMimeType: vi.fn((path: string) => {
+    if (path.endsWith(".mp4")) return Promise.resolve("video/mp4");
+    if (path.endsWith(".wav")) return Promise.resolve("audio/wav");
+    if (path.endsWith(".mp3")) return Promise.resolve("audio/mpeg");
+    if (path.endsWith(".eaf")) return Promise.resolve("application/xml");
+    return Promise.resolve("application/octet-stream");
+  }),
+  readFileAsBuffer: vi.fn(() => Promise.resolve(new ArrayBuffer(0))),
+  pathToFileURL: vi.fn((path: string) => Promise.resolve(`file://${path}`)),
 };
 
 // Make electronAPI available globally

@@ -59,6 +59,10 @@ export default tseslint.config(
       '@typescript-eslint/explicit-module-boundary-types': ['off'],
       // end temp
       'no-console': ['off'],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       'react/jsx-filename-extension': [
         'error',
         { extensions: ['.jsx', '.tsx'] },

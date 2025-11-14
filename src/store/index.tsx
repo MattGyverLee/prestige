@@ -37,6 +37,9 @@ const rootReducer = (state: any, action: any) => {
 
 export type StateProps = ReturnType<typeof rootReducer>;
 
+// Export rootReducer for testing
+export { rootReducer };
+
 export default function configureStore() {
   const store = toolkitConfigureStore({
     reducer: rootReducer,
