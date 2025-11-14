@@ -3,8 +3,8 @@
  *
  * This module handles exporting video with synchronized multilingual audio tracks.
  * It implements a "kings and princes" volume-based audio mixing strategy where:
- * - Kings: Primary audio sources (volume >= 0.7)
- * - Princes: Background/voiceover audio (0 < volume < 0.7)
+ * - Kings: Primary audio sources (volume >= 0.84, matching DeeJay playback threshold)
+ * - Princes: Background/voiceover audio (0 < volume < 0.84)
  * - Silent: Muted audio (volume == 0)
  *
  * The export process:
@@ -32,9 +32,10 @@ import toast from "react-hot-toast";
 
 /**
  * Volume threshold for "king" (primary) audio classification
- * Audio tracks with volume >= 0.7 are considered primary/dominant
+ * Audio tracks with volume >= 0.5^0.25 (≈0.84) are considered primary/dominant
+ * This matches the threshold used in DeeJay.tsx for "highs" vs "lows"
  */
-const KING_VOLUME_THRESHOLD = 0.7;
+const KING_VOLUME_THRESHOLD = 0.5 ** 0.25;
 
 /**
  * Volume threshold for silent audio
@@ -63,8 +64,8 @@ const AUDIO_CHANNELS = {
  * is adjusted to match.
  *
  * Volume Categories:
- * - Kings (volume >= 0.7): Primary audio that determines clip duration
- * - Princes (0 < volume < 0.7): Background audio adjusted to match king duration
+ * - Kings (volume >= 0.84): Primary audio that determines clip duration
+ * - Princes (0 < volume < 0.84): Background audio adjusted to match king duration
  * - Silent (volume == 0): Muted audio tracks
  *
  * Audio Track Indices:
@@ -79,8 +80,8 @@ const AUDIO_CHANNELS = {
  *
  * @example
  * // Export with video audio as primary (king), careful as background (prince)
- * await exportVideo(timeline, 1.5, [0.8, 0.3, 0]);
- * // Result: Video audio plays at 80% volume, careful voiceover at 30%, translation muted
+ * await exportVideo(timeline, 1.5, [0.9, 0.3, 0]);
+ * // Result: Video audio plays at 90% volume (king), careful voiceover at 30% (prince), translation muted
  */
 export async function exportVideo(
   timeline: Timeline,
@@ -159,17 +160,17 @@ export async function exportVideo(
 /**
  * Categorize audio tracks into "kings" and "princes" based on volume levels
  *
- * Kings are primary audio tracks (volume >= 0.7) that control clip duration.
- * Princes are background tracks (0 < volume < 0.7) that are adjusted to match king duration.
+ * Kings are primary audio tracks (volume >= 0.84) that control clip duration.
+ * Princes are background tracks (0 < volume < 0.84) that are adjusted to match king duration.
  * Silent tracks (volume == 0) are excluded from both categories.
  *
  * @param vols - Array of volume levels for each audio track
  * @returns Object with kings and princes arrays (indices of audio tracks)
  *
  * @example
- * categorizeAudioByVolume([0.8, 0.3, 0]);
+ * categorizeAudioByVolume([0.9, 0.3, 0]);
  * // Returns: { kings: [0], princes: [1] }
- * // Track 0 (video audio) is king at 0.8 volume
+ * // Track 0 (video audio) is king at 0.9 volume
  * // Track 1 (careful) is prince at 0.3 volume
  * // Track 2 (translation) is silent and excluded
  */
