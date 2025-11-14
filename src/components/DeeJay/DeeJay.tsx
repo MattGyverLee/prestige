@@ -226,7 +226,254 @@ export class DeeJay extends Component<DeeJayProps> {
     }
   };
 
-  // Processes Reaction to State Updates
+  // ============================================================================
+  // COMPONENT UPDATE HELPERS
+  // ============================================================================
+
+  /**
+   * Handle timeline being set for the first time
+   *
+   * When a timeline is selected:
+   * 1. Generate region colors
+   * 2. If WS0 is ready, redraw regions and start playback
+   * 3. Trigger WS1/WS2 to load annotation audio
+   */
+  private handleTimelineJustSet = (): void => {
+    console.log(`[DeeJay] Timeline just set! Checking WS0 readiness...`);
+    // Generate region colors for the new timeline
+    this.regionColors = generateRegionColors();
+
+    // Redraw regions for WS0 if it's already ready
+    const ws0 = this.waveSurfers[0];
+    const regions0 = this.regionsPlugins[0];
+    const ws0Duration = ws0 ? ws0.getDuration() : 0;
+    const ws0Ready = this.isWSReady[0];
+
+    console.log(
+      `[DeeJay] WS0 check: exists=${!!ws0}, duration=${ws0Duration}, isReady=${ws0Ready}, regions=${!!regions0}, currentPlaying[0]=${this.currentPlaying[0]}`,
+    );
+
+    // Check if WaveSurfer is ready by checking isWSReady flag and has loaded audio
+    if (ws0 && ws0Ready && this.currentPlaying[0] && regions0) {
+      console.log(
+        `[DeeJay] WS0 is ready, redrawing regions and starting playback`,
+      );
+      regions0.clearRegions();
+      const milestones =
+        this.props.timeline[this.props.currentTimeline].milestones;
+      milestones.forEach((m: any, mileNum: number) => {
+        const region = {
+          id: m.startId,
+          start: m.startTime,
+          end: m.stopTime,
+          color: this.regionColors[mileNum],
+          drag: false,
+          resize: false,
+        };
+        regions0.addRegion(region);
+      });
+
+      // Start playback now that timeline is set and WS0 is ready
+      // WS1/WS2 will load asynchronously
+      console.log(`[DeeJay] Dispatching PlayerSeek to start auto-playback`);
+      // Use setTimeout to ensure dispatch happens after componentDidUpdate completes
+      setTimeout(() => {
+        this.props.setDispatch({
+          dispatchType: "PlayerSeek",
+          wsNum: -1,
+          refStart: 0,
+        });
+      }, 100);
+    } else {
+      console.log(
+        `[DeeJay] WS0 not ready yet when timeline set, will auto-play when WS0 becomes ready`,
+      );
+    }
+
+    // Force WS1 and WS2 to load by clearing their currentPlaying state
+    this.currentPlaying[1] = "";
+    this.currentPlaying[2] = "";
+  };
+
+  /**
+   * Handle milestones changing (e.g., oral annotations added)
+   *
+   * Redraws all waveforms with updated milestone data
+   */
+  private handleMilestonesChanged = (): void => {
+    // Redraw WS0 regions with new milestone data
+    const ws0 = this.waveSurfers[0];
+    const regions0 = this.regionsPlugins[0];
+    if (ws0 && regions0 && ws0.getDuration() > 0) {
+      regions0.clearRegions();
+      const milestones =
+        this.props.timeline[this.props.currentTimeline].milestones;
+      milestones.forEach((m: any, mileNum: number) => {
+        const region = {
+          id: m.startId,
+          start: m.startTime,
+          end: m.stopTime,
+          color: this.regionColors[mileNum],
+          drag: false,
+          resize: false,
+        };
+        regions0.addRegion(region);
+      });
+    }
+
+    // Clear and reload WS1 and WS2 to redraw regions with new oral annotations
+    [1, 2].forEach((idx) => {
+      if (this.waveSurfers[idx] && this.regionsPlugins[idx]) {
+        // Only clear if the file to load is different from what's currently loaded
+        // This prevents infinite reload loops when milestones change repeatedly
+        const audioToLoad = findValidAudio(idx);
+        if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
+          if (this.verboseMilestones) {
+            console.log(
+              `[DeeJay] WS${idx} milestones changed, clearing currentPlaying to reload with new regions`,
+            );
+          }
+          this.currentPlaying[idx] = "";
+        } else if (!audioToLoad) {
+          // If no valid audio, clear it
+          this.currentPlaying[idx] = "";
+        } else {
+          if (this.verboseMilestones) {
+            console.log(
+              `[DeeJay] WS${idx} milestones changed but same file is loaded, just redrawing regions`,
+            );
+          }
+          // Same file is already loaded, just clear and redraw regions
+          this.regionsPlugins[idx].clearRegions();
+          const milestones =
+            this.props.timeline[this.props.currentTimeline].milestones;
+          milestones.forEach((m: any, mileNum: number) => {
+            if (m.data[idx]) {
+              const region = {
+                id: m.startId + "_ws" + idx,
+                start:
+                  m.data[idx].clipStart !== undefined
+                    ? m.data[idx].clipStart
+                    : m.startTime,
+                end:
+                  m.data[idx].clipStop !== undefined
+                    ? m.data[idx].clipStop
+                    : m.stopTime,
+                color: this.regionColors[mileNum],
+                drag: false,
+                resize: false,
+              };
+              this.regionsPlugins[idx].addRegion(region);
+            }
+          });
+        }
+      }
+    });
+  };
+
+  /**
+   * Handle URL change - reset all wavesurfers for new media file
+   */
+  private handleUrlChanged = (): void => {
+    // Add Colors for Possible Regions if Necessary
+    this.regionColors = generateRegionColors();
+
+    // Match URLs
+    this.currBlob = this.props.url;
+
+    // Reset Private Variables in Preparation
+    this.idxs.forEach((idx: number) => {
+      this.props.setWSVolume(idx, +(idx === 0));
+      this.loadQueue[idx] = "";
+      this.waveSurfers[idx].destroy();
+      this.createWaveSurfer(idx);
+      // WaveSurfer v7 no longer exposes backend.peaks directly
+      // Peaks are managed internally - empty() is called in createWaveSurfer
+      // Regions are also cleared when the wavesurfer is destroyed and recreated
+      this.currentPlaying[idx] = "";
+      this.actingDispatch = { dispatchType: "" };
+    });
+  };
+
+  /**
+   * Handle dimension changes - update waveform heights
+   */
+  private handleDimensionsChanged = (): void => {
+    this.lastDimensions = this.getDimensions();
+    const newHeight = rowHeight();
+    this.idxs.forEach((idx: number) => {
+      // WaveSurfer v7 uses setOptions instead of setHeight
+      this.waveSurfers[idx].setOptions({ height: newHeight });
+    });
+  };
+
+  /**
+   * Handle loading audio for a specific wavesurfer
+   *
+   * Determines what audio file to load (if any) and triggers loading
+   */
+  private handleWaveformLoading = (idx: number): void => {
+    // Don't load waveforms until we have a timeline (if one exists)
+    // If timeline array is populated but currentTimeline is -1, wait
+    const waitingForTimeline =
+      this.props.timeline.length > 0 && this.props.currentTimeline === -1;
+    if (waitingForTimeline) {
+      console.log(
+        `[DeeJay] WS${idx} waiting for timeline to be set (timeline.length=${this.props.timeline.length}, currentTimeline=${this.props.currentTimeline})`,
+      );
+      return;
+    }
+
+    // If Sync Media Does Not Contain currBlob => No Timeline Actions
+    // -> Else => Timeline Actions
+    const inSync = syncContainsCurrent(this.currBlob);
+
+    if (inSync) {
+      // If WS is Playing => Check for Playing Actions
+      // -> Else If WS0, and Not Empty URL => Load and Play URL
+      if (this.currentPlaying[idx]) {
+        this.checkPlayingValues(idx);
+      } else if (!idx && this.props.url) {
+        const audioToLoad =
+          this.props.url !== "" ? findValidAudio(idx) : this.props.url;
+        // Only load if we have a valid URL and it's different from current
+        if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
+          this.loadFileWS(idx, audioToLoad);
+        }
+      } else if (idx > 0) {
+        // WS1 and WS2 (annotation tracks)
+        const audioToLoad = findValidAudio(idx);
+        if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
+          this.loadFileWS(idx, audioToLoad);
+        }
+      }
+    } else {
+      // If WS is Ready and Playing => Check for Playing Actions
+      // -> Else => Search and Load
+      if (this.currentPlaying[idx] && this.isWSReady[idx]) {
+        this.checkPlayingValues(idx);
+      } else if (!this.currentPlaying[idx]) {
+        const load = this.loadQueue[idx]
+          ? this.loadQueue[idx]
+          : findValidAudio(idx);
+        // Load File if Possible, Otherwise Put Into LoadQueue
+        if (!this.fileAllowed(load)) {
+          this.loadQueue[idx] = load;
+        } else if (load) {
+          this.loadFileWS(idx, load);
+        }
+      }
+    }
+  };
+
+  /**
+   * Processes reactions to state updates
+   *
+   * This method coordinates all state change responses by:
+   * 1. Detecting what changed (URL, timeline, milestones, dimensions)
+   * 2. Delegating to specific handlers for each concern
+   * 3. Ensuring waveforms stay synchronized with application state
+   */
   componentDidUpdate(prevProps: StateProps): void {
     // Track if URL or media files changed
     const urlChanged = prevProps.url !== this.props.url;
@@ -241,156 +488,17 @@ export class DeeJay extends Component<DeeJayProps> {
       prevProps.timeline[this.props.currentTimeline].milestones !==
         this.props.timeline[this.props.currentTimeline].milestones;
 
-    // If timeline was just set, redraw regions for WS0 and trigger load for WS1/WS2
+    // Handle each type of state change
     if (timelineJustSet) {
-      console.log(`[DeeJay] Timeline just set! Checking WS0 readiness...`);
-      // Generate region colors for the new timeline
-      this.regionColors = generateRegionColors();
-
-      // Redraw regions for WS0 if it's already ready
-      const ws0 = this.waveSurfers[0];
-      const regions0 = this.regionsPlugins[0];
-      const ws0Duration = ws0 ? ws0.getDuration() : 0;
-      const ws0Ready = this.isWSReady[0];
-
-      console.log(
-        `[DeeJay] WS0 check: exists=${!!ws0}, duration=${ws0Duration}, isReady=${ws0Ready}, regions=${!!regions0}, currentPlaying[0]=${this.currentPlaying[0]}`,
-      );
-
-      // Check if WaveSurfer is ready by checking isWSReady flag and has loaded audio
-      if (ws0 && ws0Ready && this.currentPlaying[0] && regions0) {
-        console.log(
-          `[DeeJay] WS0 is ready, redrawing regions and starting playback`,
-        );
-        regions0.clearRegions();
-        const milestones =
-          this.props.timeline[this.props.currentTimeline].milestones;
-        milestones.forEach((m: any, mileNum: number) => {
-          const region = {
-            id: m.startId,
-            start: m.startTime,
-            end: m.stopTime,
-            color: this.regionColors[mileNum],
-            drag: false,
-            resize: false,
-          };
-          regions0.addRegion(region);
-        });
-
-        // Start playback now that timeline is set and WS0 is ready
-        // WS1/WS2 will load asynchronously
-        console.log(`[DeeJay] Dispatching PlayerSeek to start auto-playback`);
-        // Use setTimeout to ensure dispatch happens after componentDidUpdate completes
-        setTimeout(() => {
-          this.props.setDispatch({
-            dispatchType: "PlayerSeek",
-            wsNum: -1,
-            refStart: 0,
-          });
-        }, 100);
-      } else {
-        console.log(
-          `[DeeJay] WS0 not ready yet when timeline set, will auto-play when WS0 becomes ready`,
-        );
-      }
-
-      // Force WS1 and WS2 to load by clearing their currentPlaying state
-      this.currentPlaying[1] = "";
-      this.currentPlaying[2] = "";
+      this.handleTimelineJustSet();
     }
 
-    // If milestones changed (e.g., oral annotations were added), redraw all waveforms
     if (milestonesChanged && !timelineJustSet) {
-      // Redraw WS0 regions with new milestone data
-      const ws0 = this.waveSurfers[0];
-      const regions0 = this.regionsPlugins[0];
-      if (ws0 && regions0 && ws0.getDuration() > 0) {
-        regions0.clearRegions();
-        const milestones =
-          this.props.timeline[this.props.currentTimeline].milestones;
-        milestones.forEach((m: any, mileNum: number) => {
-          const region = {
-            id: m.startId,
-            start: m.startTime,
-            end: m.stopTime,
-            color: this.regionColors[mileNum],
-            drag: false,
-            resize: false,
-          };
-          regions0.addRegion(region);
-        });
-      }
-
-      // Clear and reload WS1 and WS2 to redraw regions with new oral annotations
-      [1, 2].forEach((idx) => {
-        if (this.waveSurfers[idx] && this.regionsPlugins[idx]) {
-          // Only clear if the file to load is different from what's currently loaded
-          // This prevents infinite reload loops when milestones change repeatedly
-          const audioToLoad = findValidAudio(idx);
-          if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
-            if (this.verboseMilestones) {
-              console.log(
-                `[DeeJay] WS${idx} milestones changed, clearing currentPlaying to reload with new regions`,
-              );
-            }
-            this.currentPlaying[idx] = "";
-          } else if (!audioToLoad) {
-            // If no valid audio, clear it
-            this.currentPlaying[idx] = "";
-          } else {
-            if (this.verboseMilestones) {
-              console.log(
-                `[DeeJay] WS${idx} milestones changed but same file is loaded, just redrawing regions`,
-              );
-            }
-            // Same file is already loaded, just clear and redraw regions
-            this.regionsPlugins[idx].clearRegions();
-            const milestones =
-              this.props.timeline[this.props.currentTimeline].milestones;
-            milestones.forEach((m: any, mileNum: number) => {
-              if (m.data[idx]) {
-                const region = {
-                  id: m.startId + "_ws" + idx,
-                  start:
-                    m.data[idx].clipStart !== undefined
-                      ? m.data[idx].clipStart
-                      : m.startTime,
-                  end:
-                    m.data[idx].clipStop !== undefined
-                      ? m.data[idx].clipStop
-                      : m.stopTime,
-                  color: this.regionColors[mileNum],
-                  drag: false,
-                  resize: false,
-                };
-                this.regionsPlugins[idx].addRegion(region);
-              }
-            });
-          }
-        }
-      });
+      this.handleMilestonesChanged();
     }
 
-    // If currentURL and StateURL Don't Match (use prevProps for comparison)
     if (urlChanged) {
-      // Add Colors for Possible Regions if Necessary
-      this.regionColors = generateRegionColors();
-
-      // Match URLs
-      this.currBlob = this.props.url;
-
-      // Reset Private Variables in Preparation
-      this.idxs.forEach((idx: number) => {
-        this.props.setWSVolume(idx, +(idx === 0));
-        this.loadQueue[idx] = "";
-        this.waveSurfers[idx].destroy();
-        this.createWaveSurfer(idx);
-        // WaveSurfer v7 no longer exposes backend.peaks directly
-        // Peaks are managed internally - empty() is called in createWaveSurfer
-        // Regions are also cleared when the wavesurfer is destroyed and recreated
-        this.currentPlaying[idx] = "";
-        this.actingDispatch = { dispatchType: "" };
-      });
+      this.handleUrlChanged();
     }
 
     // Only update dimensions if they actually changed
@@ -399,67 +507,12 @@ export class DeeJay extends Component<DeeJayProps> {
       prevProps.isReady &&
       this.lastDimensions !== this.getDimensions()
     ) {
-      this.lastDimensions = this.getDimensions();
-      const newHeight = rowHeight();
-      this.idxs.forEach((idx: number) => {
-        // WaveSurfer v7 uses setOptions instead of setHeight
-        this.waveSurfers[idx].setOptions({ height: newHeight });
-      });
+      this.handleDimensionsChanged();
     }
 
-    // Loop Through all WSs
+    // Load waveforms for each track
     this.idxs.forEach((idx: number) => {
-      // Don't load waveforms until we have a timeline (if one exists)
-      // If timeline array is populated but currentTimeline is -1, wait
-      const waitingForTimeline =
-        this.props.timeline.length > 0 && this.props.currentTimeline === -1;
-      if (waitingForTimeline) {
-        console.log(
-          `[DeeJay] WS${idx} waiting for timeline to be set (timeline.length=${this.props.timeline.length}, currentTimeline=${this.props.currentTimeline})`,
-        );
-        return;
-      }
-
-      // If Sync Media Does Not Contain currBlob => No Timeline Actions
-      // -> Else => Timeline Actions
-      const inSync = syncContainsCurrent(this.currBlob);
-
-      if (inSync) {
-        // If WS is Playing => Check for Playing Actions
-        // -> Else If WS0, and Not Empty URL => Load and Play URL
-        if (this.currentPlaying[idx]) {
-          this.checkPlayingValues(idx);
-        } else if (!idx && this.props.url) {
-          const audioToLoad =
-            this.props.url !== "" ? findValidAudio(idx) : this.props.url;
-          // Only load if we have a valid URL and it's different from current
-          if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
-            this.loadFileWS(idx, audioToLoad);
-          }
-        } else if (idx > 0) {
-          // WS1 and WS2 (annotation tracks)
-          const audioToLoad = findValidAudio(idx);
-          if (audioToLoad && audioToLoad !== this.currentPlaying[idx]) {
-            this.loadFileWS(idx, audioToLoad);
-          }
-        }
-      } else {
-        // If WS is Ready and Playing => Check for Playing Actions
-        // -> Else => Search and Load
-        if (this.currentPlaying[idx] && this.isWSReady[idx]) {
-          this.checkPlayingValues(idx);
-        } else if (!this.currentPlaying[idx]) {
-          const load = this.loadQueue[idx]
-            ? this.loadQueue[idx]
-            : findValidAudio(idx);
-          // Load File if Possible, Otherwise Put Into LoadQueue
-          if (!this.fileAllowed(load)) {
-            this.loadQueue[idx] = load;
-          } else if (load) {
-            this.loadFileWS(idx, load);
-          }
-        }
-      }
+      this.handleWaveformLoading(idx);
     });
   }
 
