@@ -463,231 +463,316 @@ export class DeeJay extends Component<DeeJayProps> {
     });
   }
 
-  wsSeek = (idx: number): void => {
-    if (this.clicked[idx]) {
-      // Added Mar 2021 because Pause was breaking things.
-      // todo: this breaks Single clip playing.
-      this.playPausing = false;
-      // Log Action and Reset Clicked
-      console.log(`${idx} Click Seeking`);
-      this.clicked[idx] = false;
-      const ws = this.waveSurfers[idx];
-      const currMiles =
-        this.props.currentTimeline === -1
-          ? []
-          : this.props.timeline[this.props.currentTimeline].milestones;
+  // ============================================================================
+  // WAVEFORM SEEKING HELPERS
+  // ============================================================================
 
-      // Grab Current Milestone and Set Volume of Given WS
-      const currM = getCurrentMilestone(
+  /**
+   * Filter active wavesurfers into "highs" (primary tracks) and "lows" (voiceovers)
+   *
+   * Highs have volume > 0.5^0.25 (≈0.84), lows have volume between 0 and 0.5^0.25
+   */
+  private getHighsAndLows = (
+    actives: number[],
+  ): { highs: number[]; lows: number[] } => {
+    const highs = actives.filter(
+      (a: number) => this.waveSurfers[a].getVolume() > 0.5 ** 0.25,
+    );
+    const lows = actives.filter(
+      (a: number) =>
+        this.waveSurfers[a].getVolume() &&
+        this.waveSurfers[a].getVolume() <= 0.5 ** 0.25,
+    );
+    return { highs, lows };
+  };
+
+  /**
+   * Find the lowest-indexed high wavesurfer that can play the current milestone
+   *
+   * Returns the index of the lowest valid high, or -1 if none found
+   */
+  private findLowestValidHigh = (highs: number[], currM: Milestone): number => {
+    const currMD = {
+      dispatchType: "WSSeek",
+      clipStart: currM.startTime,
+      clipStop: currM.stopTime,
+    };
+
+    return highs.reduce(
+      (a: number, b: number) =>
+        (!b ||
+          getCurrentMilestone(
+            0,
+            this.waveSurfers[0].getCurrentTime(),
+            currMD,
+            b,
+          ).data.length) &&
+        (b < a || a === -1)
+          ? b
+          : a,
+      -1,
+    );
+  };
+
+  /**
+   * Create a callback that loads the next milestone when current one finishes
+   *
+   * This is used during wsSeek to chain together sequential milestone playback
+   */
+  private createLoadNextCallback = (
+    high: number,
+    hIdx: number,
+    highs: number[],
+    lows: number[],
+    idx: number,
+    currMiles: any[],
+  ): (() => void) => {
+    const highWS = this.waveSurfers[high];
+
+    return () => {
+      // If No Highs are Playing => Load Next
+      if (!this.playPausing) {
+        if (!this.voNum) {
+          // Cycle Through All Highs (from First After Current, Ending on Current)
+          for (let i = 1, l = highs.length + 1; i < l; i++) {
+            // Grab Index of Next WS and the WS Itself
+            const nextIdx = highs[(hIdx + i) % highs.length];
+
+            // Calculate Timeline Index of the Coming Milestone:
+            // - 1. FindMilestoneIndex of High's Current Time
+            // - 2. + (0 If Next WS <= High Else -1)
+            let nextM: any;
+            if (
+              getCurrentMilestone(high, this.waveSurfers[high].getCurrentTime())
+            ) {
+              const comingMIdx =
+                findNextMilestoneIndex(
+                  getCurrentMilestone(
+                    high,
+                    this.waveSurfers[high].getCurrentTime(),
+                  ),
+                ) +
+                +(highWS.getDuration() - highWS.getCurrentTime() < 0.05) +
+                +(nextIdx <= high) +
+                -1;
+
+              if (comingMIdx === currMiles.length)
+                highWS.un("pause", this.createLoadNextCallback);
+              else {
+                // Grab currComingM
+                const currComingM = currMiles[comingMIdx];
+                nextM = getCurrentMilestone(
+                  0,
+                  this.waveSurfers[0].getCurrentTime(),
+                  {
+                    dispatchType: "WSSeek",
+                    clipStart: currComingM.startTime,
+                    clipStop: currComingM.stopTime,
+                  },
+                  nextIdx,
+                );
+                // If NextM Exists and NextM Has Data if Necessary => Load Next Clip
+                if (nextM && (!nextIdx || nextM.data.length)) {
+                  // Force Exit Loop Now
+                  i = l;
+                  this.checkVOAndPlay(nextIdx, lows, nextM);
+                  this.actingDispatch = {
+                    dispatchType: "WSSeek",
+                    wsNum: nextIdx,
+                  };
+                }
+              }
+            }
+          }
+        } else {
+          const currComingM =
+            currMiles[
+              findNextMilestoneIndex(
+                getCurrentMilestone(
+                  idx,
+                  this.waveSurfers[idx].getCurrentTime(),
+                ),
+              ) - 1
+            ];
+          this.checkVOAndPlay(
+            idx,
+            lows,
+            getCurrentMilestone(
+              0,
+              this.waveSurfers[0].getCurrentTime(),
+              {
+                dispatchType: "WSSeek",
+                clipStart: currComingM.startTime,
+                clipStop: currComingM.stopTime,
+              },
+              idx,
+            ),
+          );
+          this.actingDispatch = { dispatchType: "WSSeek", wsNum: idx };
+        }
+      }
+    };
+  };
+
+  /**
+   * Set up sequential playback for highs with synchronized lows
+   *
+   * This subscribes each high wavesurfer to load the next milestone when it finishes
+   */
+  private setupSequentialPlayback = (
+    idx: number,
+    currM: Milestone,
+    highs: number[],
+    lows: number[],
+    currMiles: any[],
+  ): void => {
+    const currMD = {
+      dispatchType: "WSSeek",
+      clipStart: currM.startTime,
+      clipStop: currM.stopTime,
+    };
+
+    // Set relative times for lows
+    lows.forEach((low: number) => {
+      const lowM = getCurrentMilestone(
+        0,
+        this.waveSurfers[0].getCurrentTime(),
+        currMD,
+        low,
+      );
+      if (!low || lowM.data.length) this.setRelativeTime(idx, low, currM, lowM);
+    });
+
+    // Subscribe Highs to Function for Loading Next Milestone in Sequence
+    highs.forEach((high: number, hIdx: number) => {
+      const highWS = this.waveSurfers[high];
+
+      // Function for Loading Next Clip on Pause
+      const loadNext = this.createLoadNextCallback(
+        high,
+        hIdx,
+        highs,
+        lows,
         idx,
-        this.waveSurfers[idx].getCurrentTime(),
-      );
-      this.waveSurfers[idx].setVolume(1);
-      this.props.setWSVolume(idx, 1);
-
-      // Grab High and Low Audio WSs from the Active WSs
-      const actives = this.getActives();
-      const highs = actives.filter(
-        (a: number) => this.waveSurfers[a].getVolume() > 0.5 ** 0.25,
-      );
-      const lows = actives.filter(
-        (a: number) =>
-          this.waveSurfers[a].getVolume() &&
-          this.waveSurfers[a].getVolume() <= 0.5 ** 0.25,
+        currMiles,
       );
 
-      // Find Lowest Element of High that Can Play the Seeked Milestone
+      // If Current Milestone Has What it Needs => Set Relative Time
+      const highM = getCurrentMilestone(
+        0,
+        this.waveSurfers[0].getCurrentTime(),
+        currMD,
+        high,
+      );
+      if (!high || highM.data.length)
+        this.setRelativeTime(idx, high, currM, highM);
+
+      // Subscribe High for Pausing (Allows for Loading Next Milestone)
+      if (this.props.currentTimeline !== -1) {
+        highWS.on("pause", loadNext);
+        this.eventHandlers[high].pause.push(loadNext);
+      }
+    });
+  };
+
+  /**
+   * Handle waveform seek interaction
+   *
+   * Called when user clicks/drags on a waveform to seek to a new position.
+   * This method:
+   * 1. Finds the milestone at the seek position
+   * 2. Determines which wavesurfers should play (highs vs lows)
+   * 3. Sets up sequential playback if needed
+   * 4. Dispatches playback action
+   */
+  wsSeek = (idx: number): void => {
+    if (!this.clicked[idx]) return;
+
+    // Added Mar 2021 because Pause was breaking things.
+    // todo: this breaks Single clip playing.
+    this.playPausing = false;
+    // Log Action and Reset Clicked
+    console.log(`${idx} Click Seeking`);
+    this.clicked[idx] = false;
+    const ws = this.waveSurfers[idx];
+    const currMiles =
+      this.props.currentTimeline === -1
+        ? []
+        : this.props.timeline[this.props.currentTimeline].milestones;
+
+    // Grab Current Milestone and Set Volume of Given WS
+    const currM = getCurrentMilestone(
+      idx,
+      this.waveSurfers[idx].getCurrentTime(),
+    );
+    this.waveSurfers[idx].setVolume(1);
+    this.props.setWSVolume(idx, 1);
+
+    // Grab High and Low Audio WSs from the Active WSs
+    const actives = this.getActives();
+    const { highs, lows } = this.getHighsAndLows(actives);
+
+    // Find Lowest Element of High that Can Play the Seeked Milestone
+    const lowestValidHigh = this.findLowestValidHigh(highs, currM);
+
+    // If LowestValidHigh is not this WS => Set Clicked and Relative Time for What Is
+    // -> Else => Set Up Subscriptions and Start Playing
+    if (lowestValidHigh !== idx) {
+      // Allow LowestValidHigh to Be Processed in Seek, and Then Seek It
+      this.clicked[lowestValidHigh] = true;
       const currMD = {
         dispatchType: "WSSeek",
         clipStart: currM.startTime,
         clipStop: currM.stopTime,
       };
-      const lowestValidHigh = highs.reduce(
-        (a: number, b: number) =>
-          (!b ||
-            getCurrentMilestone(
-              0,
-              this.waveSurfers[0].getCurrentTime(),
-              currMD,
-              b,
-            ).data.length) &&
-          (b < a || a === -1)
-            ? b
-            : a,
-        -1,
-      );
-
-      // If LowestValidHigh is not this WS => Set Clicked and Relative Time for What Is
-      // -> Else => Set Up Subscriptions and Start Playing
-      if (lowestValidHigh !== idx) {
-        // Allow LowestValidHigh to Be Processed in Seek, and Then Seek It
-        this.clicked[lowestValidHigh] = true;
-        this.setRelativeTime(
-          idx,
+      this.setRelativeTime(
+        idx,
+        lowestValidHigh,
+        currM,
+        getCurrentMilestone(
+          0,
+          this.waveSurfers[0].getCurrentTime(),
+          currMD,
           lowestValidHigh,
-          currM,
-          getCurrentMilestone(
-            0,
-            this.waveSurfers[0].getCurrentTime(),
-            currMD,
-            lowestValidHigh,
-          ),
-        );
+        ),
+      );
+    } else {
+      // Set up sequential playback for highs with synchronized lows
+      this.setupSequentialPlayback(idx, currM, highs, lows, currMiles);
+
+      // If Current Timeline is not Empty => Dispatch Clip to trigger sequential playback with voiceovers
+      // -> Else => Play as Normal
+      if (this.props.currentTimeline !== -1) {
+        // Instead of calling checkVOAndPlay/seekSyncAndPlay, dispatch a Clip action
+        // This will use the full Clip handler logic for sequential highs + simultaneous lows
+
+        // For WS0, use source timeline (startTime/stopTime)
+        // For WS1/WS2, use annotation timeline (data[0].clipStart/clipStop)
+        const clipStart =
+          idx === 0
+            ? currM.startTime
+            : (currM.data[0]?.clipStart ?? currM.startTime);
+        const clipStop =
+          idx === 0
+            ? currM.stopTime
+            : (currM.data[0]?.clipStop ?? currM.stopTime);
+
+        this.props.setDispatch({
+          dispatchType: "Clip",
+          wsNum: idx,
+          clipStart,
+          clipStop,
+        });
       } else {
-        lows.forEach((low: number) => {
-          const lowM = getCurrentMilestone(
-            0,
-            this.waveSurfers[0].getCurrentTime(),
-            currMD,
-            low,
-          );
-          if (!low || lowM.data.length)
-            this.setRelativeTime(idx, low, currM, lowM);
+        this.seekSyncAndPlay(0, {
+          annotationID: "",
+          startTime: 0,
+          stopTime: ws.getDuration(),
+          data: [],
         });
-
-        // Subscribe Highs to Function for Loading Next Milestone in Sequence
-        highs.forEach((high: number, hIdx: number) => {
-          const highWS = this.waveSurfers[high];
-
-          // Function for Loading Next Clip on Pause
-          const loadNext = () => {
-            // If No Highs are Playing => Load Next
-            if (!this.playPausing) {
-              if (!this.voNum) {
-                // Cycle Through All Highs (from First After Current, Ending on Current)
-                for (let i = 1, l = highs.length + 1; i < l; i++) {
-                  // Grab Index of Next WS and the WS Itself
-                  const nextIdx = highs[(hIdx + i) % highs.length];
-
-                  // Calculate Timeline Index of the Coming Milestone:
-                  // - 1. FindMilestoneIndex of High's Current Time
-                  // - 2. + (0 If Next WS <= High Else -1)
-                  let nextM: any;
-                  if (
-                    getCurrentMilestone(
-                      high,
-                      this.waveSurfers[high].getCurrentTime(),
-                    )
-                  ) {
-                    const comingMIdx =
-                      findNextMilestoneIndex(
-                        getCurrentMilestone(
-                          high,
-                          this.waveSurfers[high].getCurrentTime(),
-                        ),
-                      ) +
-                      +(highWS.getDuration() - highWS.getCurrentTime() < 0.05) +
-                      +(nextIdx <= high) +
-                      -1;
-
-                    if (comingMIdx === currMiles.length)
-                      highWS.un("pause", loadNext);
-                    else {
-                      // Grab currComingM
-                      const currComingM = currMiles[comingMIdx];
-                      nextM = getCurrentMilestone(
-                        0,
-                        this.waveSurfers[0].getCurrentTime(),
-                        {
-                          dispatchType: "WSSeek",
-                          clipStart: currComingM.startTime,
-                          clipStop: currComingM.stopTime,
-                        },
-                        nextIdx,
-                      );
-                      // If NextM Exists and NextM Has Data if Necessary => Load Next Clip
-                      if (nextM && (!nextIdx || nextM.data.length)) {
-                        // Force Exit Loop Now
-                        i = l;
-                        this.checkVOAndPlay(nextIdx, lows, nextM);
-                        this.actingDispatch = {
-                          dispatchType: "WSSeek",
-                          wsNum: nextIdx,
-                        };
-                      }
-                    }
-                  }
-                }
-              } else {
-                const currComingM =
-                  currMiles[
-                    findNextMilestoneIndex(
-                      getCurrentMilestone(
-                        idx,
-                        this.waveSurfers[idx].getCurrentTime(),
-                      ),
-                    ) - 1
-                  ];
-                this.checkVOAndPlay(
-                  idx,
-                  lows,
-                  getCurrentMilestone(
-                    0,
-                    this.waveSurfers[0].getCurrentTime(),
-                    {
-                      dispatchType: "WSSeek",
-                      clipStart: currComingM.startTime,
-                      clipStop: currComingM.stopTime,
-                    },
-                    idx,
-                  ),
-                );
-                this.actingDispatch = { dispatchType: "WSSeek", wsNum: idx };
-              }
-            }
-          };
-
-          // If Current Milestone Has What it Needs => Set Relative Time
-          const highM = getCurrentMilestone(
-            0,
-            this.waveSurfers[0].getCurrentTime(),
-            currMD,
-            high,
-          );
-          if (!high || highM.data.length)
-            this.setRelativeTime(idx, high, currM, highM);
-
-          // Subscribe High for Pausing (Allows for Loading Next Milestone)
-          if (this.props.currentTimeline !== -1) {
-            highWS.on("pause", loadNext);
-            this.eventHandlers[high].pause.push(loadNext);
-          }
-        });
-
-        // If Current Timeline is not Empty => Dispatch Clip to trigger sequential playback with voiceovers
-        // -> Else => Play as Normal
-        if (this.props.currentTimeline !== -1) {
-          // Instead of calling checkVOAndPlay/seekSyncAndPlay, dispatch a Clip action
-          // This will use the full Clip handler logic for sequential highs + simultaneous lows
-
-          // For WS0, use source timeline (startTime/stopTime)
-          // For WS1/WS2, use annotation timeline (data[0].clipStart/clipStop)
-          const clipStart =
-            idx === 0
-              ? currM.startTime
-              : (currM.data[0]?.clipStart ?? currM.startTime);
-          const clipStop =
-            idx === 0
-              ? currM.stopTime
-              : (currM.data[0]?.clipStop ?? currM.stopTime);
-
-          this.props.setDispatch({
-            dispatchType: "Clip",
-            wsNum: idx,
-            clipStart,
-            clipStop,
-          });
-        } else {
-          this.seekSyncAndPlay(0, {
-            annotationID: "",
-            startTime: 0,
-            stopTime: ws.getDuration(),
-            data: [],
-          });
-        }
-        // this.actingDispatch = { dispatchType: "WSSeek", wsNum: idx };
-        // todo: can I delete this?
       }
+      // this.actingDispatch = { dispatchType: "WSSeek", wsNum: idx };
+      // todo: can I delete this?
     }
   };
 
