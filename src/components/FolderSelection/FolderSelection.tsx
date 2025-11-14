@@ -23,8 +23,7 @@ import {
 interface StateProps {
   annotMedia: aTypes.LooseObject[];
   annot: aTypes.AnnotationState;
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  annotations: object;
+  annotations: Record<string, unknown>;
   availableFiles: aTypes.LooseObject[];
   categories: string[];
   env: string;
@@ -89,9 +88,11 @@ class SelectFolderZone extends Component<FolderProps> {
       const timelineIndex = getTimelineIndex(
         this.props.timeline,
         this.props.url,
-        this.props.sourceMedia
+        this.props.sourceMedia,
       );
-      console.log(`[FolderSelection] Timeline created! Updating currentTimeline from -1 to ${timelineIndex}`);
+      console.log(
+        `[FolderSelection] Timeline created! Updating currentTimeline from -1 to ${timelineIndex}`,
+      );
       if (timelineIndex !== -1) {
         this.props.setURL(this.props.url, timelineIndex);
       }
@@ -121,7 +122,8 @@ class SelectFolderZone extends Component<FolderProps> {
     // For audio/video files, convert to blob URL for webSecurity compatibility
     // For other files, use file:// URL
     let blobURL: string;
-    const isAudioVideo = tempMime.startsWith("audio") || tempMime.startsWith("video");
+    const isAudioVideo =
+      tempMime.startsWith("audio") || tempMime.startsWith("video");
 
     if (isAudioVideo) {
       try {
@@ -132,10 +134,15 @@ class SelectFolderZone extends Component<FolderProps> {
         // Create blob URL
         blobURL = URL.createObjectURL(blob);
         if (this.verboseFileHandling) {
-          console.log(`[chokFileDescribe] Created blob URL for ${parsedPath.base}`);
+          console.log(
+            `[chokFileDescribe] Created blob URL for ${parsedPath.base}`,
+          );
         }
       } catch (error) {
-        console.error(`[chokFileDescribe] Error creating blob URL for ${path}:`, error);
+        console.error(
+          `[chokFileDescribe] Error creating blob URL for ${path}:`,
+          error,
+        );
         // Fallback to file:// URL if blob creation fails
         blobURL = await electronAPI.pathToFileURL(path);
       }
@@ -218,15 +225,97 @@ class SelectFolderZone extends Component<FolderProps> {
     });
   };
 
-  // Handler for file add events
+  // ==================== File Watcher Event Handlers ====================
+
+  /**
+   * Schedule debounced audio merge for annotation clips
+   *
+   * When annotation clips are added, we wait 500ms for all clips to be discovered
+   * before triggering the merge. This prevents multiple merges for the same set of clips.
+   */
+  private scheduleDebouncedMerge = (): void => {
+    if (this.annotMergeTimeout) {
+      clearTimeout(this.annotMergeTimeout);
+    }
+    this.annotMergeTimeout = setTimeout(async () => {
+      console.log(
+        `[handleFileAdd] Triggering delayed loadAnnot after clip discovery`,
+      );
+      await this.loadAnnot(true); // Careful
+      await this.loadAnnot(false); // Translation
+    }, 500);
+  };
+
+  /**
+   * Handle annotation media file being added
+   *
+   * @param fileDef - File definition for the annotation media
+   */
+  private handleAnnotationMediaAdded = (fileDef: aTypes.LooseObject): void => {
+    this.props.annotMediaAdded({ file: fileDef });
+
+    // If this is a Merged.mp3 file, log it (milestones are created during merge)
+    if (
+      fileDef.isMerged &&
+      fileDef.name.includes("_Merged.mp3") &&
+      this.isChokReady
+    ) {
+      console.log(`[handleFileAdd] Merged file detected: ${fileDef.name}`);
+      // Note: Merged files already exist, so we don't need to create them
+      // Oral annotations are added to the timeline during the merge process
+    }
+
+    // If this is an individual Careful/Translation clip, schedule a merge
+    if (
+      !fileDef.isMerged &&
+      this.isChokReady &&
+      this.props.currentTimeline !== -1
+    ) {
+      const isCareful = fileDef.name.includes("_Careful.");
+      const isTranslation = fileDef.name.includes("_Translation.");
+
+      if (isCareful || isTranslation) {
+        if (this.verboseFileHandling) {
+          console.log(
+            `[handleFileAdd] Annotation audio clip added: ${fileDef.name}`,
+          );
+        }
+        this.scheduleDebouncedMerge();
+      }
+    }
+  };
+
+  /**
+   * Handle source media file being added
+   *
+   * @param fileDef - File definition for the source media
+   */
+  private handleSourceMediaAdded = (fileDef: aTypes.LooseObject): void => {
+    this.props.sourceMediaAdded({ file: fileDef });
+
+    // If StandardAudio.wav is added, convert to normalized MP3
+    if (fileDef.name.endsWith("_StandardAudio.wav")) {
+      this.convertToMP3(fileDef.path);
+    }
+  };
+
+  /**
+   * Handler for file add events from file watcher
+   *
+   * @param path - Path of the added file
+   * @param props - Component props (for compatibility with event handler signature)
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private handleFileAdd = async (path: string, props: any) => {
     this.props.setTimelineChanged(true);
 
+    // If EAF file is added after watcher is ready, reload folder
     if (this.isChokReady && path.endsWith(".eaf") && !this.usingStoredData) {
       this.props.setTimelinesInstantiated(false);
       this.isChokReady = false;
       this.loadLocalFolder(this.currentFolder);
     } else {
+      // Describe the file
       const fileDef = await this.chokFileDescribe(path);
       if (!fileDef) return;
 
@@ -234,49 +323,18 @@ class SelectFolderZone extends Component<FolderProps> {
         fileDef.mimeType.startsWith("video") ||
         fileDef.mimeType.startsWith("audio");
 
+      // Route to appropriate handler
       if (isAudVid) {
         if (fileDef.isAnnotation) {
-          this.props.annotMediaAdded({ file: fileDef });
-
-          // If this is a Merged.mp3 file being added, trigger loadAnnot to create oral annotations
-          if (fileDef.isMerged && fileDef.name.includes("_Merged.mp3") && this.isChokReady) {
-            console.log(`[handleFileAdd] Merged file detected: ${fileDef.name}, triggering loadAnnot`);
-            const isCareful = fileDef.name.includes("Careful");
-            // Note: Merged files already exist, so we don't need to create them
-            // We just need to add the oral annotations to the timeline
-            // This is handled by detecting when all Careful/Translation clips have been added
-          }
-
-          // If this is an individual Careful/Translation clip, check if we should trigger merging
-          if (!fileDef.isMerged && this.isChokReady && this.props.currentTimeline !== -1) {
-            const isCareful = fileDef.name.includes("_Careful.");
-            const isTranslation = fileDef.name.includes("_Translation.");
-
-            if (isCareful || isTranslation) {
-              if (this.verboseFileHandling) {
-                console.log(`[handleFileAdd] Annotation audio clip added: ${fileDef.name}`);
-              }
-              // Debounce: wait a bit for all clips to be discovered, then trigger merge
-              if (this.annotMergeTimeout) {
-                clearTimeout(this.annotMergeTimeout);
-              }
-              this.annotMergeTimeout = setTimeout(async () => {
-                console.log(`[handleFileAdd] Triggering delayed loadAnnot after clip discovery`);
-                await this.loadAnnot(true);  // Careful
-                await this.loadAnnot(false); // Translation
-              }, 500); // Wait 500ms for all clips to be discovered
-            }
-          }
+          this.handleAnnotationMediaAdded(fileDef);
         } else {
-          this.props.sourceMediaAdded({ file: fileDef });
-          if (fileDef.name.endsWith("_StandardAudio.wav")) {
-            this.convertToMP3(fileDef.path);
-          }
+          this.handleSourceMediaAdded(fileDef);
         }
       } else {
         this.props.fileAdded({ file: fileDef });
       }
     }
+
     await this.setLocal(this.currentFolder);
     console.log(`File ${path} has been added`);
   };
@@ -323,28 +381,46 @@ class SelectFolderZone extends Component<FolderProps> {
 
   // Handler for watcher ready event
   private handleWatcherReady = async (props: any) => {
-    console.log(`[handleWatcherReady] usingStoredData: ${this.usingStoredData}, sourceMedia.length: ${this.props.sourceMedia.length}, readyPlayURL: ${this.readyPlayURL}`);
+    console.log(
+      `[handleWatcherReady] usingStoredData: ${this.usingStoredData}, sourceMedia.length: ${this.props.sourceMedia.length}, readyPlayURL: ${this.readyPlayURL}`,
+    );
     if (!this.usingStoredData) {
       if (this.readyPlayURL !== "") {
         props.setURL(
           this.readyPlayURL,
-          getTimelineIndex(this.props.timeline, this.readyPlayURL, this.props.sourceMedia),
+          getTimelineIndex(
+            this.props.timeline,
+            this.readyPlayURL,
+            this.props.sourceMedia,
+          ),
         );
         this.readyPlayURL = "";
       } else if (this.props.sourceMedia.length !== 0) {
-        console.log(`[handleWatcherReady] Calling loadAnnot for Careful and Translation`);
+        console.log(
+          `[handleWatcherReady] Calling loadAnnot for Careful and Translation`,
+        );
         await this.loadAnnot(true);
         await this.loadAnnot(false);
         const blobURL = getSourceMedia(this.props.sourceMedia, false)[0]
           .blobURL;
-        props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia));
+        props.setURL(
+          blobURL,
+          getTimelineIndex(
+            this.props.timeline,
+            blobURL,
+            this.props.sourceMedia,
+          ),
+        );
         console.log(`Initial scan complete. Ready for changes`);
       } else {
         console.log("Empty Directory");
       }
     } else if (this.props.url === "" && this.props.sourceMedia.length !== 0) {
       const blobURL = getSourceMedia(this.props.sourceMedia, false)[0].blobURL;
-      props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia));
+      props.setURL(
+        blobURL,
+        getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia),
+      );
     }
 
     this.isChokReady = true;
@@ -539,35 +615,147 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   };
 
-  // Merges Annotation Sound Files (Careful/Translation)
-  // carefulOrTranslation: True -> careful, False -> Translation
+  // ==================== Audio Merging Helper Methods ====================
+
+  /**
+   * Build array of input file paths for audio merging
+   *
+   * Filters annotation media files by type (Careful/Translation),
+   * sorts by start time, and extracts file paths.
+   *
+   * @param ctString - "Careful" or "Translation"
+   * @returns Sorted array of file paths
+   */
+  private buildInputFilesArray = (ctString: string): string[] => {
+    const filtered = this.props.annotMedia.filter((am: any) =>
+      am.name.includes("_" + ctString),
+    );
+
+    return filtered
+      .sort((a1: any, a2: any) => {
+        return (
+          parseFloat(a1.name.substring(0, a1.name.indexOf("_"))) -
+          parseFloat(a2.name.substring(0, a2.name.indexOf("_")))
+        );
+      })
+      .map((a: any) => a.path);
+  };
+
+  /**
+   * Collect metadata for all input files
+   *
+   * For each input file, extracts:
+   * - Duration from media metadata
+   * - Start/stop times from filename
+   *
+   * @param inputFiles - Array of file paths
+   * @returns Array of file metadata objects
+   */
+  private collectInputMetadata = async (
+    inputFiles: string[],
+  ): Promise<any[]> => {
+    const inputTimes: any[] = [];
+
+    for (const filePath of inputFiles) {
+      const metadata = await electronAPI.getMediaMetadata(filePath);
+      const parsedPath = safeParseSync(filePath);
+      const name = parsedPath.base;
+
+      inputTimes.push({
+        file: filePath,
+        name,
+        duration: roundIt(metadata.streams[0].duration, 3),
+        refStart: name.split("_")[0],
+        refStop: name.split("_")[2],
+      });
+    }
+
+    // Sort by start time
+    return inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
+  };
+
+  /**
+   * Create oral milestones from merged audio and add to timeline
+   *
+   * For each input file, creates a milestone that references a specific
+   * clip (clipStart to clipStop) within the merged audio file.
+   *
+   * @param inputTimes - Sorted array of input file metadata
+   * @param timecodes - Timecodes from FFmpeg merge (silence padding boundaries)
+   * @param mergedFileURL - URL of the merged audio file
+   * @param ctString - "Careful" or "Translation"
+   * @param annotDir - Annotation directory path
+   */
+  private createOralMilestonesFromMerge = async (
+    inputTimes: any[],
+    timecodes: number[],
+    mergedFileURL: string,
+    ctString: string,
+    annotDir: string,
+  ): Promise<void> => {
+    const TOGGLE_TIMES = true;
+
+    for (let i = 0, l = inputTimes.length; i < l; i++) {
+      const oralMilestone: aTypes.Milestone = {
+        annotationID: "",
+        data: [
+          {
+            channel: `${ctString}Merged`,
+            data: mergedFileURL,
+            linguisticType: `${ctString}Merged`,
+            locale: "",
+            mimeType: "audio-mp3",
+            clipStart: TOGGLE_TIMES
+              ? i === 0
+                ? 0
+                : timecodes[2 * i - 1]
+              : timecodes[2 * i],
+            clipStop: timecodes[2 * i + 1],
+          },
+        ],
+        startTime: parseFloat(inputTimes[i].refStart),
+        stopTime: parseFloat(inputTimes[i].refStop),
+      };
+
+      // Add milestone to timeline
+      const timelineURL = await electronAPI.pathToFileURL(
+        annotDir.substring(0, annotDir.indexOf("_Annotations")),
+      );
+      const timelineIndex = getTimelineIndex(this.props.timeline, timelineURL);
+      this.props.addOralAnnotation(oralMilestone, timelineIndex);
+      this.props.setTimelineChanged(true);
+    }
+  };
+
+  // ==================== Main Audio Merging ====================
+
+  /**
+   * Merge annotation audio files (Careful or Translation)
+   *
+   * This method:
+   * 1. Filters and sorts annotation clips by start time
+   * 2. Merges them into a single MP3 file with silence padding
+   * 3. Creates milestones that reference specific clips in the merged file
+   * 4. Adds milestones to the timeline
+   *
+   * @param carefulOrTranslation - true for Careful, false for Translation
+   */
   loadAnnot = async (carefulOrTranslation: boolean) => {
     try {
       const ctString = carefulOrTranslation ? "Careful" : "Translation";
 
-      // Sort FilteredAnnot Based on Start Time into InputFiles
-      const filtered = this.props.annotMedia.filter((am: any) => am.name.includes("_" + ctString));
-
-      const inputFiles: any[] = filtered
-        .sort((a1: any, a2: any) => {
-          return (
-            parseFloat(a1.name.substring(0, a1.name.indexOf("_"))) -
-            parseFloat(a2.name.substring(0, a2.name.indexOf("_")))
-          );
-        })
-        .map((a: any) => a.path);
-
+      // Build array of input files
+      const inputFiles = this.buildInputFilesArray(ctString);
       if (inputFiles.length === 0) {
         return;
       }
 
-      // Get directory separator and annotation directory
+      // Prepare paths for merging
       const pathSep = await electronAPI.getPathSeparator();
       const annotDir = inputFiles[0].substring(
         0,
         inputFiles[0].lastIndexOf(pathSep) + 1,
       );
-
       const outputPath = annotDir + ctString + "_Merged.mp3";
       const cwd = await electronAPI.getCwd();
 
@@ -577,7 +765,7 @@ class SelectFolderZone extends Component<FolderProps> {
           " files.",
       );
 
-      // Use secure API to merge audio files
+      // Merge audio files using FFmpeg
       const mergeResult = await electronAPI.mergeAudioFiles(
         inputFiles,
         outputPath,
@@ -588,64 +776,18 @@ class SelectFolderZone extends Component<FolderProps> {
         },
       );
 
-      const timecodes = mergeResult.timecodes;
+      // Collect metadata for all input files
+      const inputTimes = await this.collectInputMetadata(inputFiles);
 
-      // Get metadata for each input file to create milestones
-      const inputTimes: any[] = [];
-      for (const filePath of inputFiles) {
-        const metadata = await electronAPI.getMediaMetadata(filePath);
-        const parsedPath = safeParseSync(filePath);
-        const name = parsedPath.base;
-
-        inputTimes.push({
-          file: filePath,
-          name,
-          duration: roundIt(metadata.streams[0].duration, 3),
-          refStart: name.split("_")[0],
-          refStop: name.split("_")[2],
-        });
-      }
-
-      // Sort InputTimes Based on Start Time
-      inputTimes.sort((a: any, b: any) => a.refStart - b.refStart);
-
-      // Create and Add Oral Milestones to Timeline
-      const TOGGLE_TIMES = true;
+      // Create milestones and add to timeline
       const mergedFileURL = await electronAPI.pathToFileURL(outputPath);
-
-      for (let i = 0, l = inputTimes.length; i < l; i++) {
-        const oralMilestone: aTypes.Milestone = {
-          annotationID: "",
-          data: [
-            {
-              channel: `${ctString}Merged`,
-              data: mergedFileURL,
-              linguisticType: `${ctString}Merged`,
-              locale: "",
-              mimeType: "audio-mp3",
-              clipStart: TOGGLE_TIMES
-                ? i === 0
-                  ? 0
-                  : timecodes[2 * i - 1]
-                : timecodes[2 * i],
-              clipStop: timecodes[2 * i + 1],
-            },
-          ],
-          startTime: parseFloat(inputTimes[i].refStart),
-          stopTime: parseFloat(inputTimes[i].refStop),
-        };
-
-        // Add Milestone to Timeline
-        const timelineURL = await electronAPI.pathToFileURL(
-          annotDir.substring(0, annotDir.indexOf("_Annotations")),
-        );
-        const timelineIndex = getTimelineIndex(this.props.timeline, timelineURL);
-        this.props.addOralAnnotation(
-          oralMilestone,
-          timelineIndex,
-        );
-        this.props.setTimelineChanged(true);
-      }
+      await this.createOralMilestonesFromMerge(
+        inputTimes,
+        mergeResult.timecodes,
+        mergedFileURL,
+        ctString,
+        annotDir,
+      );
 
       this.sendSnackbar(
         (carefulOrTranslation ? "Careful Speech" : "Translation") +
@@ -672,7 +814,7 @@ class SelectFolderZone extends Component<FolderProps> {
       this.sendSnackbar("Converting Source Audio.");
 
       // Use secure API for FFmpeg conversion
-      const result = await electronAPI.convertAudioToMP3(path, outputPath, {
+      await electronAPI.convertAudioToMP3(path, outputPath, {
         bitrate: "128k",
         channels: 2,
         normalize: true,
@@ -696,122 +838,268 @@ class SelectFolderZone extends Component<FolderProps> {
     console.log("#Scanning EAF", inputFile);
   };
 
+  // ==================== EAF Processing Helper Methods ====================
+
+  /**
+   * Build array of synchronized media URLs from EAF file header
+   *
+   * @param fileData - Parsed EAF file data
+   * @param parsedPath - Parsed path of the EAF file
+   * @returns Array of media file URLs referenced in the EAF
+   */
+  private createSyncMediaArray = async (
+    fileData: any,
+    parsedPath: any,
+  ): Promise<string[]> => {
+    const syncMedia: string[] = [];
+    for (
+      let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length;
+      h < l;
+      h++
+    ) {
+      const mediaURL = await electronAPI.pathToFileURL(
+        parsedPath.dir +
+          "/" +
+          fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL,
+      );
+      syncMedia.push(mediaURL);
+    }
+    return syncMedia;
+  };
+
+  /**
+   * Find time value (in milliseconds) for a given TIME_SLOT_ID
+   *
+   * @param timeSlotPointer - Array of time slot objects from EAF
+   * @param timeSlotRef - TIME_SLOT_ID to search for
+   * @returns Time value in milliseconds, or -1 if not found
+   */
+  private findTimeSlot = (
+    timeSlotPointer: any[],
+    timeSlotRef: string,
+  ): number => {
+    for (let i = 0, l = timeSlotPointer.length; i < l; i++) {
+      if (timeSlotPointer[i].$.TIME_SLOT_ID === timeSlotRef) {
+        return timeSlotPointer[i].$.TIME_VALUE;
+      }
+    }
+    return -1;
+  };
+
+  /**
+   * Find annotation time by looking up a referenced annotation ID
+   *
+   * @param miles - Array of processed milestones
+   * @param annotationRef - ANNOTATION_ID to search for
+   * @param startOrStop - Which time to return: "startTime" or "stopTime"
+   * @returns Time in seconds, or -1 if not found
+   */
+  private findAnnotationTime = (
+    miles: any[],
+    annotationRef: string,
+    startOrStop: string,
+  ): number => {
+    for (let i = 0, l = miles.length; i < l; i++) {
+      if (miles[i]["annotationID"] === annotationRef) {
+        return miles[i][startOrStop];
+      }
+    }
+    return -1;
+  };
+
+  /**
+   * Process an ALIGNABLE_ANNOTATION and create a milestone
+   *
+   * Alignable annotations have direct time slot references (TIME_SLOT_REF1 and TIME_SLOT_REF2)
+   *
+   * @param annotation - The annotation object containing ALIGNABLE_ANNOTATION
+   * @param tierData - The tier this annotation belongs to
+   * @param timeSlotPointer - Array of time slots for looking up times
+   * @param timelineBase - Base name of the timeline
+   * @returns Milestone object
+   */
+  private processAlignableAnnotation = (
+    annotation: any,
+    tierData: any,
+    timeSlotPointer: any[],
+    timelineBase: string,
+  ): any => {
+    const alAnnPointer = annotation.ALIGNABLE_ANNOTATION[0];
+    return {
+      annotationID: alAnnPointer.$.ANNOTATION_ID,
+      data: [
+        {
+          channel: tierData.$.TIER_ID,
+          linguisticType: tierData.$.LINGUISTIC_TYPE_REF + "_text",
+          data: alAnnPointer.ANNOTATION_VALUE[0],
+          locale: tierData.$.DEFAULT_LOCALE,
+          mimeType: "string",
+        },
+      ],
+      startTime:
+        this.findTimeSlot(timeSlotPointer, alAnnPointer.$.TIME_SLOT_REF1) /
+        1000,
+      startId: alAnnPointer.$.TIME_SLOT_REF1,
+      stopTime:
+        this.findTimeSlot(timeSlotPointer, alAnnPointer.$.TIME_SLOT_REF2) /
+        1000,
+      stopId: alAnnPointer.$.TIME_SLOT_REF2,
+      timeline: timelineBase,
+    };
+  };
+
+  /**
+   * Process a REF_ANNOTATION and create a milestone
+   *
+   * Reference annotations inherit their timing from another annotation (ANNOTATION_REF)
+   *
+   * @param annotation - The annotation object containing REF_ANNOTATION
+   * @param tierData - The tier this annotation belongs to
+   * @param miles - Array of processed milestones (for looking up referenced annotation times)
+   * @param timelineBase - Base name of the timeline
+   * @returns Milestone object, or null if annotation is empty
+   */
+  private processRefAnnotation = (
+    annotation: any,
+    tierData: any,
+    miles: any[],
+    timelineBase: string,
+  ): any => {
+    const refAnnPointer = annotation.REF_ANNOTATION[0];
+
+    // Only process if it has actual text
+    if (refAnnPointer.ANNOTATION_VALUE[0] === "") {
+      return null;
+    }
+
+    return {
+      annotationID: refAnnPointer.$.ANNOTATION_ID,
+      data: [
+        {
+          channel: tierData.$.LINGUISTIC_TYPE_REF,
+          data: refAnnPointer.ANNOTATION_VALUE[0],
+          linguisticType: tierData.$.TIER_ID + "_text",
+          locale: tierData.$.DEFAULT_LOCALE,
+          mimeType: "string",
+        },
+      ],
+      startId: refAnnPointer.$.TIME_SLOT_REF1,
+      startTime: this.findAnnotationTime(
+        miles,
+        refAnnPointer.$.ANNOTATION_REF,
+        "startTime",
+      ),
+      stopId: refAnnPointer.$.TIME_SLOT_REF2,
+      stopTime: this.findAnnotationTime(
+        miles,
+        refAnnPointer.$.ANNOTATION_REF,
+        "stopTime",
+      ),
+      timeline: timelineBase,
+    };
+  };
+
+  /**
+   * Process all tiers and annotations in the EAF file
+   *
+   * This iterates through all tiers, ensures linguistic types are in categories,
+   * and processes both alignable and reference annotations.
+   *
+   * @param fileData - Parsed EAF file data
+   * @param timeSlotPointer - Array of time slots
+   * @param timelineBase - Base name of the timeline
+   * @param tempTimeline - Timeline object to add milestones to
+   * @returns Array of all processed milestones
+   */
+  private processTiersAndAnnotations = (
+    fileData: any,
+    timeSlotPointer: any[],
+    timelineBase: string,
+    tempTimeline: any,
+  ): any[] => {
+    const miles: any[] = [];
+
+    for (let j = 0, l = fileData.TIER.length; j < l; j++) {
+      const tier = fileData.TIER[j];
+
+      // Verify current linguistic type is a category and add if not
+      const lingType = tier.$.LINGUISTIC_TYPE_REF + "_text";
+      if (this.props.categories.indexOf(lingType) === -1) {
+        this.props.addCategory(lingType);
+      }
+
+      // Process all annotations in this tier
+      for (let k = 0, l2 = tier.ANNOTATION.length; k < l2; k++) {
+        const annotation = tier.ANNOTATION[k];
+        let milestone = null;
+
+        if ("ALIGNABLE_ANNOTATION" in annotation) {
+          milestone = this.processAlignableAnnotation(
+            annotation,
+            tier,
+            timeSlotPointer,
+            timelineBase,
+          );
+          miles.push(milestone);
+          tempTimeline.addMilestone(milestone);
+        } else if ("REF_ANNOTATION" in annotation) {
+          milestone = this.processRefAnnotation(
+            annotation,
+            tier,
+            miles,
+            timelineBase,
+          );
+          if (milestone !== null) {
+            tempTimeline.addMilestone(milestone);
+          }
+        }
+      }
+    }
+
+    return miles;
+  };
+
+  // ==================== Main EAF Processing ====================
+
+  /**
+   * Process an ELAN Annotation Format (EAF) file
+   *
+   * EAF files contain linguistic annotations with time-aligned transcriptions.
+   * This method:
+   * 1. Parses the XML structure
+   * 2. Extracts synchronized media references
+   * 3. Processes all tiers and annotations
+   * 4. Creates a timeline with milestones
+   *
+   * @param path - Path to the .eaf file
+   */
   async processEAF(path: string) {
     try {
       // Parse EAF file using secure API
       const content = await electronAPI.parseEAF(path);
-
-      // Miscellaneous Local Variables
       const fileData = content.ANNOTATION_DOCUMENT;
       const timeSlotPointer = fileData.TIME_ORDER[0].TIME_SLOT;
-      const miles: any[] = [];
-
-      // Define SyncMedia for tempTimeline
       const parsedPath = safeParseSync(path);
-      const syncMedia: string[] = [];
-      for (
-        let h = 0, l = fileData.HEADER[0].MEDIA_DESCRIPTOR.length;
-        h < l;
-        h++
-      ) {
-        const mediaURL = await electronAPI.pathToFileURL(
-          parsedPath.dir +
-            "/" +
-            fileData.HEADER[0].MEDIA_DESCRIPTOR[h].$.MEDIA_URL,
-        );
-        syncMedia.push(mediaURL);
-      }
 
-      // Instantiate tempTimeline
+      // Build synchronized media array
+      const syncMedia = await this.createSyncMediaArray(fileData, parsedPath);
+
+      // Create timeline
       const eafFileURL = await electronAPI.pathToFileURL(path);
       const tempTimeline = new Timelines({
         syncMedia: syncMedia,
         eafFile: eafFileURL,
       });
 
-      // Inline Function Definition for findTime and findAnnotTime
-      const findTime = (myRef: string) => {
-        for (let i = 0, l = timeSlotPointer.length; i < l; i++)
-          if (timeSlotPointer[i].$.TIME_SLOT_ID === myRef)
-            return timeSlotPointer[i].$.TIME_VALUE;
-        return -1;
-      };
-      const findAnnotTime = (myRef4: any, startStop: string) => {
-        for (let i = 0, l = miles.length; i < l; i++)
-          if (miles[i]["annotationID"] === myRef4) return miles[i][startStop];
-        return -1;
-      };
+      // Process all tiers and annotations
+      this.processTiersAndAnnotations(
+        fileData,
+        timeSlotPointer,
+        parsedPath.base,
+        tempTimeline,
+      );
 
-      // Process All of File's Annotations
-      for (let j = 0, l = fileData.TIER.length; j < l; j++) {
-        // Verify Current lingType is a Category and Add if Otherwise
-        const lingType = fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text";
-        if (this.props.categories.indexOf(lingType) === -1)
-          this.props.addCategory(lingType);
-
-        // Process Annotations
-        for (let k = 0, l2 = fileData.TIER[j].ANNOTATION.length; k < l2; k++) {
-          // Process Alignable Annotations or Ref Annotations
-          if ("ALIGNABLE_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
-            // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
-            const alAnnPointer =
-              fileData.TIER[j].ANNOTATION[k].ALIGNABLE_ANNOTATION[0];
-            const milestone = {
-              annotationID: alAnnPointer.$.ANNOTATION_ID,
-              data: [
-                {
-                  channel: fileData.TIER[j].$.TIER_ID,
-                  linguisticType:
-                    fileData.TIER[j].$.LINGUISTIC_TYPE_REF + "_text",
-                  data: alAnnPointer.ANNOTATION_VALUE[0],
-                  locale: fileData.TIER[j].$.DEFAULT_LOCALE,
-                  mimeType: "string",
-                },
-              ],
-              startTime: findTime(alAnnPointer.$.TIME_SLOT_REF1) / 1000,
-              startId: alAnnPointer.$.TIME_SLOT_REF1,
-              stopTime: findTime(alAnnPointer.$.TIME_SLOT_REF2) / 1000,
-              stopId: alAnnPointer.$.TIME_SLOT_REF2,
-              timeline: parsedPath.base,
-            };
-            miles.push(milestone);
-            tempTimeline.addMilestone(milestone);
-          } else if ("REF_ANNOTATION" in fileData.TIER[j].ANNOTATION[k]) {
-            const refAnnPointer =
-              fileData.TIER[j].ANNOTATION[k].REF_ANNOTATION[0];
-            // Only Process Annotation if it Has Actual Text
-            if (refAnnPointer.ANNOTATION_VALUE[0] !== "") {
-              // Define Milestone for Current Annotation, Push to Miles, and Add to tempTimeline
-              const milestone2 = {
-                annotationID: refAnnPointer.$.ANNOTATION_ID,
-                data: [
-                  {
-                    channel: fileData.TIER[j].$.LINGUISTIC_TYPE_REF,
-                    data: refAnnPointer.ANNOTATION_VALUE[0],
-                    linguisticType: fileData.TIER[j].$.TIER_ID + "_text",
-                    locale: fileData.TIER[j].$.DEFAULT_LOCALE,
-                    mimeType: "string",
-                  },
-                ],
-                startId: refAnnPointer.$.TIME_SLOT_REF1,
-                startTime: findAnnotTime(
-                  refAnnPointer.$.ANNOTATION_REF,
-                  "startTime",
-                ),
-                stopId: refAnnPointer.$.TIME_SLOT_REF2,
-                stopTime: findAnnotTime(
-                  refAnnPointer.$.ANNOTATION_REF,
-                  "stopTime",
-                ),
-                timeline: parsedPath.base,
-              };
-              tempTimeline.addMilestone(milestone2);
-            }
-          }
-        }
-      }
-
-      // Push TempTimeline to Timeline
+      // Push timeline to Redux store
       this.props.pushTimeline(tempTimeline);
       console.log("EAF Processed");
     } catch (err) {
