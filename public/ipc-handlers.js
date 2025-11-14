@@ -689,7 +689,10 @@ function registerIPCHandlers(mainWindow) {
               .replace(/%/g, '\\%');      // Escape percent signs
 
             // Add drawtext filter for yellow subtitles at bottom
-            videoFilter += `,drawtext=text='${escapedText}':fontcolor=yellow:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-20`;
+            // text_w=w*0.9 wraps text at 90% of video width (auto multi-line for long text)
+            // x=w*0.05 centers the 90%-wide text block (5% margin on each side)
+            // y=h-th-20 positions 20px from bottom (th grows vertically with multi-line text)
+            videoFilter += `,drawtext=text='${escapedText}':fontcolor=yellow:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:text_w=w*0.9:x=w*0.05:y=h-th-20`;
           }
 
           videoFilter += '[v]';
