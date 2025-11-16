@@ -79,9 +79,9 @@ describe("Video Export Workflow (Integration)", () => {
       // GIVEN: Complex timeline with voiceover tracks
       const { timeline, volumes } = testScenarios.kingsAndPrinces();
 
-      // volumes = [0.8, 0.3, 0]
-      // King: video audio (0.8)
-      // Prince: careful voiceover (0.3)
+      // volumes = [0.9, 0.3, 0]
+      // King: video audio (0.9 >= 0.84)
+      // Prince: careful voiceover (0.3 < 0.84)
       // Silent: translation (0)
       const multiplier = 1.2;
 
@@ -105,7 +105,7 @@ describe("Video Export Workflow (Integration)", () => {
         expect(clip).toHaveProperty("A2Speed");
         expect(clip).toHaveProperty("A2Vol");
         expect(clip.A2Vol).toBeGreaterThan(0);
-        expect(clip.A2Vol).toBeLessThan(0.7); // Prince volume
+        expect(clip.A2Vol).toBeLessThan(0.84); // Prince volume threshold
       });
     });
 
@@ -254,11 +254,20 @@ describe("Video Export Workflow (Integration)", () => {
   });
 
   describe("Volume logic (Kings and Princes)", () => {
-    it("should categorize King as volume >= 0.7", async () => {
-      const timeline = testScenarios.simple();
+    it("should categorize King as volume >= 0.84", async () => {
+      // Use timeline with audio tracks
+      const timeline = generateTestTimeline({
+        numMilestones: 3,
+        videoPath: "/test/video.mp4",
+        audioPath: "/test/audio.wav",
+        hasCareful: true,
+        hasTranslation: false,
+        avgDuration: 2,
+      });
 
-      // Test boundary: 0.7 should be King
-      const volumes = [0.7, 0, 0];
+      // Test boundary: 0.85 should be King (>= 0.84 threshold)
+      // King is video audio (index 0)
+      const volumes = [0.85, 0, 0];
 
       await exportVideo(timeline, 1.0, volumes);
 
@@ -266,7 +275,7 @@ describe("Video Export Workflow (Integration)", () => {
       expect(clips.length).toBeGreaterThan(0); // King exists, clips created
     });
 
-    it("should categorize Prince as 0 < volume < 0.7", async () => {
+    it("should categorize Prince as 0 < volume < 0.84", async () => {
       const timeline = generateTestTimeline({
         numMilestones: 2,
         videoPath: "/test/video.mp4",
@@ -275,8 +284,8 @@ describe("Video Export Workflow (Integration)", () => {
         hasTranslation: false,
       });
 
-      // King=0.8, Prince=0.5
-      const volumes = [0.8, 0.5, 0];
+      // King=0.9 (>= 0.84), Prince=0.5 (< 0.84)
+      const volumes = [0.9, 0.5, 0];
 
       await exportVideo(timeline, 1.0, volumes);
 

@@ -367,8 +367,8 @@ export const testScenarios = {
    *
    * This scenario returns both a timeline and volume configuration for testing
    * the "kings and princes" volume categorization:
-   * - Kings: volume >= 0.7 (primary audio)
-   * - Princes: 0 < volume < 0.7 (background audio)
+   * - Kings: volume >= 0.84 (primary audio)
+   * - Princes: 0 < volume < 0.84 (background audio)
    * - Silent: volume == 0 (muted audio)
    *
    * @returns Object with timeline and volume array
@@ -383,8 +383,8 @@ export const testScenarios = {
       avgDuration: 5,
     }),
     volumes: [
-      0.8, // King: video audio (high volume)
-      0.3, // Prince: careful voiceover (low volume)
+      0.9, // King: video audio (high volume >= 0.84)
+      0.3, // Prince: careful voiceover (low volume < 0.84)
       0, // Silent: translation muted
     ],
   }),

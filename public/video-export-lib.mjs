@@ -78,26 +78,33 @@ function buildFilterComplex(clip, hasA2 = false) {
     const ptsMultiplier = 1 / clip.V1Speed;
     filters.push(`[0:v]setpts=${ptsMultiplier}*PTS[v]`);
   } else {
-    // No speed adjustment needed, pass through video
-    filters.push(`[0:v]copy[v]`);
+    // No speed adjustment needed, pass through video with null filter
+    filters.push(`[0:v]null[v]`);
   }
 
   // -------------------------------------------------------------------------
   // PRIMARY AUDIO (A1) FILTER: Speed and volume adjustments
   // -------------------------------------------------------------------------
   let primaryAudioFilter = '[1:a]';
+  const a1FiltersList = [];
 
   // Apply tempo adjustment if speed is not 1x
   if (clip.A1Speed && clip.A1Speed !== 1) {
     const tempoFilters = buildTempoFilters(clip.A1Speed);
-    primaryAudioFilter += tempoFilters.join(',');
+    a1FiltersList.push(...tempoFilters);
   }
 
   // Apply volume adjustment if volume is not 1.0 (100%)
   if (clip.A1Vol !== undefined && clip.A1Vol !== 1) {
-    primaryAudioFilter += `,volume=${clip.A1Vol}`;
+    a1FiltersList.push(`volume=${clip.A1Vol}`);
   }
 
+  // If no filters needed, use anull to pass through
+  if (a1FiltersList.length === 0) {
+    a1FiltersList.push('anull');
+  }
+
+  primaryAudioFilter += a1FiltersList.join(',');
   primaryAudioFilter += '[a1]';
   filters.push(primaryAudioFilter);
 
@@ -106,26 +113,33 @@ function buildFilterComplex(clip, hasA2 = false) {
   // -------------------------------------------------------------------------
   if (hasA2 && clip.A2) {
     let secondaryAudioFilter = '[2:a]';
+    const a2FiltersList = [];
 
     // Apply tempo adjustment if speed is not 1x
     if (clip.A2Speed && clip.A2Speed !== 1) {
       const tempoFilters = buildTempoFilters(clip.A2Speed);
-      secondaryAudioFilter += tempoFilters.join(',');
+      a2FiltersList.push(...tempoFilters);
     }
 
     // Apply volume adjustment if volume is not 1.0 (100%)
     if (clip.A2Vol !== undefined && clip.A2Vol !== 1) {
-      secondaryAudioFilter += `,volume=${clip.A2Vol}`;
+      a2FiltersList.push(`volume=${clip.A2Vol}`);
     }
 
+    // If no filters needed, use anull to pass through
+    if (a2FiltersList.length === 0) {
+      a2FiltersList.push('anull');
+    }
+
+    secondaryAudioFilter += a2FiltersList.join(',');
     secondaryAudioFilter += '[a2]';
     filters.push(secondaryAudioFilter);
 
     // Mix primary and secondary audio tracks
     filters.push('[a1][a2]amix=inputs=2:duration=longest[a]');
   } else {
-    // No secondary audio, pass through primary audio
-    filters.push('[a1]copy[a]');
+    // No secondary audio, pass through primary audio with anull filter
+    filters.push('[a1]anull[a]');
   }
 
   return filters.join(';');

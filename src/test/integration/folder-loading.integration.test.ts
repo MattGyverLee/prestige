@@ -58,48 +58,58 @@ describe("Folder Loading Workflow (Integration)", () => {
       });
 
       // WHEN: User triggers folder selection and files are processed
-      store.dispatch(actions.onNewFolder(folderPath, "test-project"));
+      store.dispatch(actions.treeOnNewFolder(folderPath));
 
       // Simulate file discovery (normally triggered by chokidar)
       store.dispatch(
         actions.fileAdded({
-          path: `${folderPath}/video.mp4`,
-          name: "video.mp4",
-          mimeType: "video/mp4",
+          file: {
+            path: `${folderPath}/video.mp4`,
+            name: "video.mp4",
+            mimeType: "video/mp4",
+          },
         }),
       );
 
       store.dispatch(
         actions.sourceMediaAdded({
-          path: `${folderPath}/video.mp4`,
-          url: "blob:test-video",
-          name: "video.mp4",
-          mimeType: "video/mp4",
+          file: {
+            path: `${folderPath}/video.mp4`,
+            url: "blob:test-video",
+            name: "video.mp4",
+            mimeType: "video/mp4",
+          },
         }),
       );
 
       store.dispatch(
         actions.fileAdded({
-          path: `${folderPath}/audio.wav`,
-          name: "audio.wav",
-          mimeType: "audio/wav",
+          file: {
+            path: `${folderPath}/audio.wav`,
+            name: "audio.wav",
+            mimeType: "audio/wav",
+          },
         }),
       );
 
       store.dispatch(
         actions.sourceMediaAdded({
-          path: `${folderPath}/audio.wav`,
-          url: "blob:test-audio",
-          name: "audio.wav",
-          mimeType: "audio/wav",
+          file: {
+            path: `${folderPath}/audio.wav`,
+            url: "blob:test-audio",
+            name: "audio.wav",
+            mimeType: "audio/wav",
+          },
         }),
       );
 
       store.dispatch(
         actions.fileAdded({
-          path: `${folderPath}/annotations.eaf`,
-          name: "annotations.eaf",
-          mimeType: "application/xml",
+          file: {
+            path: `${folderPath}/annotations.eaf`,
+            name: "annotations.eaf",
+            mimeType: "application/xml",
+          },
         }),
       );
 
@@ -124,25 +134,25 @@ describe("Folder Loading Workflow (Integration)", () => {
         ],
       };
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
 
       // THEN: The store should reflect the loaded folder state
       const state = store.getState();
 
       // Verify folder is loaded
       expect(state.tree.folderPath).toBe(folderPath);
-      expect(state.tree.folderName).toBe("test-project");
+      // expect(state.tree.folderName).toBe("test-project"); // folderName not set by treeOnNewFolder
 
       // Verify files were discovered
       expect(state.tree.availableFiles).toHaveLength(3);
 
       // Verify media was categorized
-      expect(state.annot.sourceMedia).toHaveLength(2);
+      expect(state.tree.sourceMedia).toHaveLength(2);
       expect(
-        state.annot.sourceMedia.some((m: any) => m.name === "video.mp4"),
+        state.tree.sourceMedia.some((m: any) => m.name === "video.mp4"),
       ).toBe(true);
       expect(
-        state.annot.sourceMedia.some((m: any) => m.name === "audio.wav"),
+        state.tree.sourceMedia.some((m: any) => m.name === "audio.wav"),
       ).toBe(true);
 
       // Verify timeline was created
@@ -165,14 +175,16 @@ describe("Folder Loading Workflow (Integration)", () => {
       mockElectronAPI.getMimeType.mockResolvedValue("video/mp4");
 
       // WHEN: Folder is loaded
-      store.dispatch(actions.onNewFolder(folderPath, "media-only"));
+      store.dispatch(actions.treeOnNewFolder(folderPath));
 
       store.dispatch(
         actions.sourceMediaAdded({
-          path: `${folderPath}/video1.mp4`,
-          url: "blob:video1",
-          name: "video1.mp4",
-          mimeType: "video/mp4",
+          file: {
+            path: `${folderPath}/video1.mp4`,
+            url: "blob:video1",
+            name: "video1.mp4",
+            mimeType: "video/mp4",
+          },
         }),
       );
 
@@ -180,7 +192,7 @@ describe("Folder Loading Workflow (Integration)", () => {
       const state = store.getState();
 
       expect(state.tree.folderPath).toBe(folderPath);
-      expect(state.annot.sourceMedia).toHaveLength(1);
+      expect(state.tree.sourceMedia).toHaveLength(1);
       expect(state.annot.timeline).toHaveLength(0); // No timeline without EAF
     });
 
@@ -188,52 +200,58 @@ describe("Folder Loading Workflow (Integration)", () => {
       // GIVEN: A folder with both source and annotation audio files
       const folderPath = "/test/mixed-audio";
 
-      store.dispatch(actions.onNewFolder(folderPath, "mixed"));
+      store.dispatch(actions.treeOnNewFolder(folderPath));
 
       // WHEN: Files are categorized
       // Source media (main audio)
       store.dispatch(
         actions.sourceMediaAdded({
-          path: `${folderPath}/main-audio.wav`,
-          url: "blob:main",
-          name: "main-audio.wav",
-          mimeType: "audio/wav",
+          file: {
+            path: `${folderPath}/main-audio.wav`,
+            url: "blob:main",
+            name: "main-audio.wav",
+            mimeType: "audio/wav",
+          },
         }),
       );
 
       // Annotation media (voiceover/merged tracks)
       store.dispatch(
         actions.annotMediaAdded({
-          path: `${folderPath}/video_Annotations/Careful_Merged.mp3`,
-          url: "blob:careful",
-          name: "Careful_Merged.mp3",
-          mimeType: "audio/mpeg",
-          channel: "CarefulMerged",
+          file: {
+            path: `${folderPath}/video_Annotations/Careful_Merged.mp3`,
+            url: "blob:careful",
+            name: "Careful_Merged.mp3",
+            mimeType: "audio/mpeg",
+            channel: "CarefulMerged",
+          },
         }),
       );
 
       store.dispatch(
         actions.annotMediaAdded({
-          path: `${folderPath}/video_Annotations/Translation_Merged.mp3`,
-          url: "blob:translation",
-          name: "Translation_Merged.mp3",
-          mimeType: "audio/mpeg",
-          channel: "TranslationMerged",
+          file: {
+            path: `${folderPath}/video_Annotations/Translation_Merged.mp3`,
+            url: "blob:translation",
+            name: "Translation_Merged.mp3",
+            mimeType: "audio/mpeg",
+            channel: "TranslationMerged",
+          },
         }),
       );
 
       // THEN: Files are categorized correctly
       const state = store.getState();
 
-      expect(state.annot.sourceMedia).toHaveLength(1);
-      expect(state.annot.annotMedia).toHaveLength(2);
+      expect(state.tree.sourceMedia).toHaveLength(1);
+      expect(state.tree.annotMedia).toHaveLength(2);
 
       // Annotation media should have channel info
       expect(
-        state.annot.annotMedia.some((m: any) => m.channel === "CarefulMerged"),
+        state.tree.annotMedia.some((m: any) => m.channel === "CarefulMerged"),
       ).toBe(true);
       expect(
-        state.annot.annotMedia.some(
+        state.tree.annotMedia.some(
           (m: any) => m.channel === "TranslationMerged",
         ),
       ).toBe(true);
@@ -264,9 +282,11 @@ describe("Folder Loading Workflow (Integration)", () => {
       // WHEN: EAF parsing is attempted
       store.dispatch(
         actions.fileAdded({
-          path: `${folderPath}/corrupt.eaf`,
-          name: "corrupt.eaf",
-          mimeType: "application/xml",
+          file: {
+            path: `${folderPath}/corrupt.eaf`,
+            name: "corrupt.eaf",
+            mimeType: "application/xml",
+          },
         }),
       );
 

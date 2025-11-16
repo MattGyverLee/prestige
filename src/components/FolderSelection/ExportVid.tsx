@@ -25,6 +25,80 @@ import {
 } from "../../store/annot/types";
 import { electronAPI } from "../../utils/electronAPI";
 import toast from "react-hot-toast";
+import store from "../../store";
+import { Media } from "../../store/tree/types";
+
+// ============================================================================
+// URL UTILITIES
+// ============================================================================
+
+/**
+ * Convert a file:// URL to a file system path
+ *
+ * @param fileUrl - File URL (e.g., "file:///D:/path/to/file.mp4")
+ * @returns File system path (e.g., "D:/path/to/file.mp4" on Windows)
+ *
+ * @example
+ * fileURLToPath("file:///D:/path/to/file.mp4")
+ * // Returns: "D:/path/to/file.mp4"
+ */
+function fileURLToPath(fileUrl: string): string {
+  if (!fileUrl.startsWith("file://")) {
+    return fileUrl; // Already a path, not a URL
+  }
+
+  // Remove 'file://' prefix
+  let path = fileUrl.substring(7);
+
+  // On Windows, file URLs look like: file:///D:/path
+  // We need to handle the extra slash before the drive letter
+  if (path.startsWith("/") && path.charAt(2) === ":") {
+    path = path.substring(1); // Remove leading slash before drive letter
+  }
+
+  // Decode URL encoding (e.g., %20 -> space, %C3%A8 -> è)
+  path = decodeURIComponent(path);
+
+  return path;
+}
+
+/**
+ * Resolve a blob URL to its filesystem path
+ *
+ * Searches the Redux store (sourceMedia and annotMedia) to find the media
+ * file with the matching blob URL, then returns its filesystem path.
+ *
+ * @param blobUrl - Blob URL (e.g., "blob:http://localhost/abc123")
+ * @returns File system path, or the original blob URL if not found
+ *
+ * @example
+ * resolveBlobToPath("blob:http://localhost/abc123")
+ * // Returns: "D:/project/audio/Careful_Merged.mp3"
+ */
+function resolveBlobToPath(blobUrl: string): string {
+  // If it's not a blob URL, try converting file:// URLs
+  if (!blobUrl.startsWith("blob:")) {
+    return fileURLToPath(blobUrl);
+  }
+
+  // Get Redux state
+  const state = store.getState();
+  const allMedia: Media[] = [
+    ...(state.tree.sourceMedia || []),
+    ...(state.tree.annotMedia || []),
+  ];
+
+  // Search for matching blob URL
+  const mediaFile = allMedia.find((media: Media) => media.blobURL === blobUrl);
+
+  if (mediaFile) {
+    return mediaFile.path;
+  }
+
+  // If not found, log warning and return original URL
+  console.warn(`Could not resolve blob URL to path: ${blobUrl}`);
+  return blobUrl;
+}
 
 // ============================================================================
 // CONSTANTS
@@ -94,11 +168,21 @@ export async function exportVideo(
     // -------------------------------------------------------------------------
     const { kings, princes } = categorizeAudioByVolume(vols);
 
+    console.log("=== EXPORT VIDEO DEBUG ===");
+    console.log("Volume levels:", vols);
+    console.log("Kings (primary audio):", kings);
+    console.log("Princes (background audio):", princes);
+    console.log("Timeline milestones:", timeline.milestones.length);
+
     // -------------------------------------------------------------------------
     // Step 2: Extract source media paths from timeline
     // -------------------------------------------------------------------------
-    const vidSource = timeline.syncMedia[0]; // Video file path
-    const audSource = timeline.syncMedia[1]; // Audio file path
+    // Convert file:// URLs to file system paths for FFmpeg
+    const vidSource = fileURLToPath(timeline.syncMedia[0]); // Video file path
+    const audSource = fileURLToPath(timeline.syncMedia[1]); // Audio file path
+
+    console.log("Video source:", vidSource);
+    console.log("Audio source:", audSource);
 
     const clips: VideoClip[] = [];
 
@@ -243,6 +327,8 @@ function buildMilestoneClips(params: BuildMilestoneClipsParams): VideoClip[] {
   // Process each "king" (primary audio track)
   // -------------------------------------------------------------------------
   kings.forEach((king: number) => {
+    console.log(`Processing milestone ${msIndex}, king ${king}`);
+
     // Calculate primary audio configuration and king duration
     const kingConfig = calculateKingAudio({
       kingIndex: king,
@@ -259,6 +345,9 @@ function buildMilestoneClips(params: BuildMilestoneClipsParams): VideoClip[] {
     }
 
     const { A1, A1Start, A1Stop, A1Speed, V1Speed, kingLen } = kingConfig;
+    console.log(
+      `  King ${king} audio: ${A1}, ${A1Start}-${A1Stop}, speed=${A1Speed}`,
+    );
 
     // -------------------------------------------------------------------------
     // Extract subtitle text for this king
@@ -363,7 +452,9 @@ function calculateKingAudio(params: {
     A1Speed = multiplier;
     A1Start = ms.startTime;
     A1Stop = ms.stopTime;
-    kingLen = (ms.stopTime - ms.startTime) * multiplier;
+    // Calculate king's output duration: input_duration / speed
+    // e.g., 10 seconds at 1.5x speed = 10 / 1.5 = 6.67 seconds output
+    kingLen = (ms.stopTime - ms.startTime) / A1Speed;
     V1Speed = multiplier;
   }
   // -------------------------------------------------------------------------
@@ -376,8 +467,13 @@ function calculateKingAudio(params: {
       A1Start = carefulAudio.start;
       A1Stop = carefulAudio.stop;
       A1Speed = multiplier;
-      kingLen = (A1Stop - A1Start) * multiplier;
-      V1Speed = kingLen / (ms.stopTime - ms.startTime);
+      // Calculate king's output duration: input_duration / speed
+      // e.g., 10 seconds at 1.5x speed = 10 / 1.5 = 6.67 seconds output
+      kingLen = (A1Stop - A1Start) / A1Speed;
+      // Calculate video speed to match audio duration
+      // If audio is longer than video, slow down video (V1Speed < 1)
+      // If audio is shorter than video, speed up video (V1Speed > 1)
+      V1Speed = (ms.stopTime - ms.startTime) / kingLen;
     }
   }
   // -------------------------------------------------------------------------
@@ -390,8 +486,13 @@ function calculateKingAudio(params: {
       A1Start = translationAudio.start;
       A1Stop = translationAudio.stop;
       A1Speed = multiplier;
-      kingLen = (A1Stop - A1Start) * multiplier;
-      V1Speed = kingLen / (ms.stopTime - ms.startTime);
+      // Calculate king's output duration: input_duration / speed
+      // e.g., 10 seconds at 1.5x speed = 10 / 1.5 = 6.67 seconds output
+      kingLen = (A1Stop - A1Start) / A1Speed;
+      // Calculate video speed to match audio duration
+      // If audio is longer than video, slow down video (V1Speed < 1)
+      // If audio is shorter than video, speed up video (V1Speed > 1)
+      V1Speed = (ms.stopTime - ms.startTime) / kingLen;
     }
   }
 
@@ -462,6 +563,8 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
   // Process each prince (background audio track)
   // -------------------------------------------------------------------------
   princes.forEach((prince: number) => {
+    console.log(`  Processing prince ${prince}`);
+
     // -----------------------------------------------------------------------
     // Prince Index 0: Use video/audio source as background
     // -----------------------------------------------------------------------
@@ -492,12 +595,19 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
     // -----------------------------------------------------------------------
     else if (prince === 1) {
       const carefulAudio = getAudio(AUDIO_CHANNELS.CAREFUL_MERGED, ms);
+      console.log(
+        `    Careful audio: file="${carefulAudio.file}", start=${carefulAudio.start}, stop=${carefulAudio.stop}`,
+      );
 
       if (carefulAudio.file !== "") {
         const A2 = carefulAudio.file;
         const A2Start = carefulAudio.start;
         const A2Stop = carefulAudio.stop;
-        const A2Speed = kingLen / (A2Stop - A2Start);
+        // Calculate prince speed to match king's output duration
+        // If prince is longer than king, speed up (A2Speed > 1)
+        // If prince is shorter than king, slow down (A2Speed < 1)
+        const A2Speed = (A2Stop - A2Start) / kingLen;
+        console.log(`    A2 speed calculated: ${A2Speed}`);
 
         clips.push({
           V1,
@@ -548,7 +658,10 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
         const A2 = translationAudio.file;
         const A2Start = translationAudio.start;
         const A2Stop = translationAudio.stop;
-        const A2Speed = kingLen / (A2Stop - A2Start);
+        // Calculate prince speed to match king's output duration
+        // If prince is longer than king, speed up (A2Speed > 1)
+        // If prince is shorter than king, slow down (A2Speed < 1)
+        const A2Speed = (A2Stop - A2Start) / kingLen;
 
         clips.push({
           V1,
@@ -605,6 +718,8 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
  * (e.g., "CarefulMerged" or "TranslationMerged") and extracts the
  * audio file path and clip times.
  *
+ * This function resolves blob URLs to filesystem paths for FFmpeg compatibility.
+ *
  * @param chan - Channel name to search for (e.g., "CarefulMerged")
  * @param ms - Milestone object containing audio data
  * @returns Object with audio file path and clip times
@@ -627,9 +742,13 @@ export function getAudio(chan: string, ms: Milestone) {
   // Search milestone data for matching channel
   ms.data.forEach((d: MilestoneData) => {
     if (d.channel === chan) {
-      audioFile = d.data;
+      const originalUrl = d.data;
+      // Resolve blob URL to filesystem path for FFmpeg
+      audioFile = resolveBlobToPath(d.data);
       audioStart = d.clipStart ?? -1;
       audioStop = d.clipStop ?? -1;
+
+      console.log(`      getAudio(${chan}): ${originalUrl} -> ${audioFile}`);
     }
   });
 

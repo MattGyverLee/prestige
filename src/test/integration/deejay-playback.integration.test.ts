@@ -171,7 +171,7 @@ describe("DeeJay Playback Integration Tests", () => {
       });
 
       // WHEN: Timeline is loaded into the store
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
       store.dispatch(actions.setURL("/test/video.mp4", 0)); // Set current timeline
 
       // THEN: Dispatch should be set for PlayerSeek (auto-play trigger)
@@ -200,7 +200,7 @@ describe("DeeJay Playback Integration Tests", () => {
 
       // THEN: Should not crash
       const state = store.getState();
-      expect(state.annot.timeline[0].milestones).toHaveLength(0);
+      expect(state.annot.currentTimeline?.milestones || []).toHaveLength(0);
     });
   });
 
@@ -215,7 +215,7 @@ describe("DeeJay Playback Integration Tests", () => {
         hasTranslation: true,
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
       store.dispatch(actions.setURL("/test/video.mp4", 0));
 
       // WHEN: User clicks a region (simulated)
@@ -267,7 +267,7 @@ describe("DeeJay Playback Integration Tests", () => {
         audioPath: "/test/audio.wav",
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
       store.dispatch(actions.setURL("/test/video.mp4", 0));
 
       // WHEN: User drags to seek (WSSeek dispatch)
@@ -382,7 +382,7 @@ describe("DeeJay Playback Integration Tests", () => {
         withClipTimes: true, // Careful has different clip times
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
 
       // Milestone 1: Video 0-5s, Careful clip 0-1.8s
       // Expected playback rate: 5 / 1.8 ≈ 2.78x
@@ -409,7 +409,7 @@ describe("DeeJay Playback Integration Tests", () => {
         hasCareful: true,
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
 
       // WHEN: Play clip
       store.dispatch(
@@ -543,7 +543,7 @@ describe("DeeJay Playback Integration Tests", () => {
         avgDuration: 5, // Total ≈ 15s
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
 
       // WHEN: Seek to 100s (past end)
       store.dispatch(
@@ -570,7 +570,7 @@ describe("DeeJay Playback Integration Tests", () => {
         hasTranslation: false, // No Translation
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
 
       // WHEN: Try to play WS1 (which has no data)
       store.dispatch(actions.setWSVolume(1, 1.0));
@@ -589,7 +589,7 @@ describe("DeeJay Playback Integration Tests", () => {
         audioPath: "/test/audio.wav",
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
 
       // WHEN: Attempt to access milestone at invalid index
       const state = store.getState();
@@ -614,15 +614,15 @@ describe("DeeJay Playback Integration Tests", () => {
 
     it("should seek video player when wavesurfer seeks", () => {
       // GIVEN: Video at position 0
-      expect(store.getState().player.seek).toBe(0);
+      expect(store.getState().player.seek.time).toBe(-1);
 
       // WHEN: Seek wavesurfer to 10s
       store.dispatch(actions.setSeek(10, "seconds"));
 
       // THEN: Video should sync
       const state = store.getState();
-      expect(state.player.seek).toBe(10);
-      expect(state.player.scale).toBe("seconds");
+      expect(state.player.seek.time).toBe(10);
+      expect(state.player.seek.scale).toBe("seconds");
     });
 
     it("should toggle video play state with audio", () => {
@@ -679,7 +679,7 @@ describe("DeeJay Playback Integration Tests", () => {
         audioPath: "/test/audio1.wav",
       });
 
-      store.dispatch(actions.pushTimeline(timeline1));
+      store.dispatch(actions.pushTimeline({ timeline: timeline1 }));
       store.dispatch(actions.setURL("/test/video1.mp4", 0));
 
       expect(store.getState().annot.timeline.length).toBe(1);
@@ -691,13 +691,13 @@ describe("DeeJay Playback Integration Tests", () => {
         audioPath: "/test/audio2.wav",
       });
 
-      store.dispatch(actions.pushTimeline(timeline2));
+      store.dispatch(actions.pushTimeline({ timeline: timeline2 }));
       store.dispatch(actions.setURL("/test/video2.mp4", 1));
 
       // THEN: Second timeline should be active
       const state = store.getState();
       expect(state.annot.timeline.length).toBe(2);
-      expect(state.player.currentTimeline).toBe(1);
+      expect(state.annot.currentTimeline).toBe(1);
     });
 
     it("should clear regions when milestones change", () => {
@@ -708,7 +708,7 @@ describe("DeeJay Playback Integration Tests", () => {
         audioPath: "/test/audio.wav",
       });
 
-      store.dispatch(actions.pushTimeline(timeline));
+      store.dispatch(actions.pushTimeline({ timeline: timeline }));
 
       // WHEN: Milestones change (new annotation added)
       const updatedMilestones = [

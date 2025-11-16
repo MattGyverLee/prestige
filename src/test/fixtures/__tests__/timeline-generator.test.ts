@@ -182,8 +182,8 @@ describe("Timeline Generator", () => {
 
       expect(timeline.milestones).toHaveLength(5);
       expect(volumes).toHaveLength(3);
-      expect(volumes[0]).toBe(0.8); // King
-      expect(volumes[1]).toBe(0.3); // Prince
+      expect(volumes[0]).toBe(0.9); // King (>= 0.84 threshold)
+      expect(volumes[1]).toBe(0.3); // Prince (< 0.84)
       expect(volumes[2]).toBe(0); // Silent
     });
 

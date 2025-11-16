@@ -634,8 +634,8 @@ function registerIPCHandlers(mainWindow) {
       const tempDir = path.join(app.getPath('temp'), 'prestige-export-' + Date.now());
 
       // Create temp directory
-      if (!existsSync(tempDir)) {
-        require('fs').mkdirSync(tempDir, { recursive: true });
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
       }
 
       // Process each clip into an intermediate file
@@ -643,6 +643,9 @@ function registerIPCHandlers(mainWindow) {
 
       const processClip = (clip, clipIndex) => {
         return new Promise((resolveClip, rejectClip) => {
+          console.log(`\n=== Processing Clip ${clipIndex} ===`);
+          console.log('Clip config:', JSON.stringify(clip, null, 2));
+
           const clipOutput = path.join(tempDir, `clip_${clipIndex}.mp4`);
 
           const command = fluentFfmpeg();
@@ -673,53 +676,63 @@ function registerIPCHandlers(mainWindow) {
           if (clip.V1Speed && clip.V1Speed !== 1) {
             videoFilter += `setpts=${1/clip.V1Speed}*PTS`;
           } else {
-            videoFilter += 'copy';
+            // Use setpts with multiplier of 1 (no change) instead of null filter
+            videoFilter += 'setpts=1.0*PTS';
           }
 
-          // Add subtitle burning if subtitle text is provided
+          // TODO: Re-enable subtitle burning after fixing filter syntax
+          // Temporarily disabled to isolate filter complex issues
+          /*
           if (clip.subtitle && clip.subtitle.trim() !== '') {
-            // Escape special characters for FFmpeg drawtext filter
-            // FFmpeg requires: ' -> \' , : -> \: , \ -> \\
             const escapedText = clip.subtitle
-              .replace(/\\/g, '\\\\')    // Escape backslashes first
-              .replace(/'/g, "\\'")       // Escape single quotes
-              .replace(/:/g, '\\:')       // Escape colons
-              .replace(/\[/g, '\\[')      // Escape brackets
+              .replace(/\\/g, '\\\\\\\\')
+              .replace(/:/g, '\\:')
+              .replace(/'/g, "'")
+              .replace(/ /g, '\\ ')
+              .replace(/\[/g, '\\[')
               .replace(/\]/g, '\\]')
-              .replace(/%/g, '\\%');      // Escape percent signs
+              .replace(/%/g, '\\%')
+              .replace(/,/g, '\\,');
 
-            // Add drawtext filter for yellow subtitles at bottom
-            // text_w=w*0.9 wraps text at 90% of video width (auto multi-line for long text)
-            // x=w*0.05 centers the 90%-wide text block (5% margin on each side)
-            // y=h-th-20 positions 20px from bottom (th grows vertically with multi-line text)
-            videoFilter += `,drawtext=text='${escapedText}':fontcolor=yellow:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:text_w=w*0.9:x=w*0.05:y=h-th-20`;
+            videoFilter += `,drawtext=text=${escapedText}:fontcolor=yellow:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-20`;
           }
+          */
 
           videoFilter += '[v]';
           filters.push(videoFilter);
 
           // A1 audio tempo filter (handle speeds > 2 by stacking atempo filters)
           let a1Filter = '[1:a]';
+          let a1Filters = [];
+
           if (clip.A1Speed && clip.A1Speed !== 1) {
             let speed = clip.A1Speed;
-            let tempoFilters = [];
 
             // Stack atempo filters for speeds > 2
             while (speed > 2) {
-              tempoFilters.push('atempo=2.0');
+              a1Filters.push('atempo=2.0');
               speed = speed / 2;
             }
             if (speed > 0.2) {
-              tempoFilters.push(`atempo=${speed}`);
+              a1Filters.push(`atempo=${speed}`);
             }
-
-            a1Filter += tempoFilters.join(',');
           }
 
           // Apply volume to A1
           if (clip.A1Vol !== undefined && clip.A1Vol !== 1) {
-            a1Filter += `,volume=${clip.A1Vol}`;
+            a1Filters.push(`volume=${clip.A1Vol}`);
           }
+
+          // If no filters needed, use acopy (just pass through unchanged)
+          // Note: We still need a filter here to relabel the stream
+          if (a1Filters.length === 0) {
+            a1Filters.push('aresample=async=1');
+          }
+
+          // Reset timestamps to start at 0 for proper mixing
+          a1Filters.push('asetpts=PTS-STARTPTS');
+
+          a1Filter += a1Filters.join(',');
           a1Filter += '[a1]';
           filters.push(a1Filter);
 
@@ -736,36 +749,53 @@ function registerIPCHandlers(mainWindow) {
 
             // A2 audio tempo filter
             let a2Filter = '[2:a]';
+            let a2Filters = [];
+
             if (clip.A2Speed && clip.A2Speed !== 1) {
               let speed = clip.A2Speed;
-              let tempoFilters = [];
 
               while (speed > 2) {
-                tempoFilters.push('atempo=2.0');
+                a2Filters.push('atempo=2.0');
                 speed = speed / 2;
               }
               if (speed > 0.2) {
-                tempoFilters.push(`atempo=${speed}`);
+                a2Filters.push(`atempo=${speed}`);
               }
-
-              a2Filter += tempoFilters.join(',');
             }
 
             // Apply volume to A2
             if (clip.A2Vol !== undefined && clip.A2Vol !== 1) {
-              a2Filter += `,volume=${clip.A2Vol}`;
+              a2Filters.push(`volume=${clip.A2Vol}`);
             }
+
+            // If no filters needed, use acopy (just pass through unchanged)
+            // Note: We still need a filter here to relabel the stream
+            if (a2Filters.length === 0) {
+              a2Filters.push('aresample=async=1');
+            }
+
+            // Reset timestamps to start at 0 for proper mixing
+            a2Filters.push('asetpts=PTS-STARTPTS');
+
+            // Add apad to ensure A2 stream continues until A1 ends
+            // This prevents amix from hanging when streams have different durations
+            a2Filters.push('apad');
+
+            a2Filter += a2Filters.join(',');
             a2Filter += '[a2]';
             filters.push(a2Filter);
 
-            // Mix A1 and A2
-            filters.push('[a1][a2]amix=inputs=2:duration=longest[a]');
+            // Mix A1 and A2 with shortest duration (since we padded A2, both should end together)
+            filters.push('[a1][a2]amix=inputs=2:duration=first:dropout_transition=0[a]');
           } else {
-            // No A2, just use A1
-            filters.push('[a1]copy[a]');
+            // No A2, just use A1 with aresample to pass through
+            filters.push('[a1]aresample=async=1[a]');
           }
 
-          command.complexFilter(filters.join(';'));
+          const filterComplex = filters.join(';');
+          console.log(`Clip ${clipIndex} filter complex:`, filterComplex);
+
+          command.complexFilter(filterComplex);
           command.outputOptions([
             '-map [v]',
             '-map [a]',
@@ -780,6 +810,14 @@ function registerIPCHandlers(mainWindow) {
             .on('start', (cmd) => {
               console.log(`Processing clip ${clipIndex + 1}/${clips.length}`);
               console.log('FFmpeg command:', cmd);
+
+              // Write command to file for debugging
+              const debugPath = path.join(tempDir, `ffmpeg_cmd_${clipIndex}.txt`);
+              fs.writeFileSync(debugPath, cmd);
+            })
+            .on('stderr', (stderrLine) => {
+              // Log FFmpeg stderr for debugging
+              console.log(`FFmpeg stderr (clip ${clipIndex}): ${stderrLine}`);
             })
             .on('progress', (progress) => {
               mainWindow.webContents.send('ffmpeg:progress', {
@@ -839,10 +877,10 @@ function registerIPCHandlers(mainWindow) {
               // Clean up temp files
               try {
                 clipFiles.forEach(f => {
-                  if (existsSync(f)) require('fs').unlinkSync(f);
+                  if (fs.existsSync(f)) fs.unlinkSync(f);
                 });
-                if (existsSync(concatFile)) require('fs').unlinkSync(concatFile);
-                if (existsSync(tempDir)) require('fs').rmdirSync(tempDir);
+                if (fs.existsSync(concatFile)) fs.unlinkSync(concatFile);
+                if (fs.existsSync(tempDir)) fs.rmdirSync(tempDir);
               } catch (cleanupErr) {
                 console.warn('Cleanup error:', cleanupErr);
               }
