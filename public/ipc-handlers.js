@@ -680,23 +680,82 @@ function registerIPCHandlers(mainWindow) {
             videoFilter += 'setpts=1.0*PTS';
           }
 
-          // TODO: Re-enable subtitle burning after fixing filter syntax
-          // Temporarily disabled to isolate filter complex issues
-          /*
+          // Add subtitle burning if subtitle text is provided
           if (clip.subtitle && clip.subtitle.trim() !== '') {
-            const escapedText = clip.subtitle
-              .replace(/\\/g, '\\\\\\\\')
-              .replace(/:/g, '\\:')
-              .replace(/'/g, "'")
-              .replace(/ /g, '\\ ')
-              .replace(/\[/g, '\\[')
-              .replace(/\]/g, '\\]')
-              .replace(/%/g, '\\%')
-              .replace(/,/g, '\\,');
+            // First escape special characters in the raw text
+            // Need to escape: \ ' : [ ] , %
+            let escapedText = clip.subtitle
+              .replace(/\\/g, '\\\\\\\\')   // Backslash
+              .replace(/'/g, "'\\\\\\''")   // Single quote
+              .replace(/:/g, '\\:')         // Colon
+              .replace(/\[/g, '\\[')        // Left bracket
+              .replace(/\]/g, '\\]')        // Right bracket
+              .replace(/,/g, '\\,')         // Comma
+              .replace(/%/g, '\\%');        // Percent
 
-            videoFilter += `,drawtext=text=${escapedText}:fontcolor=yellow:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-20`;
+            // Function to wrap text with given chars per line limit
+            const wrapText = (text, maxChars) => {
+              const words = text.split(' ');
+              const lines = [];
+              let currentLine = '';
+
+              words.forEach(word => {
+                const testLine = currentLine ? currentLine + ' ' + word : word;
+                if (testLine.length > maxChars && currentLine) {
+                  lines.push(currentLine);
+                  currentLine = word;
+                } else {
+                  currentLine = testLine;
+                }
+              });
+              if (currentLine) lines.push(currentLine);
+              return lines;
+            };
+
+            // Function to center lines by padding with spaces
+            const centerLines = (lines) => {
+              if (lines.length === 0) return lines;
+
+              // Find the longest line
+              const maxLength = Math.max(...lines.map(l => l.length));
+
+              // Center each line by padding with spaces
+              return lines.map(line => {
+                const padding = Math.floor((maxLength - line.length) / 2);
+                return ' '.repeat(padding) + line;
+              });
+            };
+
+            // Calculate max characters per line to fill 90% of 640px width
+            // Video width: 640px, 90% = 576px usable width
+            // Segoe UI average character width at fontsize 24: ~11px
+            // Formula: (width * 0.9) / (fontSize * avgCharWidthRatio)
+            // where avgCharWidthRatio ≈ 0.45 for Segoe UI (tested empirically)
+            const videoWidth = 640;
+            const usableWidthRatio = 0.9;
+            const avgCharWidthRatio = 0.45; // Average char width as ratio of font size
+
+            let fontSize = 24;
+            let maxCharsPerLine = Math.floor((videoWidth * usableWidthRatio) / (fontSize * avgCharWidthRatio));
+            let lines = wrapText(escapedText, maxCharsPerLine);
+
+            // If more than 3 lines, reduce font size by 0.5px and recalculate
+            while (lines.length > 3 && fontSize > 14) {
+              fontSize -= 0.5;
+              maxCharsPerLine = Math.floor((videoWidth * usableWidthRatio) / (fontSize * avgCharWidthRatio));
+              lines = wrapText(escapedText, maxCharsPerLine);
+            }
+
+            // Center each line within the text block
+            const centeredLines = centerLines(lines);
+
+            // Join lines with actual newline character
+            const wrappedText = centeredLines.join('\n');
+
+            // Add subtitle at bottom center with line spacing and Segoe UI font
+            // Center horizontally and position 20px from bottom
+            videoFilter += `,drawtext=fontfile='C\\:/Windows/Fonts/segoeui.ttf':text='${wrappedText}':fontcolor=yellow:fontsize=${fontSize}:line_spacing=4:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-20`;
           }
-          */
 
           videoFilter += '[v]';
           filters.push(videoFilter);

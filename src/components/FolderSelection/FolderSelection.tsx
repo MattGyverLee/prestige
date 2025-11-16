@@ -1156,13 +1156,16 @@ class SelectFolderZone extends Component<FolderProps> {
       await electronAPI.writeFile(dir + "sourceMedia.json", savedSourceMedia);
       //TODO: Filter out wavs, copy the others.
 
-      const savedAnnotMedia = JSON.stringify(
-        parentThis.props.annotMedia,
-        null,
-        2,
+      // Filter out raw WAV data from annotMedia (keep metadata only)
+      const filteredAnnotMedia = parentThis.props.annotMedia.map(
+        (media: any) => {
+          // const { arrayBuffer, ...metadataOnly } = media;
+          const { ...metadataOnly } = media;
+          return metadataOnly;
+        },
       );
+      const savedAnnotMedia = JSON.stringify(filteredAnnotMedia, null, 2);
       await electronAPI.writeFile(dir + "annotMedia.json", savedAnnotMedia);
-      //TODO: Filter out wavs, copy the others.
 
       /* const savedTimeline = JSON.stringify(parentThis.props.timeline, null, 2);
       await electronAPI.writeFile(dir + "Timeline.json", savedTimeline); */
