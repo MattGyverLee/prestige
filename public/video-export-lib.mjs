@@ -14,7 +14,7 @@
  * @module video-export-lib
  */
 
-import path from 'path';
+import path from 'node:path';
 
 // ============================================================================
 // CONSTANTS

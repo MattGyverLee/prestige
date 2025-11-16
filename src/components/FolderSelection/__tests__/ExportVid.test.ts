@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getAudio } from "../ExportVid";
-import { Milestone, MilestoneData } from "../../../store/annot/types";
+import { Milestone } from "../../../store/annot/types";
 
 describe("ExportVid - getAudio", () => {
   it("should find audio clip for CarefulMerged channel", () => {

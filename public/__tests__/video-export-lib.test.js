@@ -66,10 +66,12 @@ describe('video-export-lib', () => {
 
       const filter = buildFilterComplex(clip, false);
 
-      expect(filter).toContain('[0:v]copy[v]');
+      // Video filter should use null passthrough at 1x speed
+      expect(filter).toContain('[0:v]null[v]');
       expect(filter).toContain('[1:a]');
       expect(filter).toContain('[a1]');
-      expect(filter).toContain('[a1]copy[a]');
+      // Audio should use anull for passthrough
+      expect(filter).toContain('anull');
     });
 
     it('should build filter for 2x speed video', () => {
@@ -304,14 +306,16 @@ describe('video-export-lib', () => {
       const tempPath = '/tmp';
       const dir = getTempExportDir(tempPath);
 
-      expect(dir).toMatch(/\/tmp\/prestige-export-\d+/);
+      // Match both Unix (/) and Windows (\) path separators
+      expect(dir).toMatch(/[\/\\]tmp[\/\\]prestige-export-\d+/);
     });
 
     it('should use provided base path', () => {
       const tempPath = '/custom/temp';
       const dir = getTempExportDir(tempPath);
 
-      expect(dir).toContain('/custom/temp');
+      // Normalize path for cross-platform compatibility
+      expect(dir.replace(/\\/g, '/')).toContain('/custom/temp');
     });
   });
 

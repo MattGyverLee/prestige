@@ -78,7 +78,10 @@ class PlayerZone extends Component<PlayerProps> {
 
   loadNewFile(blobURL: string) {
     this.props.togglePlay(true);
-    this.props.setURL(blobURL, getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia));
+    this.props.setURL(
+      blobURL,
+      getTimelineIndex(this.props.timeline, blobURL, this.props.sourceMedia),
+    );
   }
 
   onDuration = (duration: number) => {

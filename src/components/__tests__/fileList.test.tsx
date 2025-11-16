@@ -72,7 +72,7 @@ const sourceMedia = [
 
 afterEach(cleanup);
 
-const tree = (props?: any) => (
+const tree = (_props?: any) => (
   <Provider store={store}>
     <FileList
       sourceMedia={getSourceMedia(sourceMedia, true)}
@@ -111,14 +111,13 @@ it("Displays the WAV", () => {
   expect(ul).toMatchSnapshot();
 });
 
-// Todo: Enable MP3 Test
-// currently Failing
-/* it("Displays the MP3", () => {
+// Todo: Enable MP3 Test - currently Failing
+it.skip("Displays the MP3", () => {
   sourceMedia.pop();
-  const { getByTestId, container } = render(tree());
+  const { getByTestId } = render(tree());
   const ul = getByTestId("fileList.UL");
   expect(ul).toBeVisible();
-  expect(ul.childNodes.length === 1);
+  expect(ul.childNodes.length).toBe(1);
   expect(ul.firstElementChild).toHaveTextContent("_Normalized.mp3");
   expect(ul).toMatchSnapshot();
-}); */
+});

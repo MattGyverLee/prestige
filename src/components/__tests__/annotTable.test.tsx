@@ -41,8 +41,6 @@ const props = {};
 
 afterEach(cleanup);
 
-// it("is true", () => true);
-
 it("renders annotTable without crashing", () => {
   renderer.act(() => {
     annotationTableMaster = renderer.create(

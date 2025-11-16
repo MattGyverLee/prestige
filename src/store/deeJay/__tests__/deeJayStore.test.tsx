@@ -20,38 +20,3 @@ it("has a PlayPauseFunction and a resetDeeJay Action", () => {
   expect(types).toHaveProperty("PLAY_PAUSE");
   expect(actions).toHaveProperty("resetDeeJay");
 });
-
-/* 
-let store: any;
-// set up a fake store for all our tests
-beforeEach(() => {
-  store = mockStore({ Playing: false });
-}); */
-
-/* it("has a PlayPauseFunction", () => {
-  expect(types).toHaveProperty("PLAY_PAUSE");
-  expect(store.dispatch(playPause(), mockStore)).toContain(types.PLAY_PAUSE);
-});
-
-it("dispatches playPause action", () => {
-  expect(actions).toContainEqual({
-    type: types.PLAY_PAUSE
-  });
-  expect(actions).toContainEqual({ type: types.PLAY_PAUSE });
-}); */
-
-/*   describe('when a user logs in', () => {
-      it('fires a play/pause action', () =>
-        store
-          .dispatch(playPause(),
-            mockServiceCreator(types.PLAY_PAUSE),
-          ))
-          .then(() => expect(store.getActions()).toEqual(true));
-
-
-
-describe("actions", () => {
-  it("should toggle PlayPause", () => {
-    expect(playPause()).toEqual(true);
-  });
-}); */

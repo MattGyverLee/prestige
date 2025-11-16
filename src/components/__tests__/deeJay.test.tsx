@@ -49,8 +49,6 @@ const props = {
 
 afterEach(cleanup);
 
-// it("is true", () => true);
-
 it("renders deeJay without crashing", () => {
   renderer.act(() => {
     deejayMaster = renderer.create(

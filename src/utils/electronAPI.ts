@@ -91,9 +91,9 @@ interface ElectronAPI {
 // Check if we're in Electron with the new secure API
 const hasSecureAPI = typeof (window as any).electronAPI !== "undefined";
 
-console.log('=== Electron API Check ===');
-console.log('window.electronAPI exists:', hasSecureAPI);
-console.log('window.electronAPI:', (window as any).electronAPI);
+console.log("=== Electron API Check ===");
+console.log("window.electronAPI exists:", hasSecureAPI);
+console.log("window.electronAPI:", (window as any).electronAPI);
 
 /**
  * Get the appropriate API based on environment
@@ -101,13 +101,13 @@ console.log('window.electronAPI:', (window as any).electronAPI);
 function getAPI(): ElectronAPI {
   // If secure API is available via contextBridge, use it
   if (hasSecureAPI) {
-    console.log('Using secure API from preload.js');
+    console.log("Using secure API from preload.js");
     return (window as any).electronAPI;
   }
 
   // Fallback to old require() approach (to be phased out)
   // This allows gradual migration
-  console.log('Using legacy API - preload.js not loaded');
+  console.log("Using legacy API - preload.js not loaded");
   return createLegacyAPI();
 }
 
@@ -118,42 +118,42 @@ function getAPI(): ElectronAPI {
 function createStubAPI(): ElectronAPI {
   const notAvailable = (methodName: string) => async () => {
     throw new Error(
-      `${methodName} is not available. Please ensure the Electron preload script is loaded properly.`
+      `${methodName} is not available. Please ensure the Electron preload script is loaded properly.`,
     );
   };
 
   return {
-    readDirectory: notAvailable('readDirectory'),
-    readFile: notAvailable('readFile'),
-    writeFile: notAvailable('writeFile'),
-    exists: notAvailable('exists'),
-    deleteFile: notAvailable('deleteFile'),
-    getDirectorySnapshot: notAvailable('getDirectorySnapshot'),
-    getFileStats: notAvailable('getFileStats'),
-    clearCache: notAvailable('clearCache'),
-    selectDirectory: notAvailable('selectDirectory'),
-    parsePath: notAvailable('parsePath'),
-    joinPath: notAvailable('joinPath'),
-    getPathSeparator: notAvailable('getPathSeparator'),
-    pathToFileURL: notAvailable('pathToFileURL'),
-    getMimeType: notAvailable('getMimeType'),
-    getCwd: notAvailable('getCwd'),
-    getUserDataPath: notAvailable('getUserDataPath'),
-    startWatcher: notAvailable('startWatcher'),
-    stopWatcher: notAvailable('stopWatcher'),
+    readDirectory: notAvailable("readDirectory"),
+    readFile: notAvailable("readFile"),
+    writeFile: notAvailable("writeFile"),
+    exists: notAvailable("exists"),
+    deleteFile: notAvailable("deleteFile"),
+    getDirectorySnapshot: notAvailable("getDirectorySnapshot"),
+    getFileStats: notAvailable("getFileStats"),
+    clearCache: notAvailable("clearCache"),
+    selectDirectory: notAvailable("selectDirectory"),
+    parsePath: notAvailable("parsePath"),
+    joinPath: notAvailable("joinPath"),
+    getPathSeparator: notAvailable("getPathSeparator"),
+    pathToFileURL: notAvailable("pathToFileURL"),
+    getMimeType: notAvailable("getMimeType"),
+    getCwd: notAvailable("getCwd"),
+    getUserDataPath: notAvailable("getUserDataPath"),
+    startWatcher: notAvailable("startWatcher"),
+    stopWatcher: notAvailable("stopWatcher"),
     onFileSystemEvent: () => {},
     removeFileSystemEventListener: () => {},
-    convertVideo: notAvailable('convertVideo'),
-    convertAudioToMP3: notAvailable('convertAudioToMP3'),
-    mergeAudioFiles: notAvailable('mergeAudioFiles'),
-    getMediaMetadata: notAvailable('getMediaMetadata'),
-    exportVideo: notAvailable('exportVideo'),
+    convertVideo: notAvailable("convertVideo"),
+    convertAudioToMP3: notAvailable("convertAudioToMP3"),
+    mergeAudioFiles: notAvailable("mergeAudioFiles"),
+    getMediaMetadata: notAvailable("getMediaMetadata"),
+    exportVideo: notAvailable("exportVideo"),
     onFFmpegProgress: () => {},
     removeFFmpegProgressListener: () => {},
-    parseEAF: notAvailable('parseEAF'),
-    parseXML: notAvailable('parseXML'),
-    isDev: notAvailable('isDev'),
-    getPlatform: notAvailable('getPlatform'),
+    parseEAF: notAvailable("parseEAF"),
+    parseXML: notAvailable("parseXML"),
+    isDev: notAvailable("isDev"),
+    getPlatform: notAvailable("getPlatform"),
     send: () => {},
     on: () => {},
   };
@@ -166,18 +166,23 @@ function createStubAPI(): ElectronAPI {
 function createLegacyAPI(): ElectronAPI {
   // Check if we're in a Node.js environment where require is available
   // This prevents "require is not defined" errors in browser contexts
-  if (typeof require === 'undefined') {
-    console.error('Legacy API cannot be used: require is not defined. Ensure preload.js is loaded properly.');
+  if (typeof require === "undefined") {
+    console.error(
+      "Legacy API cannot be used: require is not defined. Ensure preload.js is loaded properly.",
+    );
     // Return a stub API that throws errors when used
     return createStubAPI();
   }
 
+  // Legacy API requires CommonJS imports - disable ESLint warnings
+  /* eslint-disable @typescript-eslint/no-require-imports */
   const fs = require("fs-extra");
   const path = require("path");
   const fileUrl = require("file-url");
   const mime = require("mime");
   const xml2js = require("xml2js");
-  const chokidar = require("chokidar");
+  // const chokidar = require("chokidar"); // Unused - kept for future file watching
+  /* eslint-enable @typescript-eslint/no-require-imports */
 
   // Wrap synchronous operations in promises for API consistency
   return {
@@ -247,6 +252,7 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     clearCache: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const electron = require("electron");
       const app = electron.remote.app;
       const chromeCacheDir = path.join(app.getPath("userData"), "Cache");
@@ -266,12 +272,13 @@ function createLegacyAPI(): ElectronAPI {
 
     selectDirectory: async () => {
       // This is a legacy fallback - should use secure API via preload
-      console.warn('Using legacy selectDirectory - should be using secure API');
+      console.warn("Using legacy selectDirectory - should be using secure API");
       return null;
     },
 
     // Path Operations
     parsePath: async (filePath: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pathParse = require("path-parse");
       return pathParse(filePath);
     },
@@ -302,6 +309,7 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     getUserDataPath: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const electron = require("electron");
       const app = electron.remote.app;
       return app.getPath("userData");
@@ -363,6 +371,7 @@ function createLegacyAPI(): ElectronAPI {
 
     // Utilities
     isDev: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const electronIsDev = require("electron-is-dev");
       return electronIsDev;
     },
@@ -376,11 +385,13 @@ function createLegacyAPI(): ElectronAPI {
     },
 
     send: (channel: string, data: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const electron = require("electron");
       electron.ipcRenderer.send(channel, data);
     },
 
     on: (channel: string, callback: (data: any) => void) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const electron = require("electron");
       electron.ipcRenderer.on(channel, (event: any, data: any) =>
         callback(data),

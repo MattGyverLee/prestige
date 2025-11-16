@@ -5,11 +5,13 @@ import React, { Component } from "react";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface StateProps {
   // These come from the stores.
   // annotations: object;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DispatchProps {
   // These come from the actions
   // addCategory: typeof actions.addCategory;

@@ -39,8 +39,6 @@ let appMaster: any;
 
 jest.autoMockOn();
 
-// it("is true", () => true);
-
 it("renders without crashing", () => {
   renderer.act(() => {
     appMaster = renderer.create(

@@ -29,7 +29,11 @@ export const ResizableDiv: React.FC<ComponentProps> = ({
   dimensions,
   updateDimensions,
 }) => {
-  const { width = 0, height = 0, ref } = useResizeDetector({
+  const {
+    width = 0,
+    height = 0,
+    ref,
+  } = useResizeDetector({
     handleHeight: true,
     refreshMode: "debounce",
     refreshRate: 16,
