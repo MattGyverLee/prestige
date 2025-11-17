@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { getAudio } from "../ExportVid";
-import { Milestone } from "../../../store/annot/types";
+import {
+  getAudio,
+  hasSyncedVideo,
+  formatSrtTimestamp,
+  buildSrtContent,
+} from "../ExportVid";
+import { Milestone, Timeline } from "../../../store/annot/types";
 
 describe("ExportVid - getAudio", () => {
   it("should find audio clip for CarefulMerged channel", () => {
@@ -327,5 +332,57 @@ describe("ExportVid - Speed Calculations", () => {
 
     expect(kingLen).toBe(15);
     expect(V1Speed).toBe(1.5);
+  });
+});
+
+describe("ExportVid - helpers", () => {
+  it("detects synced video entries", () => {
+    const timeline: Timeline = {
+      milestones: [],
+      syncMedia: ["file:///test/video.mp4", "file:///test/audio.wav"],
+    };
+
+    expect(hasSyncedVideo(timeline)).toBe(true);
+  });
+
+  it("detects absence of synced video", () => {
+    const timeline: Timeline = {
+      milestones: [],
+      syncMedia: ["file:///test/audio.wav"],
+    };
+
+    expect(hasSyncedVideo(timeline)).toBe(false);
+  });
+
+  it("formats SRT timestamps", () => {
+    expect(formatSrtTimestamp(1.234)).toBe("00:00:01,234");
+    expect(formatSrtTimestamp(3723.5)).toBe("01:02:03,500");
+  });
+
+  it("builds SRT content from milestones", () => {
+    const timeline: Timeline = {
+      milestones: [
+        {
+          annotationID: "a1",
+          startTime: 0,
+          stopTime: 2,
+          data: [
+            {
+              channel: "Transcription",
+              data: "Bonjour",
+              linguisticType: "Transcription_text",
+              locale: "fr",
+              mimeType: "text/plain",
+            },
+          ],
+        } as Milestone,
+      ],
+      syncMedia: [],
+    };
+
+    const content = buildSrtContent(timeline, [0]);
+    expect(content).toContain("1");
+    expect(content).toContain("00:00:00,000 --> 00:00:02,000");
+    expect(content).toContain("Bonjour");
   });
 });

@@ -210,6 +210,45 @@ export interface VideoClip {
   Comment?: string;
 }
 
+/**
+ * Audio clip definition for audio-only export
+ *
+ * Mirrors the audio portion of VideoClip but omits video fields and
+ * adds timeline metadata for caption generation.
+ */
+export interface AudioClip {
+  /** Primary audio file path */
+  A1: string;
+  /** Primary audio start time in seconds */
+  A1Start: number;
+  /** Primary audio stop time in seconds */
+  A1Stop: number;
+  /** Primary audio playback speed multiplier */
+  A1Speed: number;
+  /** Primary audio volume (0.0 to 1.0) */
+  A1Vol: number;
+  /** Whether secondary audio track is present */
+  isA2: boolean;
+  /** Secondary audio file path */
+  A2?: string;
+  /** Secondary audio start time */
+  A2Start?: number;
+  /** Secondary audio stop time */
+  A2Stop?: number;
+  /** Secondary audio playback speed multiplier */
+  A2Speed?: number;
+  /** Secondary audio volume (0.0 to 1.0) */
+  A2Vol?: number;
+  /** Subtitle text aligned with this segment */
+  subtitle?: string;
+  /** Optional comment or description */
+  Comment?: string;
+  /** Timeline-relative start time (seconds) for SRT export */
+  timelineStart: number;
+  /** Timeline-relative stop time (seconds) for SRT export */
+  timelineStop: number;
+}
+
 // ============================================================================
 // STATE INTERFACE
 // ============================================================================

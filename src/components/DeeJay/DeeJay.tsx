@@ -25,7 +25,7 @@ import {
   updateRegionAlpha,
   toggleAllRegions,
 } from "./RegionFunctions";
-import { exportVideo } from "../FolderSelection/ExportVid";
+import { exportVideo, hasSyncedVideo } from "../FolderSelection/ExportVid";
 import { createWaveSurfer, rowHeight } from "./WaveSurferFunctions";
 
 interface StateProps {
@@ -1691,8 +1691,12 @@ export class DeeJay extends Component<DeeJayProps> {
     }
   };
   render(): JSX.Element {
-    // Forms the Rows for Each WS
-    //const waveTableRows = this.idxs.map((idx: number) => {
+    const activeTimeline =
+      this.props.timeline?.[this.props.currentTimeline] ?? null;
+    const exportLabel = hasSyncedVideo(activeTimeline)
+      ? "Export Video"
+      : "Export Audio";
+
     const waveTableRows = (idx: number) => {
       return (
         <WaveTableRow
@@ -1749,14 +1753,19 @@ export class DeeJay extends Component<DeeJayProps> {
         </button>
         <button
           onClick={async () => {
+            if (!activeTimeline) {
+              toast.error("Load a timeline before exporting.");
+              return;
+            }
+
             await exportVideo(
-              this.props.timeline[this.props.currentTimeline],
+              activeTimeline,
               this.props.playbackMultiplier,
               this.props.volumes,
             );
           }}
         >
-          Export Video
+          {exportLabel}
         </button>
       </div>
     );

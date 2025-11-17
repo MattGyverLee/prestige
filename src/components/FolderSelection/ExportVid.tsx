@@ -22,6 +22,7 @@ import {
   Milestone,
   VideoClip,
   MilestoneData,
+  AudioClip,
 } from "../../store/annot/types";
 import { electronAPI } from "../../utils/electronAPI";
 import toast from "react-hot-toast";
@@ -125,6 +126,34 @@ const AUDIO_CHANNELS = {
   TRANSLATION_MERGED: "TranslationMerged",
 } as const;
 
+/**
+ * Video file extensions supported by export
+ */
+const VIDEO_EXTENSIONS = [".mp4", ".m4v", ".mov", ".mkv", ".webm"];
+
+/**
+ * Normalize media path for extension inspection
+ */
+function normalizeMediaPath(input?: string): string {
+  if (!input) return "";
+  const noFragment = input.split("#")[0];
+  return noFragment.split("?")[0].toLowerCase();
+}
+
+/**
+ * Determine if a timeline contains a synced video reference
+ */
+export function hasSyncedVideo(timeline?: Timeline | null): boolean {
+  if (!timeline || !Array.isArray(timeline.syncMedia)) {
+    return false;
+  }
+
+  return timeline.syncMedia.some((entry: string) => {
+    const normalized = normalizeMediaPath(entry);
+    return VIDEO_EXTENSIONS.some((ext) => normalized.endsWith(ext));
+  });
+}
+
 // ============================================================================
 // MAIN EXPORT FUNCTION
 // ============================================================================
@@ -163,10 +192,24 @@ export async function exportVideo(
   vols: number[],
 ): Promise<boolean> {
   try {
+    if (!timeline || !timeline.milestones || timeline.milestones.length === 0) {
+      toast.error("No timeline data available to export.");
+      return false;
+    }
+
+    if (!hasSyncedVideo(timeline)) {
+      return exportAudio(timeline, multiplier, vols);
+    }
+
     // -------------------------------------------------------------------------
     // Step 1: Categorize audio tracks by volume (Kings vs Princes)
     // -------------------------------------------------------------------------
     const { kings, princes } = categorizeAudioByVolume(vols);
+
+    if (kings.length === 0) {
+      toast.error("Enable at least one audio track before exporting.");
+      return false;
+    }
 
     console.log("=== EXPORT VIDEO DEBUG ===");
     console.log("Volume levels:", vols);
@@ -237,6 +280,68 @@ export async function exportVideo(
   }
 }
 
+/**
+ * Export timeline as audio-only mix when no synced video exists
+ */
+async function exportAudio(
+  timeline: Timeline,
+  multiplier: number,
+  vols: number[],
+): Promise<boolean> {
+  try {
+    const { kings, princes } = categorizeAudioByVolume(vols);
+
+    if (kings.length === 0) {
+      toast.error("Enable at least one audio track before exporting.");
+      return false;
+    }
+
+    const segments = buildAudioSegments({
+      timeline,
+      multiplier,
+      kings,
+      princes,
+      vols,
+    });
+
+    if (segments.length === 0) {
+      toast.error("No exportable audio segments were found.");
+      return false;
+    }
+
+    toast.loading("Exporting audio...", { id: "export-video" });
+
+    const cwd = await electronAPI.getCwd();
+    const timestamp = Date.now();
+    const basePath = `${cwd}/export-${timestamp}`;
+    const audioOutput = `${basePath}.mp3`;
+    const srtOutput = `${basePath}.srt`;
+
+    const result = await electronAPI.exportAudio(segments, audioOutput);
+
+    const srtContent = buildSrtContent(timeline, kings);
+    const finalSrtContent =
+      srtContent.trim().length > 0
+        ? srtContent
+        : "1\n00:00:00,000 --> 00:00:00,500\n(No subtitle data available)\n";
+
+    await electronAPI.writeFile(srtOutput, finalSrtContent);
+
+    toast.success(
+      `Audio exported successfully to ${result.output}\nSubtitles saved to ${srtOutput}`,
+      { id: "export-video" },
+    );
+
+    return true;
+  } catch (error) {
+    console.error("Export audio error:", error);
+    toast.error(`Audio export failed: ${(error as Error).message}`, {
+      id: "export-video",
+    });
+    return false;
+  }
+}
+
 // ============================================================================
 // AUDIO CATEGORIZATION
 // ============================================================================
@@ -286,6 +391,14 @@ interface BuildMilestoneClipsParams {
   milestoneIndex: number;
   vidSource: string;
   audSource: string;
+  multiplier: number;
+  kings: number[];
+  princes: number[];
+  vols: number[];
+}
+
+interface BuildAudioSegmentsParams {
+  timeline: Timeline;
   multiplier: number;
   kings: number[];
   princes: number[];
@@ -707,6 +820,92 @@ function buildPrinceClips(params: BuildPrinceClipsParams): VideoClip[] {
   return clips;
 }
 
+/**
+ * Build audio-only segments when no synced video exists
+ */
+function buildAudioSegments(params: BuildAudioSegmentsParams): AudioClip[] {
+  const { timeline, multiplier, kings, princes, vols } = params;
+
+  const vidSource =
+    timeline.syncMedia && timeline.syncMedia[0]
+      ? fileURLToPath(timeline.syncMedia[0])
+      : "";
+  const audSource =
+    timeline.syncMedia && timeline.syncMedia[1]
+      ? fileURLToPath(timeline.syncMedia[1])
+      : "";
+
+  const segments: AudioClip[] = [];
+
+  timeline.milestones.forEach((ms: Milestone, msIndex: number) => {
+    kings.forEach((king: number) => {
+      const kingConfig = calculateKingAudio({
+        kingIndex: king,
+        milestone: ms,
+        vidSource,
+        multiplier,
+      });
+
+      if (!kingConfig) {
+        return;
+      }
+
+      const { A1, A1Start, A1Stop, A1Speed, kingLen } = kingConfig;
+      const subtitle = getSubtitleForKing(ms, king);
+      const baseSegment: AudioClip = {
+        A1,
+        A1Start,
+        A1Stop,
+        A1Speed,
+        A1Vol: vols[king],
+        isA2: false,
+        subtitle,
+        Comment: `Milestone ${msIndex}: King ${king}`,
+        timelineStart: ms.startTime,
+        timelineStop: ms.stopTime,
+      };
+
+      if (princes.length === 0) {
+        segments.push(baseSegment);
+        return;
+      }
+
+      let created = false;
+      princes.forEach((prince: number) => {
+        const princeAudio = resolvePrinceAudio(prince, ms, audSource);
+        if (!princeAudio || princeAudio.file === "") {
+          return;
+        }
+
+        const { file, start, stop } = princeAudio;
+
+        if (start === -1 || stop === -1 || kingLen <= 0) {
+          return;
+        }
+
+        const A2Speed = (stop - start) / kingLen;
+        segments.push({
+          ...baseSegment,
+          isA2: true,
+          A2: file,
+          A2Start: start,
+          A2Stop: stop,
+          A2Speed,
+          A2Vol: vols[prince],
+          Comment: `Milestone ${msIndex}: King ${king} with voiceover ${prince}`,
+        });
+        created = true;
+      });
+
+      if (!created) {
+        segments.push(baseSegment);
+      }
+    });
+  });
+
+  return segments;
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -798,4 +997,74 @@ function getSubtitleForKing(ms: Milestone, kingIndex: number): string {
   }
 
   return subtitle;
+}
+
+/**
+ * Resolve prince audio inputs for audio-only export
+ */
+function resolvePrinceAudio(
+  princeIndex: number,
+  ms: Milestone,
+  audSource: string,
+) {
+  if (princeIndex === 0 && audSource) {
+    return { file: audSource, start: ms.startTime, stop: ms.stopTime };
+  }
+
+  if (princeIndex === 1) {
+    return getAudio(AUDIO_CHANNELS.CAREFUL_MERGED, ms);
+  }
+
+  if (princeIndex === 2) {
+    return getAudio(AUDIO_CHANNELS.TRANSLATION_MERGED, ms);
+  }
+
+  return { file: "", start: -1, stop: -1 };
+}
+
+/**
+ * Format seconds into SRT timestamp
+ */
+export function formatSrtTimestamp(seconds: number): string {
+  if (!Number.isFinite(seconds)) seconds = 0;
+  if (seconds < 0) seconds = 0;
+  const totalMillis = Math.round(seconds * 1000);
+  const hours = Math.floor(totalMillis / 3600000);
+  const minutes = Math.floor((totalMillis % 3600000) / 60000);
+  const secs = Math.floor((totalMillis % 60000) / 1000);
+  const millis = totalMillis % 1000;
+
+  const pad = (value: number, places = 2) =>
+    value.toString().padStart(places, "0");
+
+  return `${pad(hours)}:${pad(minutes)}:${pad(secs)},${millis
+    .toString()
+    .padStart(3, "0")}`;
+}
+
+/**
+ * Build SRT content based on timeline milestones and prioritized king track
+ */
+export function buildSrtContent(timeline: Timeline, kings: number[]): string {
+  const defaultTrack = 0;
+  const primaryKing =
+    kings.length > 0 ? Math.max(0, Math.min(2, kings[0])) : defaultTrack;
+
+  let counter = 1;
+  const entries: string[] = [];
+
+  timeline.milestones.forEach((ms: Milestone) => {
+    const text = getSubtitleForKing(ms, primaryKing).trim();
+    if (!text) {
+      return;
+    }
+
+    entries.push(
+      `${counter++}\n${formatSrtTimestamp(ms.startTime)} --> ${formatSrtTimestamp(
+        ms.stopTime,
+      )}\n${text}\n`,
+    );
+  });
+
+  return entries.join("\n");
 }

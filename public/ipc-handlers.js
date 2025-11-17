@@ -961,6 +961,181 @@ function registerIPCHandlers(mainWindow) {
     });
   });
 
+  ipcMain.handle('ffmpeg:exportAudio', (event, clips, outputPath, options = {}) => {
+    return new Promise((resolve, reject) => {
+      if (!clips || clips.length === 0) {
+        reject(new Error('No audio clips provided'));
+        return;
+      }
+
+      const tempDir = path.join(app.getPath('temp'), 'prestige-audio-' + Date.now());
+
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+
+      const clipFiles = [];
+
+      const processClip = (clip, clipIndex) => {
+        return new Promise((resolveClip, rejectClip) => {
+          const clipOutput = path.join(tempDir, `clip_${clipIndex}.mp3`);
+          const command = fluentFfmpeg();
+
+          command.input(clip.A1);
+          if (clip.A1Start !== undefined && clip.A1Stop !== undefined) {
+            command.inputOptions([`-ss ${clip.A1Start}`, `-to ${clip.A1Stop}`]);
+          }
+
+          const filters = [];
+          const a1Filters = [];
+
+          if (clip.A1Speed && clip.A1Speed !== 1) {
+            let speed = clip.A1Speed;
+            while (speed > 2) {
+              a1Filters.push('atempo=2.0');
+              speed = speed / 2;
+            }
+            if (speed > 0.2) {
+              a1Filters.push(`atempo=${speed}`);
+            }
+          }
+
+          if (clip.A1Vol !== undefined && clip.A1Vol !== 1) {
+            a1Filters.push(`volume=${clip.A1Vol}`);
+          }
+
+          if (a1Filters.length === 0) {
+            a1Filters.push('aresample=async=1');
+          }
+
+          a1Filters.push('asetpts=PTS-STARTPTS');
+          filters.push(`[0:a]${a1Filters.join(',')}[a1]`);
+
+          if (clip.isA2 && clip.A2) {
+            command.input(clip.A2);
+            if (clip.A2Start !== undefined && clip.A2Stop !== undefined) {
+              command.inputOptions([`-ss ${clip.A2Start}`, `-to ${clip.A2Stop}`]);
+            }
+
+            const a2Filters = [];
+            if (clip.A2Speed && clip.A2Speed !== 1) {
+              let speed = clip.A2Speed;
+              while (speed > 2) {
+                a2Filters.push('atempo=2.0');
+                speed = speed / 2;
+              }
+              if (speed > 0.2) {
+                a2Filters.push(`atempo=${speed}`);
+              }
+            }
+
+            if (clip.A2Vol !== undefined && clip.A2Vol !== 1) {
+              a2Filters.push(`volume=${clip.A2Vol}`);
+            }
+
+            if (a2Filters.length === 0) {
+              a2Filters.push('aresample=async=1');
+            }
+
+            a2Filters.push('asetpts=PTS-STARTPTS');
+            a2Filters.push('apad');
+            filters.push(`[1:a]${a2Filters.join(',')}[a2]`);
+            filters.push('[a1][a2]amix=inputs=2:duration=first:dropout_transition=0[mix]');
+          } else {
+            filters.push('[a1]aresample=async=1[mix]');
+          }
+
+          command.complexFilter(filters.join(';'));
+          command.outputOptions(['-map [mix]', '-c:a libmp3lame', '-b:a 192k']);
+
+          command
+            .on('start', () => {
+              mainWindow.webContents.send('ffmpeg:progress', {
+                phase: 'clip',
+                clipIndex,
+                totalClips: clips.length,
+                operation: 'exportAudio',
+              });
+            })
+            .on('progress', (progress) => {
+              mainWindow.webContents.send('ffmpeg:progress', {
+                phase: 'clip',
+                clipIndex,
+                totalClips: clips.length,
+                percent: progress.percent || 0,
+                operation: 'exportAudio',
+              });
+            })
+            .on('end', () => {
+              clipFiles.push(clipOutput);
+              resolveClip(clipOutput);
+            })
+            .on('error', (err) => {
+              console.error(`Error processing audio clip ${clipIndex}:`, err);
+              rejectClip(err);
+            })
+            .save(clipOutput);
+        });
+      };
+
+      (async () => {
+        try {
+          for (let i = 0; i < clips.length; i++) {
+            await processClip(clips[i], i);
+          }
+
+          const concatFile = path.join(tempDir, 'concat.txt');
+          const concatContent = clipFiles.map((file) => `file '${file}'`).join('\n');
+          fs.writeFileSync(concatFile, concatContent);
+
+          const finalCommand = fluentFfmpeg();
+          finalCommand
+            .input(concatFile)
+            .inputOptions(['-f concat', '-safe 0'])
+            .outputOptions(['-c copy'])
+            .on('start', () => {
+              mainWindow.webContents.send('ffmpeg:progress', {
+                phase: 'concat',
+                operation: 'exportAudio',
+              });
+            })
+            .on('progress', (progress) => {
+              mainWindow.webContents.send('ffmpeg:progress', {
+                phase: 'concat',
+                percent: progress.percent || 0,
+                operation: 'exportAudio',
+              });
+            })
+            .on('end', () => {
+              console.log('Audio export complete');
+
+              try {
+                clipFiles.forEach((file) => {
+                  if (fs.existsSync(file)) fs.unlinkSync(file);
+                });
+                if (fs.existsSync(concatFile)) fs.unlinkSync(concatFile);
+                if (fs.existsSync(tempDir)) fs.rmdirSync(tempDir);
+              } catch (cleanupErr) {
+                console.warn('Audio cleanup error:', cleanupErr);
+              }
+
+              resolve({
+                output: outputPath,
+                clips: clips.length
+              });
+            })
+            .on('error', (err) => {
+              console.error('Error concatenating audio clips:', err);
+              reject(err);
+            })
+            .save(outputPath);
+        } catch (err) {
+          reject(err);
+        }
+      })();
+    });
+  });
+
   // ==========================================================================
   // XML/EAF Processing
   // ==========================================================================

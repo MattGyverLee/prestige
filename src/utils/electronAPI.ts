@@ -77,6 +77,27 @@ interface ElectronAPI {
     outputPath: string,
     options?: any,
   ) => Promise<any>;
+  exportAudio: (
+    clips: Array<{
+      A1: string;
+      A1Start: number;
+      A1Stop: number;
+      A1Speed: number;
+      A1Vol: number;
+      isA2: boolean;
+      A2?: string;
+      A2Start?: number;
+      A2Stop?: number;
+      A2Speed?: number;
+      A2Vol?: number;
+      subtitle?: string;
+      Comment?: string;
+      timelineStart: number;
+      timelineStop: number;
+    }>,
+    outputPath: string,
+    options?: any,
+  ) => Promise<any>;
   onFFmpegProgress: (callback: (data: any) => void) => void;
   removeFFmpegProgressListener: () => void;
 
@@ -344,6 +365,9 @@ function createLegacyAPI(): ElectronAPI {
       throw new Error("FFmpeg requires secure API");
     },
     exportVideo: async () => {
+      throw new Error("FFmpeg requires secure API");
+    },
+    exportAudio: async () => {
       throw new Error("FFmpeg requires secure API");
     },
 

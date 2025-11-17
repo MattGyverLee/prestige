@@ -233,6 +233,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('ffmpeg:exportVideo', clips, outputPath, options),
 
   /**
+   * Export audio-only clips mixed via FFmpeg
+   * @param {Array<object>} clips - Audio clip configuration
+   * @param {string} outputPath - Output MP3 path
+   * @param {object} options - Export options
+   * @returns {Promise<string>} Output file path
+   */
+  exportAudio: (clips, outputPath, options) =>
+    ipcRenderer.invoke('ffmpeg:exportAudio', clips, outputPath, options),
+
+  /**
    * Listen for FFmpeg progress events
    * @param {function} callback - Progress callback
    */
