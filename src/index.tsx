@@ -70,7 +70,23 @@ if (container) {
   root.render(<Root />);
 }
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+// Enable service worker for PWA mode
+// In Electron mode, service worker is not needed (direct file system access)
+if (process.env.REACT_APP_MODE === "web") {
+  console.log("[PWA] Registering service worker for offline support");
+  serviceWorker.register({
+    onSuccess: (registration) => {
+      console.log("[PWA] Service worker registered successfully", registration);
+    },
+    onUpdate: (registration) => {
+      console.log("[PWA] Service worker updated", registration);
+      // Optionally show toast notification to user
+      if (window.confirm("New version available! Reload to update?")) {
+        window.location.reload();
+      }
+    },
+  });
+} else {
+  console.log("[Electron] Service worker not needed in desktop mode");
+  serviceWorker.unregister();
+}

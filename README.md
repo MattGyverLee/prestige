@@ -1,144 +1,96 @@
 # Prestige
 
-## Full Paper Below
-[Prestige- Mobilizing a Bold Corpus](https://mattgyverlee.github.io/docs/Matthew%20Lee%20Defense%20Copy.pdf)
+Prestige is a community-facing application for exploring Basic Oral Language Documentation (BOLD) corpora. It lets you load a folder produced by SayMore, browse the source media, view synchronized oral annotations, and play everything back with linked waveforms.
 
-## A distributed application for the community and researchers to interact with media recordings with audio and text annotation layers.
+### 🌐 **NEW: Progressive Web App (PWA) Support!**
 
-You may already be familiar with SIL International’s Language Technology tools and practices that are designed to be user-friendly and accessible to both external researchers and community members. In addition
-to tools and processes for dictionary development (Rapid Word Collection) and literacy (Bloom and Bloomlibrary.com), **SIL International has branched into another domain, Language Documentation. Language Documentation seeks to record, annotate, and preserve stories, songs, local knowledge, and by extension, the
-language itself, for current and future generations (see diagram below)**
+Prestige now runs as both a desktop application and a Progressive Web App:
+- ✅ **Desktop App**: Full functionality including video export (researchers/power users)
+- ✅ **PWA**: View and playback in browser - no installation needed (lightweight viewing)
+
+**PWA Use Case**: Share BOLD corpus sessions with community members or collaborators who have desktop/laptop computers but don't need the full desktop app. Perfect for viewing-only scenarios where installing software is inconvenient.
+
+**Note**: Since SayMore (corpus creation) is Windows-only, sessions are typically on desktop computers. The PWA works on desktop browsers (Chrome, Edge, Safari) for easy sharing without installation.
+
+📖 **[PWA User Guide](./PWA_GUIDE.md)** | 🚀 **Try PWA** (see developer guide)
+
+---
+
+[Read the full background paper – *Prestige: Mobilizing a Bold Corpus*](https://mattgyverlee.github.io/docs/Matthew%20Lee%20Defense%20Copy.pdf)
 
 ![Workflow](./WorkFlow.png)
 
-Once a community has decided what they want to collect, an existing tool called SayMore can guide the users
-through steps 1-4, recording, description, annotation and translation of audio and video files into an archiveready format. This tool uses the innovative technique of oral annotation (BOLD, see next page) to avoid the
-bottleneck of slow and tedious text transcription of all content.
-I am currently researching ways of using that communities can use and learn from the wealth of data in a BOLD
-corpus. My Master’s thesis project is to design and create a web application for steps 5-7, organizing, presenting and interacting with a Basic Oral Language Documentation corpus with the hope that it can be used
-for literacy, language learning, and heritage education. The following pages are intended to give an overview
-of the project and how it may be of interest for your community.
+## Who Prestige Serves
 
-## About the Developers:
+- Community heritage and literacy teams that are building a BOLD corpus and want a simple player for sharing stories, songs, and oral histories.
+- Researchers looking for a lightweight way to demonstrate annotations to collaborators without installing development tooling.
+- Educators who need an offline, synchronized audio/text experience to teach language and cultural content.
 
-My name is Matthew Lee, I am a Language Technology Consultant with SIL
-International. Over the past 10 years, I have served through Language Software training to
-support translators, linguists, professors, students and community members as they seek to
-promote and develop their native languages. Most of this time has been spent working with
-communities in French-speaking African communities as I have been based at SIL Cameroon,
-but I am currently finishing my Master’s in Descriptive Linguistics at Dallas International University in Dallas, TX.
+## Key Capabilities
 
-Blaine Billings is a student at the University of Charleston who completed an internship with Dallas International University. He was an intrumental part of coding and prototyping Prestige.
+- Load any SayMore session folder (`Documents/SayMore/<Project>/Sessions/<SessionName>`) containing videos, audio tracks, and `.eaf` annotations.
+- View a synchronized player area that combines the source video, up to three WaveSurfer timelines, and transport controls for looping, jogging, and scrubbing.
+- Inspect the DeeJay panel to mix/solo timelines, jump to milestones, and inspect merged translation tracks.
+- Read and filter annotations in the table view while browsing the associated files in the File List.
+- Automatically notice file changes—Prestige watches the selected folder and refreshes media and `.eaf` metadata when you update the session in SayMore.
+- Works completely offline once the app is installed; all data stays on your device.
 
-## Technical Content:
+## System Requirements
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and [craco](https://github.com/wwlib/cra-craco-electron-example) which enables file access using create-react-app. `Create-react-app` will manage dependency updates and web packaging. Then [Redux](https://www.npmjs.com/package/redux) was added. Then the scripts were upated to allow debugging and file access.
+- **Operating system:** Windows 10/11 64-bit (current builds are verified on Windows; macOS/Linux packages are experimental).
+- **Disk space:** ~1 GB free for the app plus enough room for local media.
+- **Data:** A SayMore-generated BOLD corpus (audio/video + `.eaf` annotation files). Keep media and annotations together in the same session folder.
 
-### Release Version 0.3
-https://github.com/MattGyverLee/prestige/releases
+## Download & Install
 
-Known Issues:
+1. Visit the [Prestige releases](https://github.com/MattGyverLee/prestige/releases) page and download the latest `Prestige Setup <version>.exe`.
+2. Double-click the installer and follow the prompts. The default location is in your user `AppData\Local\Programs` folder.
+3. Launch Prestige from the Start Menu or by opening `Prestige.exe` in `dist/win-unpacked` if you prefer the portable build.
 
-- Loop and fullscreen buttons not implemented.
-- Recreates merged media files even if existing (ineffecient)
-- There is some oddness in the interface (sizing and scrolling) if the window is less than 720px tall.
+> Windows Smartscreen may display a warning because Prestige is not code-signed. Choose **More info → Run anyway** to continue.
 
-### Developer Setup
+## Prepare Your Corpus
 
-#### Getting Started
+1. In SayMore, finish collecting and annotating your session (Steps 1–4 in the BOLD workflow).
+2. Ensure each session folder contains:
+   - Source video (`*.mp4`) and primary audio (`*_Source_01_*.wav` or `.mp3`).
+   - Optional translation or oral transcription tracks stored in the `_Annotations` subfolder.
+   - ELAN `.eaf` files that reference the media above.
+3. Keep the SayMore-generated filenames intact—Prestige links media and annotations by their shared base name.
+4. Copy the entire session folder to the machine that will run Prestige (USB drive, network share, etc.).
 
-The `yarn` command will install the dependencies.
+## First Run
 
-#### Electron Debugging (from vscode)
+1. Launch Prestige.
+2. Select **Select Folder** in the footer and browse to the SayMore session folder (the folder containing your `.eaf` file).
+3. Prestige indexes the files, builds waveform previews, and displays:
+   - **Player** – video preview + timeline scrubbing.
+   - **DeeJay** – multi-track waveform strips for oral annotations, translation layers, and milestones.
+   - **Annotation Table** – transcript segments tied to timestamps.
+   - **File List** – quick access to all source and derived files in the session.
 
-1. From the Chrome browser, install the [react devtools plugin](https://chrome.google.com/webstore/detail/react-developer-tools) and the [redux devtools plugin](https://chrome.google.com/webstore/detail/redux-devtools).
+Subsequent edits you make in SayMore are reflected automatically; the watcher reprocesses new or updated files without restarting the app.
 
-2. Use the command:
-   `yarn electron-dev`
-   to force the install of react and redux devtools into electron.
+### Navigating the Interface
 
-3. From the debugging tab in VsCode, select `Electron All` from the drop down and press the play button. The page will hot-reload if you make edits.
+- Use the standard playback controls (Play/Pause, Seek, Loop) under the main video. Keyboard shortcuts follow Electron defaults (space to toggle playback).
+- Click directly inside any WaveSurfer timeline to jump to a precise time, or drag to create selection loops.
+- Solo/mute buttons in the DeeJay panel let you focus on oral translations or source audio.
+- Double-click a row in the annotation table to jump to that segment in the player.
+- The File List highlights missing assets so you can fix mismatches in SayMore before sharing with others.
 
-Subsequently, you can press `F5` to launch Electron with the Chromium browser. If breakpoints are disappearing, check that the debug chooser is still set to `Electron All`.
+## Known Issues & Limitations
 
-#### Launching the Web version
+- Loop and fullscreen buttons are still under construction.
+- Exported merged media is regenerated even when the destination file already exists; avoid running the export repeatedly on very large corpora.
+- The UI is optimized for displays ≥ 1280×800. Windows shorter than ~720 px may require scrolling and occasionally misplace controls.
 
-`yarn web-dev` runs the app in the development mode.<br>
-It opens [http://localhost:3000](http://localhost:3000) in the default browser.
+## Need Help?
 
-You will have access to two new tabs in the Dev tools, React and Redux inspectors. Local file access is disabled in this web version. Web safe file access can still be used. Any code that is not web safe should be wrapped in a condition as is done in [testFs.tsx](https://github.com/sillsdev/electron-craco-redux-ts/blob/943f8e466a56ef9151cb8ac048078991a5121003/src/model/testFs.tsx#L2)
+- Browse the in-depth thesis paper linked above for background on the BOLD workflow.
+- File issues or feature requests on the [GitHub tracker](https://github.com/MattGyverLee/prestige/issues).
+- Email Matthew Lee (`langtech_cameroon@sil.org`) for partnership conversations.
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+## For Developers
 
-#### Testing
-
-`yarn test` Launches the test runner in the interactive watch mode. There is a single test but it is recommended to use [@testing-library/react](https://www.npmjs.com/package/@testing-library/react)<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-#### Build Electron App
-
-```
-yarn electron-pack
-yarn dist
-```
-
-Builds the app for production to the `build` folder. Then it is compiled into `dist` folder. Currently only tested for Windows. An unpacked `.exe` version is available in `dist/win-unpacked`<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-#### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-[Ejecting](https://facebook.github.io/create-react-app/docs/available-scripts#npm-run-eject) is not recommended but read the discussion at the link if you are considering it.
-
-### Preparing for production
-
-Warning messages concerning security issues are disabled for development builds in the [electron-dev.js](https://github.com/sillsdev/electron-craco-redux-ts/blob/943f8e466a56ef9151cb8ac048078991a5121003/public/electron-dev.js#L9) and [electron-debug.js](https://github.com/sillsdev/electron-craco-redux-ts/blob/943f8e466a56ef9151cb8ac048078991a5121003/public/electron-debug.js#L9) files on line 9. As you prepare for production, it is recommended to enable these warnings and make any necessary changes to address the [issues](https://github.com/electron/electron/blob/master/docs/tutorial/security.md#electron-security-warnings) they are highlighting.
-
-### Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-Webpack installed with:
-https://www.codementor.io/randyfindley/how-to-build-an-electron-app-using-create-react-app-and-electron-builder-ss1k0sfer
-
-
-### Tests to write
-
-- It Loads Blank (Electron 5)
-- It Loads French Folder
-- Player
-   - Loads all 3 Wavesurfers
-   - Plays vid and WS0
-   - Pauses
-   - Plays
-   - Seeks
-- WS0
-   - Seek on WS0
-   - Play to End
-- WS1
-   - Enable WS1
-   
-   
-###Main Process
-
-Load
-Click Load
-LoadLocal 
-@391 Folder Update
-@401 Folder Update
-@415 onnewfolder
-417 start Chokidar
-420 ReadyPlayURL = ""
-@577 LoadFileWS 
-
-
-    
+If you plan to modify Prestige or build custom distributions, read the dedicated [Developer Guide](./dev/readme.md) for setup, testing, and packaging instructions.

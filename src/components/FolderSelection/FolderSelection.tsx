@@ -11,6 +11,8 @@ import {
   safeParseSync,
 } from "../globalFunctions";
 import { electronAPI } from "../../utils/electronAPI";
+// Note: Unified API imports available for future PWA integration
+// import { api, getEnvironmentMessage, isFeatureAvailable } from "../../utils/unifiedAPI";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import toast from "react-hot-toast";

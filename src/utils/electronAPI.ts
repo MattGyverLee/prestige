@@ -7,6 +7,9 @@
  *
  * During migration, this allows code to work with both approaches,
  * making the transition gradual and testable.
+ *
+ * NOTE: For new code, prefer importing from './unifiedAPI' instead,
+ * which automatically handles both Electron and PWA environments.
  */
 
 // Type definition for the secure API exposed via preload

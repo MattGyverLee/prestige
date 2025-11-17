@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Prestige",
+  "name": "Prestige - Language Documentation Viewer",
+  "description": "A distributed application for interacting with language documentation media recordings with audio and text annotation layers",
   "icons": [
     {
       "src": "favicon.ico",
@@ -11,5 +12,16 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "scope": ".",
+  "orientation": "any",
+  "categories": ["education", "utilities"],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "application/eaf+xml": [".eaf"]
+      }
+    }
+  ]
 }
