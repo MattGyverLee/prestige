@@ -11,6 +11,7 @@ import {
   safeParseSync,
 } from "../globalFunctions";
 import { electronAPI } from "../../utils/electronAPI";
+import { parseStringPromise } from "xml2js";
 // Note: Unified API imports available for future PWA integration
 // import { api, getEnvironmentMessage, isFeatureAvailable } from "../../utils/unifiedAPI";
 import { bindActionCreators } from "redux";
@@ -62,6 +63,12 @@ interface DispatchProps {
 
 interface FolderProps extends StateProps, DispatchProps {}
 
+interface WebFileEntry {
+  handle: any;
+  file: File;
+  path: string;
+}
+
 class SelectFolderZone extends Component<FolderProps> {
   private isChokReady = false;
   private currentFolder: string = "";
@@ -71,6 +78,9 @@ class SelectFolderZone extends Component<FolderProps> {
   private watcherId: string | null = null;
   private annotMergeTimeout: NodeJS.Timeout | null = null;
   private verboseFileHandling = false; // Set to true to see detailed file handling logs
+  private webDirectoryHandle: any | null = null;
+  private webFileMap = new Map<string, { blobURL: string; file: File }>();
+  private webBlobUrls: string[] = [];
 
   componentDidMount(): void {
     // Cleaning Storage
@@ -109,6 +119,7 @@ class SelectFolderZone extends Component<FolderProps> {
     electronAPI.removeFileSystemEventListener();
     console.log("UnMounting Trees");
     // Todo: Also Unmount/Kill FFMpeg.
+    this.cleanupWebBlobs();
   }
 
   // Helper: Processes File and Returns File Definition
@@ -554,6 +565,241 @@ class SelectFolderZone extends Component<FolderProps> {
       console.log("Fell through");
     }
     console.log("End of Load Folder");
+  }
+
+  private async loadWebDirectory(dirHandle: any): Promise<void> {
+    this.cleanupWebBlobs();
+    this.webDirectoryHandle = dirHandle;
+    this.currentFolder = dirHandle.name;
+    this.prevPath = "";
+    this.props.onNewFolder(dirHandle.name);
+    this.props.setTimelineChanged(true);
+    this.props.setTimelinesInstantiated(false);
+
+    const entries: WebFileEntry[] = [];
+    await this.collectDirectoryEntries(dirHandle, dirHandle.name, entries);
+
+    if (entries.length === 0) {
+      this.sendSnackbar("The selected folder is empty.", undefined, "error");
+      return;
+    }
+
+    const eafEntries: WebFileEntry[] = [];
+    const mediaDefs: aTypes.LooseObject[] = [];
+    const annotDefs: aTypes.LooseObject[] = [];
+
+    entries.forEach((entry) => {
+      const ext = this.getExtension(entry.file.name);
+      if (ext === ".eaf") {
+        eafEntries.push(entry);
+        return;
+      }
+
+      if (this.isAudioVideoExtension(ext)) {
+        const def = this.createWebFileDefinition(entry, false);
+        mediaDefs.push(def);
+        this.props.sourceMediaAdded({ file: def });
+        return;
+      }
+
+      if (this.isAnnotationMedia(entry, ext)) {
+        const def = this.createWebFileDefinition(entry, true);
+        annotDefs.push(def);
+        this.props.annotMediaAdded({ file: def });
+      }
+    });
+
+    if (mediaDefs.length === 0) {
+      this.sendSnackbar(
+        "No media files detected in that folder.",
+        undefined,
+        "error",
+      );
+    }
+
+    if (eafEntries.length === 0) {
+      this.sendSnackbar(
+        "No EAF annotation files found in that folder.",
+        undefined,
+        "error",
+      );
+    }
+
+    for (const eafEntry of eafEntries) {
+      await this.processEAFWeb(eafEntry);
+    }
+
+    const defaultMedia =
+      mediaDefs.find((def) => def.mimeType?.startsWith("video")) ??
+      mediaDefs[0];
+
+    if (defaultMedia) {
+      this.props.setURL(defaultMedia.blobURL, 0);
+    }
+
+    this.isChokReady = true;
+    this.props.setTimelinesInstantiated(true);
+    this.sendSnackbar(`Loaded ${dirHandle.name}`);
+  }
+
+  private async collectDirectoryEntries(
+    dirHandle: any,
+    currentPath: string,
+    entries: WebFileEntry[],
+  ): Promise<void> {
+    for await (const [, handle] of dirHandle.entries()) {
+      const childPath = `${currentPath}/${handle.name}`;
+      if (handle.kind === "file") {
+        const file = await handle.getFile();
+        entries.push({ handle, file, path: childPath });
+      } else if (handle.kind === "directory") {
+        await this.collectDirectoryEntries(handle, childPath, entries);
+      }
+    }
+  }
+
+  private getExtension(name: string): string {
+    const idx = name.lastIndexOf(".");
+    return idx === -1 ? "" : name.substring(idx).toLowerCase();
+  }
+
+  private isAudioVideoExtension(ext: string): boolean {
+    return [".mp4", ".m4v", ".mov", ".mpg", ".mpeg", ".wav", ".mp3"].includes(
+      ext,
+    );
+  }
+
+  private isAnnotationMedia(entry: WebFileEntry, ext: string): boolean {
+    if (ext === ".mp3" || ext === ".wav") {
+      return (
+        entry.path.includes("_Annotations") ||
+        entry.file.name.includes("Translation") ||
+        entry.file.name.includes("Careful")
+      );
+    }
+    return false;
+  }
+
+  private createWebFileDefinition(
+    entry: WebFileEntry,
+    isAnnotation: boolean,
+  ): aTypes.LooseObject {
+    const ext = this.getExtension(entry.file.name);
+    const mimeType = entry.file.type || this.guessMimeType(ext);
+    const blobURL = URL.createObjectURL(entry.file);
+    this.webBlobUrls.push(blobURL);
+
+    const normalizedPath = this.normalizeWebPath(entry.path);
+    this.webFileMap.set(normalizedPath, { blobURL, file: entry.file });
+    const baseKey = this.normalizeWebPath(entry.file.name);
+    if (!this.webFileMap.has(baseKey)) {
+      this.webFileMap.set(baseKey, { blobURL, file: entry.file });
+    }
+
+    const isMerged = entry.file.name.includes("_Merged");
+
+    return {
+      blobURL,
+      extension: ext,
+      hasAnnotation: false,
+      isAnnotation,
+      isMerged,
+      inMilestones: false,
+      mimeType,
+      name: entry.file.name,
+      path: entry.path,
+      wsAllowed: true,
+      waveform: false,
+    };
+  }
+
+  private guessMimeType(ext: string): string {
+    switch (ext) {
+      case ".mp4":
+      case ".m4v":
+      case ".mov":
+        return "video/mp4";
+      case ".mp3":
+        return "audio/mpeg";
+      case ".wav":
+        return "audio/wav";
+      default:
+        return "application/octet-stream";
+    }
+  }
+
+  private normalizeWebPath(path: string): string {
+    return path.replace(/\\/g, "/").toLowerCase();
+  }
+
+  private async processEAFWeb(entry: WebFileEntry): Promise<void> {
+    try {
+      const xmlText = await entry.file.text();
+      const result = await parseStringPromise(xmlText);
+      const fileData = result.ANNOTATION_DOCUMENT;
+      const timeSlotPointer = fileData.TIME_ORDER[0].TIME_SLOT;
+      const parsedPath = safeParseSync(entry.path);
+      const syncMedia = await this.createSyncMediaArrayWeb(
+        fileData,
+        parsedPath,
+      );
+      const eafBlob =
+        this.resolveWebMediaURL(entry.path) ?? URL.createObjectURL(entry.file);
+      if (!this.webBlobUrls.includes(eafBlob)) {
+        this.webBlobUrls.push(eafBlob);
+      }
+      const tempTimeline = new Timelines({
+        syncMedia,
+        eafFile: eafBlob,
+      });
+      this.processTiersAndAnnotations(
+        fileData,
+        timeSlotPointer,
+        parsedPath.base,
+        tempTimeline,
+      );
+      this.props.pushTimeline(tempTimeline);
+    } catch (err) {
+      console.error("Failed to process EAF in web mode:", err);
+      this.sendSnackbar(
+        `Failed to process ${entry.file.name}`,
+        undefined,
+        "error",
+      );
+    }
+  }
+
+  private async createSyncMediaArrayWeb(
+    fileData: any,
+    parsedPath: any,
+  ): Promise<string[]> {
+    const descriptors = fileData.HEADER?.[0]?.MEDIA_DESCRIPTOR ?? [];
+    const syncMedia: string[] = [];
+    for (let h = 0; h < descriptors.length; h++) {
+      const mediaURL = descriptors[h].$?.MEDIA_URL ?? "";
+      const resolved =
+        this.resolveWebMediaURL(mediaURL) ||
+        this.resolveWebMediaURL(`${parsedPath.dir}/${mediaURL}`) ||
+        this.resolveWebMediaURL(mediaURL.split(/[\\/]/).pop() || "");
+      if (resolved) {
+        syncMedia.push(resolved);
+      } else {
+        console.warn(`Unable to resolve media reference ${mediaURL}`);
+      }
+    }
+    return syncMedia;
+  }
+
+  private resolveWebMediaURL(path: string): string | undefined {
+    if (!path) return undefined;
+    const normalized = this.normalizeWebPath(path);
+    return this.webFileMap.get(normalized)?.blobURL;
+  }
+
+  private cleanupWebBlobs(): void {
+    this.webBlobUrls.forEach((url) => URL.revokeObjectURL(url));
+    this.webBlobUrls = [];
+    this.webFileMap.clear();
   }
 
   // Adds All Oral Annotations not Yet in Milestones into Milestones
@@ -1199,6 +1445,33 @@ class SelectFolderZone extends Component<FolderProps> {
     }
   };
 
+  private handleSelectDirectoryWeb = async () => {
+    if (typeof window === "undefined" || !(window as any).showDirectoryPicker) {
+      this.sendSnackbar(
+        "Folder access is not available in this browser.",
+        undefined,
+        "error",
+      );
+      return;
+    }
+
+    try {
+      const dirHandle: any = await (window as any).showDirectoryPicker();
+      await this.loadWebDirectory(dirHandle);
+    } catch (err) {
+      if ((err as DOMException)?.name === "AbortError") {
+        console.log("User cancelled folder selection");
+        return;
+      }
+      console.error("Web directory selection failed:", err);
+      this.sendSnackbar(
+        "Unable to read selected folder. Please try again.",
+        undefined,
+        "error",
+      );
+    }
+  };
+
   render() {
     if (this.props.env === "electron") {
       return (
@@ -1214,11 +1487,29 @@ class SelectFolderZone extends Component<FolderProps> {
         </div>
       );
     } else if (this.props.env === "web") {
+      const canPickFolders =
+        typeof window !== "undefined" &&
+        "showDirectoryPicker" in window &&
+        typeof (window as any).showDirectoryPicker === "function";
       return (
-        <div>
-          <button className="mediaTest" onClick={() => this.loadWeb()}>
-            Load Media
+        <div className="folder-selection">
+          <span className="pointer">{this.showPointer()}</span>
+          <button
+            className="mediaTest"
+            onClick={
+              canPickFolders
+                ? this.handleSelectDirectoryWeb
+                : () => this.loadWeb()
+            }
+          >
+            {canPickFolders ? "Select Folder" : "Load Demo Media"}
           </button>
+          {!canPickFolders && (
+            <p className="web-folder-hint">
+              Your browser does not yet support folder access. Use Chrome/Edge
+              or install the desktop app to browse real folders.
+            </p>
+          )}
         </div>
       );
     } else {
