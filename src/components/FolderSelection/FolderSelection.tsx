@@ -1203,7 +1203,12 @@ class SelectFolderZone extends Component<FolderProps> {
         <div className="folder-selection">
           <span className="pointer">{this.showPointer()}</span>
           <button onClick={this.handleSelectDirectory}>Select Folder</button>
-          <button onClick={() => this.exportSession(this)}>Export</button>
+          <button
+            onClick={() => this.exportSession(this)}
+            style={{ display: "none" }}
+          >
+            Export
+          </button>
         </div>
       );
     } else if (this.props.env === "web") {
