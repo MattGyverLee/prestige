@@ -17,6 +17,8 @@
  * @module store/annot/types
  */
 
+import type { TierMetadata } from "../../features/fileSystem/hooks/useEAFParser";
+
 // ============================================================================
 // CORE TYPE DEFINITIONS
 // ============================================================================
@@ -310,6 +312,19 @@ export interface AnnotationState {
 
   /** Whether translation text is shown as subtitle */
   txtTranslSubtitle: boolean;
+
+  /**
+   * Whether current timeline is a simple SayMore file (≤3 tiers) vs complex ELAN file
+   * True = show column view (DeeJay waveforms)
+   * False = show grid view (ELAN-style table)
+   */
+  isSimpleSayMoreFile: boolean;
+
+  /**
+   * Tier metadata from the currently loaded EAF file
+   * Contains tier IDs, types, and annotation counts for complex ELAN files
+   */
+  tierMetadata: TierMetadata[];
 }
 
 // ============================================================================
@@ -367,6 +382,11 @@ export const SET_TIMELINE_CHANGED = "SET_TIMELINE_CHANGED";
  * Mark timelines as instantiated with WaveSurfer
  */
 export const SET_TIMELINES_INSTANTIATED = "SET_TIMELINES_INSTANTIATED";
+
+/**
+ * Set view mode based on EAF file complexity
+ */
+export const SET_VIEW_MODE = "SET_VIEW_MODE";
 
 // ANNOTATION MANAGEMENT
 /**
@@ -625,6 +645,17 @@ interface SetTimelineChanged {
   payload: boolean;
 }
 
+/**
+ * Set view mode based on EAF file complexity
+ */
+interface SetViewMode {
+  type: typeof SET_VIEW_MODE;
+  payload: {
+    isSimpleSayMoreFile: boolean;
+    tierMetadata: TierMetadata[];
+  };
+}
+
 // ============================================================================
 // ACTION UNION TYPE
 // ============================================================================
@@ -658,4 +689,5 @@ export type AnnotationActionTypes =
   | FileDeleted
   | UpdatePrevTimeline
   | SetTimelinesInstantiated
-  | SetTimelineChanged;
+  | SetTimelineChanged
+  | SetViewMode;

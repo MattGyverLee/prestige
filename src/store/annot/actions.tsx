@@ -210,6 +210,30 @@ export function setTimelineChanged(bln: boolean): types.AnnotationActionTypes {
   };
 }
 
+/**
+ * Set view mode based on EAF file complexity
+ *
+ * Sets whether to show column view (DeeJay) for simple SayMore files
+ * or grid view (AnnotationTable) for complex ELAN files.
+ *
+ * @param {boolean} isSimple - Whether file is a simple SayMore file (≤3 tiers)
+ * @param {types.TierMetadata[]} tiers - Tier metadata from parsed EAF file
+ * @returns {AnnotationActionTypes} Set view mode action
+ *
+ * @example
+ * // After parsing EAF file
+ * dispatch(setViewMode(result.isSimpleSayMoreFile, result.tiers));
+ */
+export function setViewMode(
+  isSimple: boolean,
+  tiers: types.TierMetadata[],
+): types.AnnotationActionTypes {
+  return {
+    type: types.SET_VIEW_MODE,
+    payload: { isSimpleSayMoreFile: isSimple, tierMetadata: tiers },
+  };
+}
+
 // ============================================================================
 // ANNOTATION MANAGEMENT
 // ============================================================================

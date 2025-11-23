@@ -127,6 +127,17 @@ export const annCleanStore: types.AnnotationState = {
    * Timelines not yet instantiated with WaveSurfer
    */
   timelinesInstantiated: false,
+
+  /**
+   * View mode defaults to simple SayMore file (column view)
+   * Will be updated when EAF file is loaded
+   */
+  isSimpleSayMoreFile: true,
+
+  /**
+   * No tier metadata initially (empty array)
+   */
+  tierMetadata: [],
 };
 
 // ============================================================================
@@ -207,6 +218,15 @@ export function annotationReducer(
     case types.SET_TIMELINE_CHANGED: {
       // Set timeline changed flag for save prompts
       return { ...state, timelineChanged: action.payload };
+    }
+
+    case types.SET_VIEW_MODE: {
+      // Set view mode based on EAF file complexity
+      return {
+        ...state,
+        isSimpleSayMoreFile: action.payload.isSimpleSayMoreFile,
+        tierMetadata: action.payload.tierMetadata,
+      };
     }
 
     // -------------------------------------------------------------------------

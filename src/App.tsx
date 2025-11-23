@@ -1,7 +1,7 @@
 import "./App.css";
 
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import * as actions from "./store";
 import withSplashScreen from "./components/withSplashScreen";
 
@@ -17,6 +17,11 @@ export type UpdatePlayerParam = React.SyntheticEvent<{
 
 export function App(): JSX.Element {
   const dispatch = useDispatch();
+
+  // Get view mode from Redux state
+  const isSimpleSayMoreFile = useSelector(
+    (state: actions.StateProps) => state.annot.isSimpleSayMoreFile,
+  );
 
   // componentDidMount → useEffect
   useEffect(() => {
@@ -63,11 +68,19 @@ export function App(): JSX.Element {
       <ResizableDiv className="AppBody">
         <div className="AppSidebar">
           <PlayerZone />
-          <ResizableDiv className="AppDeeJay">
-            <DeeJay />
-          </ResizableDiv>
+          {/*
+            Dual View Mode:
+            - Simple SayMore files (≤3 tiers): Show waveform column view (DeeJay)
+            - Complex ELAN files (>3 tiers): Hide DeeJay, show grid view only
+          */}
+          {isSimpleSayMoreFile && (
+            <ResizableDiv className="AppDeeJay">
+              <DeeJay />
+            </ResizableDiv>
+          )}
         </div>
         <ResizableDiv className="AppDetails">
+          {/* AnnotationTable shown for both simple and complex files */}
           <AnnotationTable />
           <FileList />
         </ResizableDiv>

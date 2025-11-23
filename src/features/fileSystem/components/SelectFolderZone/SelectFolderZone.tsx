@@ -491,6 +491,9 @@ export function SelectFolderZone(): JSX.Element {
       if (result) {
         dispatch(actions.pushTimeline(result.timeline));
 
+        // Set view mode based on file complexity
+        dispatch(actions.setViewMode(result.isSimpleSayMoreFile, result.tiers));
+
         // Add linguistic types to categories
         result.linguisticTypes.forEach((lingType) => {
           if (!categories.includes(lingType)) {
@@ -886,6 +889,9 @@ export function SelectFolderZone(): JSX.Element {
         });
 
         dispatch(actions.pushTimeline(result.timeline));
+
+        // Set view mode based on file complexity
+        dispatch(actions.setViewMode(result.isSimpleSayMoreFile, result.tiers));
       } catch (err) {
         console.error(
           "[SelectFolderZone] Failed to process EAF in web mode:",
