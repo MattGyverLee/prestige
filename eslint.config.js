@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 import jest from 'eslint-plugin-jest';
 import prettier from 'eslint-plugin-prettier/recommended';
 
@@ -11,6 +12,7 @@ export default tseslint.config(
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
       react,
+      'react-hooks': reactHooks,
       jest,
     },
     languageOptions: {
@@ -42,8 +44,20 @@ export default tseslint.config(
       react: {
         version: 'detect',
       },
+      // Import resolver for TypeScript path aliases
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+          alwaysTryTypes: true,
+        },
+      },
     },
     rules: {
+      // React Hooks rules (as per MIGRATION_PLAN.md)
+      'react-hooks/rules-of-hooks': 'error', // Enforces Rules of Hooks
+      'react-hooks/exhaustive-deps': 'warn', // Warns about missing dependencies
+      'react/prefer-stateless-function': 'warn', // Encourages function components
+
       'linebreak-style': ['off', 'unix'],
       'prettier/prettier': [
         'error',
