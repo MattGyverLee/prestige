@@ -53,7 +53,7 @@ import {
 import { rowHeight } from "../../../../components/DeeJay/WaveSurferFunctions";
 
 // Child components
-import WaveTableRow from "../../../../components/DeeJay/WaveTableRow/WaveTableRow";
+import { WaveTableRow } from "../WaveTableRow";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -278,7 +278,7 @@ export function DeeJay(_props: DeeJayProps): JSX.Element {
         actions.waveformAdded({
           ref: currentPlaying[idx],
           sourceAnnot: idx === 0,
-          wavedata: peaks,
+          wavedata: JSON.stringify(peaks),
         }),
       );
 

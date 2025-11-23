@@ -14,3 +14,4 @@ export {
   type AnnotationTableProps,
 } from "./AnnotationTable/AnnotationTable";
 export { DeeJay } from "./DeeJay/DeeJay";
+export { WaveTableRow } from "./WaveTableRow/WaveTableRow";
