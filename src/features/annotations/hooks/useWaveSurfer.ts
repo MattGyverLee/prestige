@@ -208,31 +208,43 @@ export function useWaveSurfer(
       return;
     }
 
-    // Create regions plugin
-    const regionsPlugin = RegionsPlugin.create();
-    regionsPluginRef.current = regionsPlugin;
+    try {
+      // Create regions plugin
+      const regionsPlugin = RegionsPlugin.create();
+      regionsPluginRef.current = regionsPlugin;
 
-    // Create WaveSurfer instance
-    const ws = WaveSurfer.create({
-      container: `#${options.containerId}`,
-      barWidth: options.barWidth ?? 1,
-      cursorWidth: options.cursorWidth ?? 4,
-      progressColor: options.progressColor ?? "#fff",
-      cursorColor: options.cursorColor ?? "#4a74a5",
-      waveColor: options.waveColor ?? "#00ccff",
-      hideScrollbar: options.hideScrollbar ?? true,
-      height: options.height ?? 128,
-      plugins: [regionsPlugin],
-    });
+      // Create WaveSurfer instance
+      const ws = WaveSurfer.create({
+        container: `#${options.containerId}`,
+        barWidth: options.barWidth ?? 1,
+        cursorWidth: options.cursorWidth ?? 4,
+        progressColor: options.progressColor ?? "#fff",
+        cursorColor: options.cursorColor ?? "#4a74a5",
+        waveColor: options.waveColor ?? "#00ccff",
+        hideScrollbar: options.hideScrollbar ?? true,
+        height: options.height ?? 128,
+        plugins: [regionsPlugin],
+      });
 
-    // Initialize with empty waveform
-    ws.empty();
+      // Initialize with empty waveform
+      ws.empty();
 
-    // Set initial volume
-    ws.setVolume(options.initialVolume ?? 1.0);
+      // Set initial volume
+      ws.setVolume(options.initialVolume ?? 1.0);
 
-    // Store reference
-    wavesurferRef.current = ws;
+      // Store reference
+      wavesurferRef.current = ws;
+    } catch (error) {
+      console.error(
+        `[useWaveSurfer] Failed to create WaveSurfer instance for #${options.containerId}:`,
+        error,
+      );
+      // Call onError if provided
+      if (options.onError && error instanceof Error) {
+        options.onError(error);
+      }
+      return;
+    }
 
     // Setup event listeners
     if (options.onReady) {
@@ -287,11 +299,26 @@ export function useWaveSurfer(
     // Cleanup on unmount
     return () => {
       if (wavesurferRef.current) {
-        wavesurferRef.current.destroy();
-        wavesurferRef.current = null;
+        try {
+          // Pause playback before destroying to avoid audio context errors
+          if (wavesurferRef.current.isPlaying()) {
+            wavesurferRef.current.pause();
+          }
+
+          // Destroy WaveSurfer instance (handles event listener cleanup)
+          wavesurferRef.current.destroy();
+        } catch (error) {
+          console.error(
+            `[useWaveSurfer] Error during cleanup for #${options.containerId}:`,
+            error,
+          );
+        } finally {
+          // Always clear references even if destroy() throws
+          wavesurferRef.current = null;
+          regionsPluginRef.current = null;
+          setIsReady(false);
+        }
       }
-      regionsPluginRef.current = null;
-      setIsReady(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options.containerId]); // Only reinitialize if container changes
@@ -303,16 +330,30 @@ export function useWaveSurfer(
   /**
    * Load audio file
    */
-  const load = useCallback((url: string, peaks?: number[][]) => {
-    if (wavesurferRef.current) {
-      setIsReady(false);
-      if (peaks) {
-        wavesurferRef.current.load(url, peaks);
-      } else {
-        wavesurferRef.current.load(url);
+  const load = useCallback(
+    (url: string, peaks?: number[][]) => {
+      if (wavesurferRef.current) {
+        try {
+          setIsReady(false);
+          if (peaks) {
+            wavesurferRef.current.load(url, peaks);
+          } else {
+            wavesurferRef.current.load(url);
+          }
+        } catch (error) {
+          console.error(
+            `[useWaveSurfer] Error loading audio file ${url}:`,
+            error,
+          );
+          // Call onError if provided
+          if (options.onError && error instanceof Error) {
+            options.onError(error);
+          }
+        }
       }
-    }
-  }, []);
+    },
+    [options],
+  );
 
   /**
    * Seek to normalized position
@@ -441,10 +482,22 @@ export function useWaveSurfer(
    */
   const destroy = useCallback(() => {
     if (wavesurferRef.current) {
-      wavesurferRef.current.destroy();
-      wavesurferRef.current = null;
-      regionsPluginRef.current = null;
-      setIsReady(false);
+      try {
+        // Pause playback before destroying to avoid audio context errors
+        if (wavesurferRef.current.isPlaying()) {
+          wavesurferRef.current.pause();
+        }
+
+        // Destroy WaveSurfer instance (handles event listener cleanup)
+        wavesurferRef.current.destroy();
+      } catch (error) {
+        console.error("[useWaveSurfer] Error destroying WaveSurfer:", error);
+      } finally {
+        // Always clear references even if destroy() throws
+        wavesurferRef.current = null;
+        regionsPluginRef.current = null;
+        setIsReady(false);
+      }
     }
   }, []);
 

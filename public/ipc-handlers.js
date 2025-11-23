@@ -309,15 +309,51 @@ function registerIPCHandlers(mainWindow) {
   // ==========================================================================
 
   /**
+   * Detect if path is on a network drive (Windows UNC path or mapped drive check)
+   */
+  function isNetworkPath(dirPath) {
+    // UNC paths start with \\
+    if (dirPath.startsWith('\\\\') || dirPath.startsWith('//')) {
+      return true;
+    }
+
+    // On Windows, check if it's a mapped network drive
+    // This is a heuristic - mapped drives are harder to detect
+    // For now, we'll rely on the user to configure this if needed
+    return false;
+  }
+
+  /**
    * Start watching a directory
    */
   ipcMain.handle('watcher:start', (event, dirPath, options = {}) => {
     const watcherId = `watcher_${Date.now()}_${Math.random()}`;
 
+    // Detect network paths and configure accordingly
+    const isNetwork = isNetworkPath(dirPath);
+
     const watcher = chokidar.watch(dirPath, {
-      ignored: /[/\\]\./,
+      // Ignore dotfiles and common system files
+      ignored: /(^|[\/\\])\..|(node_modules|\.git)/,
       persistent: true,
       ignoreInitial: options.ignoreInitial || false,
+
+      // Use native fs.watch for performance (default: false)
+      // Enable polling only for network drives for reliability
+      usePolling: isNetwork,
+
+      // Wait for file writes to complete before firing events
+      // Critical for large audio/video files
+      awaitWriteFinish: {
+        stabilityThreshold: 2000,  // Wait 2s after last change
+        pollInterval: 100          // Check every 100ms
+      },
+
+      // Limit recursion depth to prevent excessive file system traversal
+      // Typical structure: project/session/files (depth 2-3)
+      depth: 3,
+
+      // Allow user overrides
       ...options,
     });
 

@@ -32,6 +32,9 @@ import toast from "react-hot-toast";
 import * as actions from "../../../../store";
 import { Milestone, LooseObject } from "../../../../store/annot/types";
 
+// Environment detection
+import { api, getFeatureStatus } from "../../../../utils/unifiedAPI";
+
 // Hooks
 import { useWaveSurfer } from "../../hooks/useWaveSurfer";
 import {
@@ -628,6 +631,17 @@ export function DeeJay(_props: DeeJayProps): JSX.Element {
       </button>
       <button
         onClick={async () => {
+          // Check if export is available (requires Electron/ffmpeg)
+          if (!api.canExportVideo) {
+            const status = getFeatureStatus("video-export");
+            toast.error(
+              status.upgradeMessage ??
+                status.reason ??
+                "Video export is not available in web mode",
+            );
+            return;
+          }
+
           if (!activeTimeline) {
             toast.error("Load a timeline before exporting.");
             return;
@@ -635,6 +649,12 @@ export function DeeJay(_props: DeeJayProps): JSX.Element {
 
           await exportVideo(activeTimeline, playbackMultiplier, volumes);
         }}
+        disabled={!api.canExportVideo}
+        title={
+          !api.canExportVideo
+            ? "Export requires the desktop app (ffmpeg not available in web mode)"
+            : undefined
+        }
       >
         {exportLabel}
       </button>
