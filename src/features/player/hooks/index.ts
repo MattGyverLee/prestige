@@ -6,3 +6,10 @@
  */
 
 export { useDraggable } from "./useDraggable";
+export { useReactPlayer } from "./useReactPlayer";
+export { usePlayerControls } from "./usePlayerControls";
+export type {
+  PlayerControlsState,
+  PlayerControlsMethods,
+  UsePlayerControlsReturn,
+} from "./usePlayerControls";

@@ -8,6 +8,13 @@
 // Components
 export { VolumeButton } from "./components/VolumeButton/VolumeButton";
 export { VolumeBar } from "./components/VolumeBar/VolumeBar";
+export { PlayerZone } from "./components/PlayerZone/PlayerZone";
+export { ControlRow } from "./components/ControlRow/ControlRow";
 
 // Hooks
-export { useDraggable } from "./hooks";
+export { useDraggable, useReactPlayer, usePlayerControls } from "./hooks";
+export type {
+  PlayerControlsState,
+  PlayerControlsMethods,
+  UsePlayerControlsReturn,
+} from "./hooks";
