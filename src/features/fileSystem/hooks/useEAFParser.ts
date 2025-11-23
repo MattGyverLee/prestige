@@ -16,6 +16,28 @@ import { parseStringPromise } from "xml2js";
 import Timelines from "../../../components/FolderSelection/Timelines";
 
 /**
+ * Tier metadata
+ */
+export interface TierMetadata {
+  /**
+   * Tier ID (e.g., "default", "CarefulMerged", "TranslationMerged")
+   */
+  id: string;
+  /**
+   * Linguistic type reference
+   */
+  linguisticType: string;
+  /**
+   * Number of annotations in this tier
+   */
+  annotationCount: number;
+  /**
+   * Is this tier time-alignable (has direct time references)
+   */
+  isTimeAlignable: boolean;
+}
+
+/**
  * Parsed EAF data structure
  */
 export interface ParsedEAFData {
@@ -35,6 +57,20 @@ export interface ParsedEAFData {
    * Base name of the EAF file
    */
   timelineBase: string;
+  /**
+   * Tier metadata (tier names, types, counts)
+   */
+  tiers: TierMetadata[];
+  /**
+   * Total number of tiers in the file
+   */
+  tierCount: number;
+  /**
+   * Whether this appears to be a simple SayMore-style file (≤3 tiers with standard structure)
+   * True = show column view (DeeJay)
+   * False = show grid view (ELAN-style)
+   */
+  isSimpleSayMoreFile: boolean;
 }
 
 /**
@@ -197,6 +233,29 @@ export function useEAFParser(): UseEAFParserReturn {
   );
 
   /**
+   * Detect if this is a simple SayMore-style file
+   * Simple files have ≤3 tiers with standard names (default, CarefulMerged, TranslationMerged)
+   */
+  const detectSimpleSayMoreFile = useCallback(
+    (tiers: TierMetadata[]): boolean => {
+      // More than 3 tiers = definitely complex
+      if (tiers.length > 3) {
+        return false;
+      }
+
+      // Check for standard SayMore tier names
+      const tierIds = tiers.map((t) => t.id);
+      const hasSayMoreStructure =
+        tierIds.includes("default") ||
+        tierIds.some((id) => id.toLowerCase().includes("careful")) ||
+        tierIds.some((id) => id.toLowerCase().includes("translation"));
+
+      return hasSayMoreStructure;
+    },
+    [],
+  );
+
+  /**
    * Process all tiers and annotations in the EAF file
    */
   const processTiersAndAnnotations = useCallback(
@@ -205,9 +264,16 @@ export function useEAFParser(): UseEAFParserReturn {
       timeSlotPointer: any[],
       timelineBase: string,
       tempTimeline: any,
-    ): { miles: any[]; linguisticTypes: string[] } => {
+    ): {
+      miles: any[];
+      linguisticTypes: string[];
+      tiers: TierMetadata[];
+      tierCount: number;
+      isSimpleSayMoreFile: boolean;
+    } => {
       const miles: any[] = [];
       const linguisticTypes: string[] = [];
+      const tiers: TierMetadata[] = [];
 
       for (let j = 0, l = fileData.TIER.length; j < l; j++) {
         const tier = fileData.TIER[j];
@@ -218,12 +284,17 @@ export function useEAFParser(): UseEAFParserReturn {
           linguisticTypes.push(lingType);
         }
 
+        // Track tier metadata
+        let annotationCount = 0;
+        let hasAlignableAnnotations = false;
+
         // Process all annotations in this tier
         for (let k = 0, l2 = tier.ANNOTATION.length; k < l2; k++) {
           const annotation = tier.ANNOTATION[k];
           let milestone = null;
 
           if ("ALIGNABLE_ANNOTATION" in annotation) {
+            hasAlignableAnnotations = true;
             milestone = processAlignableAnnotation(
               annotation,
               tier,
@@ -232,6 +303,7 @@ export function useEAFParser(): UseEAFParserReturn {
             );
             miles.push(milestone);
             tempTimeline.addMilestone(milestone);
+            annotationCount++;
           } else if ("REF_ANNOTATION" in annotation) {
             milestone = processRefAnnotation(
               annotation,
@@ -241,14 +313,26 @@ export function useEAFParser(): UseEAFParserReturn {
             );
             if (milestone !== null) {
               tempTimeline.addMilestone(milestone);
+              annotationCount++;
             }
           }
         }
+
+        // Add tier metadata
+        tiers.push({
+          id: tier.$.TIER_ID,
+          linguisticType: tier.$.LINGUISTIC_TYPE_REF,
+          annotationCount,
+          isTimeAlignable: hasAlignableAnnotations,
+        });
       }
 
-      return { miles, linguisticTypes };
+      const tierCount = tiers.length;
+      const isSimpleSayMoreFile = detectSimpleSayMoreFile(tiers);
+
+      return { miles, linguisticTypes, tiers, tierCount, isSimpleSayMoreFile };
     },
-    [processAlignableAnnotation, processRefAnnotation],
+    [processAlignableAnnotation, processRefAnnotation, detectSimpleSayMoreFile],
   );
 
   /**
@@ -300,14 +384,17 @@ export function useEAFParser(): UseEAFParserReturn {
         });
 
         // Process all tiers and annotations
-        const { linguisticTypes } = processTiersAndAnnotations(
-          fileData,
-          timeSlotPointer,
-          parsedPath.base,
-          tempTimeline,
-        );
+        const { linguisticTypes, tiers, tierCount, isSimpleSayMoreFile } =
+          processTiersAndAnnotations(
+            fileData,
+            timeSlotPointer,
+            parsedPath.base,
+            tempTimeline,
+          );
 
-        console.log("[useEAFParser] EAF file processed successfully");
+        console.log(
+          `[useEAFParser] EAF file processed successfully - ${tierCount} tiers, ${isSimpleSayMoreFile ? "simple SayMore" : "complex ELAN"} file`,
+        );
 
         setIsParsing(false);
         return {
@@ -315,6 +402,9 @@ export function useEAFParser(): UseEAFParserReturn {
           syncMedia,
           linguisticTypes,
           timelineBase: parsedPath.base,
+          tiers,
+          tierCount,
+          isSimpleSayMoreFile,
         };
       } catch (err) {
         console.error("[useEAFParser] Error processing EAF:", err);
@@ -355,14 +445,17 @@ export function useEAFParser(): UseEAFParserReturn {
         });
 
         // Process all tiers and annotations
-        const { linguisticTypes } = processTiersAndAnnotations(
-          fileData,
-          timeSlotPointer,
-          parsedPath.base,
-          tempTimeline,
-        );
+        const { linguisticTypes, tiers, tierCount, isSimpleSayMoreFile } =
+          processTiersAndAnnotations(
+            fileData,
+            timeSlotPointer,
+            parsedPath.base,
+            tempTimeline,
+          );
 
-        console.log("[useEAFParser] EAF file processed successfully (web)");
+        console.log(
+          `[useEAFParser] EAF file processed successfully (web) - ${tierCount} tiers, ${isSimpleSayMoreFile ? "simple SayMore" : "complex ELAN"} file`,
+        );
 
         setIsParsing(false);
         return {
@@ -370,6 +463,9 @@ export function useEAFParser(): UseEAFParserReturn {
           syncMedia,
           linguisticTypes,
           timelineBase: parsedPath.base,
+          tiers,
+          tierCount,
+          isSimpleSayMoreFile,
         };
       } catch (err) {
         console.error("[useEAFParser] Error processing EAF (web):", err);
