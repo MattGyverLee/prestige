@@ -1,4 +1,13 @@
-// TODO: Export player components, hooks, and utilities
-// This will be the public API for the player feature
+/**
+ * Player Feature Module
+ *
+ * This module provides player-related components, hooks, and utilities.
+ * It serves as the public API for the player feature.
+ */
 
-export {};
+// Components
+export { VolumeButton } from "./components/VolumeButton/VolumeButton";
+export { VolumeBar } from "./components/VolumeBar/VolumeBar";
+
+// Hooks
+export { useDraggable } from "./hooks";
