@@ -9,3 +9,8 @@
  */
 
 export { Waveform, type WaveformProps } from "./Waveform/Waveform";
+export {
+  AnnotationTable,
+  type AnnotationTableProps,
+} from "./AnnotationTable/AnnotationTable";
+export { DeeJay } from "./DeeJay/DeeJay";
