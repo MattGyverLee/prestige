@@ -16,7 +16,7 @@
  * - UI component rendering
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mockElectronAPI, resetAllMocks } from "../setup";
 import { exportVideo } from "../../components/FolderSelection/ExportVid";
 import {
@@ -115,12 +115,22 @@ describe("Video Export Workflow (Integration)", () => {
       const volumes = [0, 0, 0]; // All silent
       const multiplier = 1.0;
 
+      // Mock user confirmation to proceed with silent export
+      vi.spyOn(global, "confirm").mockReturnValue(true);
+
       // WHEN: Export is attempted
       const result = await exportVideo(timeline, multiplier, volumes);
 
-      // THEN: Should still generate clips (silent video)
+      // THEN: Should succeed after user confirms
       expect(result).toBe(true);
 
+      // User was warned about silent export
+      expect(global.confirm).toHaveBeenCalledWith(
+        expect.stringContaining("All audio tracks are silent"),
+      );
+
+      // Export was called (even with no king tracks)
+      expect(mockElectronAPI.exportVideo).toHaveBeenCalled();
       const [clips] = mockElectronAPI.exportVideo.mock.calls[0];
       expect(clips.length).toBe(0); // No clips without a king
     });
@@ -196,13 +206,19 @@ describe("Video Export Workflow (Integration)", () => {
       // WHEN: Export is attempted
       const result = await exportVideo(timeline, 1.0, volumes);
 
-      // THEN: Should handle gracefully
-      // (Implementation may skip these milestones or use fallback timing)
+      // THEN: Should handle gracefully by skipping milestones with missing times
       expect(result).toBe(true);
 
       const [clips] = mockElectronAPI.exportVideo.mock.calls[0];
-      // Either clips are created with fallback timing, or none are created
+      // Milestones with missing clip times are skipped, so array may be empty or partial
       expect(clips).toBeInstanceOf(Array);
+      // All generated clips should have valid timing data
+      clips.forEach((clip: any) => {
+        expect(clip.V1Start).toBeDefined();
+        expect(clip.V1Stop).toBeDefined();
+        expect(clip.A1Start).toBeDefined();
+        expect(clip.A1Stop).toBeDefined();
+      });
     });
   });
 
@@ -313,6 +329,9 @@ describe("Video Export Workflow (Integration)", () => {
       const volumes = [0.8, 0, 0];
 
       await exportVideo(timeline, 1.0, volumes);
+
+      // Verify export was called
+      expect(mockElectronAPI.exportVideo).toHaveBeenCalled();
 
       const [clips] = mockElectronAPI.exportVideo.mock.calls[0];
 

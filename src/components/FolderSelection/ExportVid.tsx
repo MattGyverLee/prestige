@@ -207,8 +207,15 @@ export async function exportVideo(
     const { kings, princes } = categorizeAudioByVolume(vols);
 
     if (kings.length === 0) {
-      toast.error("Enable at least one audio track before exporting.");
-      return false;
+      // Warn user but allow them to continue with silent export
+      const confirmed = confirm(
+        "All audio tracks are silent. Export will create a video with no audio. Continue?",
+      );
+      if (!confirmed) {
+        toast.error("Export cancelled.");
+        return false;
+      }
+      toast.loading("Exporting silent video...", { id: "export-video" });
     }
 
     console.log("=== EXPORT VIDEO DEBUG ===");
@@ -561,6 +568,12 @@ function calculateKingAudio(params: {
   // King Index 0: Use video's original audio track
   // -------------------------------------------------------------------------
   if (king === 0) {
+    // Validate clip times exist
+    if (ms.startTime === undefined || ms.stopTime === undefined) {
+      console.warn(`Skipping milestone - missing startTime/stopTime`);
+      return null;
+    }
+
     A1 = vidSource;
     A1Speed = multiplier;
     A1Start = ms.startTime;
@@ -576,6 +589,19 @@ function calculateKingAudio(params: {
   else if (king === 1) {
     const carefulAudio = getAudio(AUDIO_CHANNELS.CAREFUL_MERGED, ms);
     if (carefulAudio.file !== "") {
+      // Validate audio clip times exist
+      if (carefulAudio.start === undefined || carefulAudio.stop === undefined) {
+        console.warn(
+          `Skipping milestone - missing audio clip times for CarefulMerged`,
+        );
+        return null;
+      }
+      // Validate video clip times exist
+      if (ms.startTime === undefined || ms.stopTime === undefined) {
+        console.warn(`Skipping milestone - missing video startTime/stopTime`);
+        return null;
+      }
+
       A1 = carefulAudio.file;
       A1Start = carefulAudio.start;
       A1Stop = carefulAudio.stop;
@@ -595,6 +621,22 @@ function calculateKingAudio(params: {
   else if (king === 2) {
     const translationAudio = getAudio(AUDIO_CHANNELS.TRANSLATION_MERGED, ms);
     if (translationAudio.file !== "") {
+      // Validate audio clip times exist
+      if (
+        translationAudio.start === undefined ||
+        translationAudio.stop === undefined
+      ) {
+        console.warn(
+          `Skipping milestone - missing audio clip times for TranslationMerged`,
+        );
+        return null;
+      }
+      // Validate video clip times exist
+      if (ms.startTime === undefined || ms.stopTime === undefined) {
+        console.warn(`Skipping milestone - missing video startTime/stopTime`);
+        return null;
+      }
+
       A1 = translationAudio.file;
       A1Start = translationAudio.start;
       A1Stop = translationAudio.stop;
