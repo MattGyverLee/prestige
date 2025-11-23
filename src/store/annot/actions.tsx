@@ -217,20 +217,44 @@ export function setTimelineChanged(bln: boolean): types.AnnotationActionTypes {
  * or grid view (AnnotationTable) for complex ELAN files.
  *
  * @param {boolean} isSimple - Whether file is a simple SayMore file (≤3 tiers)
+ * @param {boolean} hasAudio - Whether file has audio annotation tiers
  * @param {types.TierMetadata[]} tiers - Tier metadata from parsed EAF file
  * @returns {AnnotationActionTypes} Set view mode action
  *
  * @example
  * // After parsing EAF file
- * dispatch(setViewMode(result.isSimpleSayMoreFile, result.tiers));
+ * dispatch(setViewMode(result.isSimpleSayMoreFile, result.hasAudioAnnotations, result.tiers));
  */
 export function setViewMode(
   isSimple: boolean,
+  hasAudio: boolean,
   tiers: types.TierMetadata[],
 ): types.AnnotationActionTypes {
   return {
     type: types.SET_VIEW_MODE,
-    payload: { isSimpleSayMoreFile: isSimple, tierMetadata: tiers },
+    payload: {
+      isSimpleSayMoreFile: isSimple,
+      hasAudioAnnotations: hasAudio,
+      tierMetadata: tiers,
+    },
+  };
+}
+
+/**
+ * Toggle waveform display
+ *
+ * Toggles whether to show DeeJay waveform view or grid-only view.
+ * User can switch between modes for files with audio annotations.
+ *
+ * @returns {AnnotationActionTypes} Toggle waveforms action
+ *
+ * @example
+ * // User clicks toggle button
+ * dispatch(toggleWaveforms());
+ */
+export function toggleWaveforms(): types.AnnotationActionTypes {
+  return {
+    type: types.TOGGLE_WAVEFORMS,
   };
 }
 

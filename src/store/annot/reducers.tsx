@@ -135,6 +135,16 @@ export const annCleanStore: types.AnnotationState = {
   isSimpleSayMoreFile: true,
 
   /**
+   * No audio annotations initially (false)
+   */
+  hasAudioAnnotations: false,
+
+  /**
+   * Show waveforms by default when available
+   */
+  showWaveforms: true,
+
+  /**
    * No tier metadata initially (empty array)
    */
   tierMetadata: [],
@@ -225,7 +235,18 @@ export function annotationReducer(
       return {
         ...state,
         isSimpleSayMoreFile: action.payload.isSimpleSayMoreFile,
+        hasAudioAnnotations: action.payload.hasAudioAnnotations,
         tierMetadata: action.payload.tierMetadata,
+        // Reset showWaveforms to true when loading new file
+        showWaveforms: true,
+      };
+    }
+
+    case types.TOGGLE_WAVEFORMS: {
+      // Toggle waveform display (user preference)
+      return {
+        ...state,
+        showWaveforms: !state.showWaveforms,
       };
     }
 

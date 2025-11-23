@@ -22,6 +22,22 @@ export function App(): JSX.Element {
   const isSimpleSayMoreFile = useSelector(
     (state: actions.StateProps) => state.annot.isSimpleSayMoreFile,
   );
+  const hasAudioAnnotations = useSelector(
+    (state: actions.StateProps) => state.annot.hasAudioAnnotations,
+  );
+  const showWaveforms = useSelector(
+    (state: actions.StateProps) => state.annot.showWaveforms,
+  );
+
+  // Determine if waveforms should be shown
+  // Show if: (simple file OR has audio annotations) AND user toggle is ON
+  const shouldShowWaveforms =
+    (isSimpleSayMoreFile || hasAudioAnnotations) && showWaveforms;
+
+  // Toggle waveform view
+  const handleToggleWaveforms = () => {
+    dispatch(actions.toggleWaveforms());
+  };
 
   // componentDidMount → useEffect
   useEffect(() => {
@@ -69,14 +85,42 @@ export function App(): JSX.Element {
         <div className="AppSidebar">
           <PlayerZone />
           {/*
-            Dual View Mode:
-            - Simple SayMore files (≤3 tiers): Show waveform column view (DeeJay)
-            - Complex ELAN files (>3 tiers): Hide DeeJay, show grid view only
+            Enhanced Dual View Mode:
+            - Simple SayMore files (≤3 tiers): Show waveforms by default
+            - Complex ELAN files with audio annotations: Waveforms available, user can toggle
+            - Complex ELAN files without audio: No waveforms (grid view only)
+            - User toggle: Switch between waveform and grid-only views when waveforms available
           */}
-          {isSimpleSayMoreFile && (
+          {shouldShowWaveforms && (
             <ResizableDiv className="AppDeeJay">
               <DeeJay />
             </ResizableDiv>
+          )}
+          {/* Toggle button (shown when audio annotations are available) */}
+          {(isSimpleSayMoreFile || hasAudioAnnotations) && (
+            <div
+              style={{
+                padding: "8px",
+                textAlign: "center",
+                borderTop: "1px solid #ccc",
+              }}
+            >
+              <button
+                onClick={handleToggleWaveforms}
+                style={{
+                  padding: "4px 12px",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                }}
+                title={
+                  showWaveforms
+                    ? "Hide waveforms (show grid only)"
+                    : "Show waveforms"
+                }
+              >
+                {showWaveforms ? "📊 Grid Only" : "🎵 Show Waveforms"}
+              </button>
+            </div>
           )}
         </div>
         <ResizableDiv className="AppDetails">

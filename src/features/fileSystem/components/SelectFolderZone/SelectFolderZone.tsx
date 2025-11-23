@@ -492,7 +492,13 @@ export function SelectFolderZone(): JSX.Element {
         dispatch(actions.pushTimeline(result.timeline));
 
         // Set view mode based on file complexity
-        dispatch(actions.setViewMode(result.isSimpleSayMoreFile, result.tiers));
+        dispatch(
+          actions.setViewMode(
+            result.isSimpleSayMoreFile,
+            result.hasAudioAnnotations,
+            result.tiers,
+          ),
+        );
 
         // Add linguistic types to categories
         result.linguisticTypes.forEach((lingType) => {
@@ -891,7 +897,13 @@ export function SelectFolderZone(): JSX.Element {
         dispatch(actions.pushTimeline(result.timeline));
 
         // Set view mode based on file complexity
-        dispatch(actions.setViewMode(result.isSimpleSayMoreFile, result.tiers));
+        dispatch(
+          actions.setViewMode(
+            result.isSimpleSayMoreFile,
+            result.hasAudioAnnotations,
+            result.tiers,
+          ),
+        );
       } catch (err) {
         console.error(
           "[SelectFolderZone] Failed to process EAF in web mode:",

@@ -315,10 +315,23 @@ export interface AnnotationState {
 
   /**
    * Whether current timeline is a simple SayMore file (≤3 tiers) vs complex ELAN file
-   * True = show column view (DeeJay waveforms)
-   * False = show grid view (ELAN-style table)
+   * True = show column view (DeeJay waveforms) by default
+   * False = show grid view (ELAN-style table) by default
    */
   isSimpleSayMoreFile: boolean;
+
+  /**
+   * Whether the current file has audio annotation tiers (CarefulMerged, TranslationMerged, etc.)
+   * If true, waveforms are available even for complex ELAN files
+   */
+  hasAudioAnnotations: boolean;
+
+  /**
+   * User preference: whether to show waveforms (DeeJay)
+   * User can toggle this to switch between waveform and grid-only views
+   * Defaults to true (show waveforms when available)
+   */
+  showWaveforms: boolean;
 
   /**
    * Tier metadata from the currently loaded EAF file
@@ -387,6 +400,11 @@ export const SET_TIMELINES_INSTANTIATED = "SET_TIMELINES_INSTANTIATED";
  * Set view mode based on EAF file complexity
  */
 export const SET_VIEW_MODE = "SET_VIEW_MODE";
+
+/**
+ * Toggle waveform display (user preference)
+ */
+export const TOGGLE_WAVEFORMS = "TOGGLE_WAVEFORMS";
 
 // ANNOTATION MANAGEMENT
 /**
@@ -652,8 +670,16 @@ interface SetViewMode {
   type: typeof SET_VIEW_MODE;
   payload: {
     isSimpleSayMoreFile: boolean;
+    hasAudioAnnotations: boolean;
     tierMetadata: TierMetadata[];
   };
+}
+
+/**
+ * Toggle waveform display
+ */
+interface ToggleWaveforms {
+  type: typeof TOGGLE_WAVEFORMS;
 }
 
 // ============================================================================
@@ -690,4 +716,5 @@ export type AnnotationActionTypes =
   | UpdatePrevTimeline
   | SetTimelinesInstantiated
   | SetTimelineChanged
-  | SetViewMode;
+  | SetViewMode
+  | ToggleWaveforms;

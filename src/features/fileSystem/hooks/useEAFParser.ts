@@ -67,10 +67,15 @@ export interface ParsedEAFData {
   tierCount: number;
   /**
    * Whether this appears to be a simple SayMore-style file (≤3 tiers with standard structure)
-   * True = show column view (DeeJay)
-   * False = show grid view (ELAN-style)
+   * True = show column view (DeeJay) by default
+   * False = show grid view (ELAN-style) by default
    */
   isSimpleSayMoreFile: boolean;
+  /**
+   * Whether the file contains audio annotation tiers (CarefulMerged, TranslationMerged, etc.)
+   * If true, waveforms should be available even for complex files
+   */
+  hasAudioAnnotations: boolean;
 }
 
 /**
@@ -233,6 +238,23 @@ export function useEAFParser(): UseEAFParserReturn {
   );
 
   /**
+   * Detect if this file has audio annotation tiers
+   * Audio annotations are tiers with "Merged" in the name (CarefulMerged, TranslationMerged, etc.)
+   */
+  const detectAudioAnnotations = useCallback(
+    (tiers: TierMetadata[]): boolean => {
+      const tierIds = tiers.map((t) => t.id);
+      return tierIds.some(
+        (id) =>
+          id.includes("Merged") ||
+          id.toLowerCase().includes("careful") ||
+          id.toLowerCase().includes("translation"),
+      );
+    },
+    [],
+  );
+
+  /**
    * Detect if this is a simple SayMore-style file
    * Simple files have ≤3 tiers with standard names (default, CarefulMerged, TranslationMerged)
    */
@@ -270,6 +292,7 @@ export function useEAFParser(): UseEAFParserReturn {
       tiers: TierMetadata[];
       tierCount: number;
       isSimpleSayMoreFile: boolean;
+      hasAudioAnnotations: boolean;
     } => {
       const miles: any[] = [];
       const linguisticTypes: string[] = [];
@@ -329,10 +352,23 @@ export function useEAFParser(): UseEAFParserReturn {
 
       const tierCount = tiers.length;
       const isSimpleSayMoreFile = detectSimpleSayMoreFile(tiers);
+      const hasAudioAnnotations = detectAudioAnnotations(tiers);
 
-      return { miles, linguisticTypes, tiers, tierCount, isSimpleSayMoreFile };
+      return {
+        miles,
+        linguisticTypes,
+        tiers,
+        tierCount,
+        isSimpleSayMoreFile,
+        hasAudioAnnotations,
+      };
     },
-    [processAlignableAnnotation, processRefAnnotation, detectSimpleSayMoreFile],
+    [
+      processAlignableAnnotation,
+      processRefAnnotation,
+      detectSimpleSayMoreFile,
+      detectAudioAnnotations,
+    ],
   );
 
   /**
@@ -384,16 +420,21 @@ export function useEAFParser(): UseEAFParserReturn {
         });
 
         // Process all tiers and annotations
-        const { linguisticTypes, tiers, tierCount, isSimpleSayMoreFile } =
-          processTiersAndAnnotations(
-            fileData,
-            timeSlotPointer,
-            parsedPath.base,
-            tempTimeline,
-          );
+        const {
+          linguisticTypes,
+          tiers,
+          tierCount,
+          isSimpleSayMoreFile,
+          hasAudioAnnotations,
+        } = processTiersAndAnnotations(
+          fileData,
+          timeSlotPointer,
+          parsedPath.base,
+          tempTimeline,
+        );
 
         console.log(
-          `[useEAFParser] EAF file processed successfully - ${tierCount} tiers, ${isSimpleSayMoreFile ? "simple SayMore" : "complex ELAN"} file`,
+          `[useEAFParser] EAF file processed successfully - ${tierCount} tiers, ${isSimpleSayMoreFile ? "simple SayMore" : "complex ELAN"} file${hasAudioAnnotations ? " with audio annotations" : ""}`,
         );
 
         setIsParsing(false);
@@ -405,6 +446,7 @@ export function useEAFParser(): UseEAFParserReturn {
           tiers,
           tierCount,
           isSimpleSayMoreFile,
+          hasAudioAnnotations,
         };
       } catch (err) {
         console.error("[useEAFParser] Error processing EAF:", err);
@@ -445,16 +487,21 @@ export function useEAFParser(): UseEAFParserReturn {
         });
 
         // Process all tiers and annotations
-        const { linguisticTypes, tiers, tierCount, isSimpleSayMoreFile } =
-          processTiersAndAnnotations(
-            fileData,
-            timeSlotPointer,
-            parsedPath.base,
-            tempTimeline,
-          );
+        const {
+          linguisticTypes,
+          tiers,
+          tierCount,
+          isSimpleSayMoreFile,
+          hasAudioAnnotations,
+        } = processTiersAndAnnotations(
+          fileData,
+          timeSlotPointer,
+          parsedPath.base,
+          tempTimeline,
+        );
 
         console.log(
-          `[useEAFParser] EAF file processed successfully (web) - ${tierCount} tiers, ${isSimpleSayMoreFile ? "simple SayMore" : "complex ELAN"} file`,
+          `[useEAFParser] EAF file processed successfully (web) - ${tierCount} tiers, ${isSimpleSayMoreFile ? "simple SayMore" : "complex ELAN"} file${hasAudioAnnotations ? " with audio annotations" : ""}`,
         );
 
         setIsParsing(false);
@@ -466,6 +513,7 @@ export function useEAFParser(): UseEAFParserReturn {
           tiers,
           tierCount,
           isSimpleSayMoreFile,
+          hasAudioAnnotations,
         };
       } catch (err) {
         console.error("[useEAFParser] Error processing EAF (web):", err);
